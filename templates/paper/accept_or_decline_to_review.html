@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% load custom_filters %}
+{% block content %}
+
+<div class="card" style="width: 30rem;">
+    <div class="card-body">
+      <h5 class="card-title">{{ paper.title }}</h5>
+      <p class="card-text">{{ paper.abstract }}</p>
+      <p class="card-text">
+        <b>Keywords:</b><br/>
+        {% for keyword in paper.keywords.all %}
+          {{ keyword }}{% if not forloop.last %}, {% endif %} 
+        {% endfor %} 
+      </p>
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <b>Authors:</b><br/>
+        {% for author in paper.authors.all %}
+          {{ author }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </li>
+      <li class="list-group-item">
+        {% if paper.file %}
+          <a href='{{ paper.file.url }}'>{{ paper|basename }}</a>  
+        {% endif %}  
+      </li>
+    </ul>
+    <div class="card-body">
+      <a href="{% url 'myAccount' %}" class="btn btn-outline-secondary"><i class="fas fa-angle-left"></i> Back</a>
+      <a href="{% url 'decline_to_review' paper.id %}" class="btn btn-dark">Decline</a>
+      <a href="{% url 'review' paper.id %}" class="btn btn-dark">Accept</a>
+    </div>
+  </div>
+
+{% endblock %}  

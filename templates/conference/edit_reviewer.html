@@ -1,0 +1,21 @@
+{% extends 'conference/add_new_reviewer.html' %}
+
+{% block modal-id %} id="edit_reviewer_modal" {% endblock modal-id %}
+
+{% block modal-title %}<i class="fas fa-edit"></i>&nbsp;&nbsp; Edit Reviewer of {{ target_paper.title }}{% endblock modal-title %}
+
+{% block action %} action="{% url 'edit_reviewer' conference.id target_paper.id reviewer_id %}" {% endblock action %}
+
+{% block btn-action %}<i class="fas fa-edit"></i>&nbsp;&nbsp;Save Changes{% endblock btn-action %}
+
+{% block js %}
+<script>
+  $(document).ready(function() {
+    $('#edit_reviewer_modal').modal('show');
+    $('#edit_reviewer_modal').on('click', function(event) {
+      if ($(event.target).is('#edit_reviewer_modal')) {
+        redirectToViewPapers();
+      }
+    });
+  }); 
+{% endblock js %}

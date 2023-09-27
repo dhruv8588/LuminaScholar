@@ -1,0 +1,130 @@
+{% load static %}
+{% load custom_filters %}
+
+
+<style>
+    body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+  }
+  
+  nav {
+    background-color: #222D32;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0px;
+  }
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .nav-links li {
+    margin-right: 20px;
+  }
+  
+  .nav-links li a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .nav-links li a:hover {
+    background-color: #555;
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .menu-icon {
+    font-size: 24px;
+    cursor: pointer;
+    display: none;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .nav-links {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      background-color: #444;
+      text-align: center;
+    }
+  
+    .nav-links li {
+      margin-right: 0;
+      margin-bottom: 15px;
+    }
+  
+    .menu-icon {
+      display: block;
+    }
+  
+    .active {
+      display: flex;
+    }
+  }
+</style>
+<body>
+    <nav>
+        <div class="logo">
+          <img src="{% static "images/logo.png" %}" alt="LuminaScholar" width="250">
+        </div>
+        <img src="{% static "images/journal_logo.png" %}" alt="Journal" width="200">
+        {% if user.is_authenticated %} 
+          <ul class="nav-links">
+              <li>
+                <a href="{% url 'home' %}">Home</a>
+              </li>  
+              {% if user|has_role:"Associate Editor" %}
+                <li>
+                  <a href="{% url 'ae_dashboard' %}">Associate Editor</a>
+                </li> 
+              {% endif %}
+              {% if user|has_role:"Editor-in-Chief" %}
+                <li>
+                  <a href="{% url 'eic_dashboard' %}">Editor-in-Chief</a>
+                </li> 
+              {% endif %}
+              <li>
+                  <a href="{% url 'unsubmitted_manuscripts' %}">Author</a>
+              </li>
+              <li>
+                  <a href="{% url 'edit_profile' %}">Edit profile</a>
+              </li>
+              <li>
+                  <a href="{% url 'reset_password' %}">Reset Password</a>
+              </li>
+              <li>
+                  <a href="{% url 'logout' %}">Log Out</a>
+              </li>
+          </ul>
+        {% endif %}
+    </nav>
+</body>
+
+{% comment %} {% with user_roles=user.roles.all %}
+    {% if user_roles %}
+        {% for role in user_roles %}
+            {% if role.name == 'Associate Editor' %}
+            <li>
+              <a href="#">Associate Editor</a>
+            </li> 
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+  {% endwith %} {% endcomment %}

@@ -1,0 +1,26 @@
+<style>
+    .error-box {
+        border: 2px solid red;
+        background-color: lightcoral;
+        color: darkred;
+        padding: 10px;
+        width: 800px;
+    }
+</style>    
+
+{% if not paper.title or not paper.abstract or not paper.type %}
+    <div class="error-box"> 
+        <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+        <ul>
+        {% if not paper.title %}
+            <li>Title is a required field.</li>
+        {% endif %}    
+        {% if not paper.abstract %}
+            <li>Abstract is a required field.</li>
+        {% endif %}
+        {% if not paper.type %}
+            <li>Type is a required field.</li>
+        {% endif %}   
+        </ul> 
+    </div>
+{% endif %}

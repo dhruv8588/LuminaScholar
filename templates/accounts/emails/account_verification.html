@@ -1,0 +1,10 @@
+{% autoescape off %}
+Hi {{ user.first_name }},
+Your login credentials are as follows:
+Username: {{ user.username }} 
+Password: {{ password }}
+
+Please click on below link to confirm your registeration.
+http://{{domain}}{% url 'activate' uidb64=uid token=token %}
+
+{% endautoescape %}

@@ -1,0 +1,8 @@
+{% autoescape off %}
+
+Hi {{ reviewer.first_name }},
+
+You are invited to review a paper. Click on below link to see its details.
+http://{{domain}}{% url 'accept_or_decline_to_review' paper_id %}
+
+{% endautoescape %} 

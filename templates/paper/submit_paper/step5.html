@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+{% load custom_filters %}     
+{% load widget_tweaks %}
+{% block content %}
+
+<style>
+  .list-group-item {
+    background-color: transparent; /* To remove default background */
+    padding: 0; /* To remove default padding */
+}
+
+.list-link {
+    display: block;
+    padding: 10px 15px; /* Add padding to create a clickable area */
+    text-decoration: none; /* Remove underline */
+    color: #333; /* Default color */
+    transition: color 0.3s; /* Smooth color transition on hover */
+}
+
+.list-link:hover {
+    cursor: pointer;
+    text-decoration: none;
+    background-color: #d3d3d3;
+    color: #808080; /* Change color on hover */
+}
+
+.selected {
+    background-color: #d3d3d3;
+    padding: 10px 15px; /* Add padding to create a clickable area */
+}
+
+.red-asterisk {
+    color: red;
+}
+
+.file-upload__label {
+    color: #aaa;
+  }
+
+.green-check {
+    color: green;
+}  
+</style>  
+    <div class="row">
+      <div class="col-md-4">
+        <br/><br/>
+        <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><b><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</b></a><br/><br/>
+          <div class="card" style="width: 18rem; margin-left: 50px;">
+              <div class="card-header">
+                  <b>Submission</b>
+              </div>
+              <ul class="list-group list-group-flush">
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step1">Step 1: Type, Title, & Abstract
+                    {% if paper.type and paper.title and paper.abstract %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}    
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step2">Step 2: Authors
+                    {% if paper.authors %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step3">Step 3: Attributes
+                    {% if paper.attributes.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step4">Step 4: File Upload
+                    {% if paper.files %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item selected">Step 5: Details & Comments
+                    {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+                        {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                          {% if figures_tables_published_elsewhere_desc %}
+                            <i class="fas fa-check green-check"></i>
+                          {% endif %}  
+                        {% endif %}
+                    {% endif %}
+                  </li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step6">Step 6: Review & Submit</a></li>
+            </ul>
+          </div>
+      </div>
+  
+      <div class="col-md-8">
+        <div style="margin-right: 100px;">
+        <br/>
+        <h2>Step 5: Details & Comments</h2>
+        <p style="color: #54626F;">Enter or paste your cover letter text into the "Cover Letter" box below. If you would like to attach a file containing your cover letter, click the "Browse..." button, locate your file, and click "Attach this Cover Letter." Answer any remaining questions appropriately. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
+        <hr>
+          <form id="submit-paper-form_step5" action="{% url 'submit_paper_step5' paper.id %}" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <b>Cover Letter</b>
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <label>Write Cover Letter</label>
+                          {{ form.cover_letter }}
+                      </div>
+                  </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                    <div class="file-upload form-group">
+                        <label>Upload Cover Letter</label><br/>
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                        {% comment %} {% render_field form.cover_letter_file class="file-upload__input" style="display:none" %} {% endcomment %}
+                        <input class="file-upload__input" type="file" name="cover_letter_file" id="cover-letter-file-input" style="display:none">
+                        <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File...</button>
+                        <span class="file-upload__label"></span>
+                        <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
+
+                        <button type="button" class="btn btn-success btn-sm" id="upload-file-button" onclick="uploadFile()"><i class="fas fa-upload"></i>&nbsp;Upload File</button>
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                    {% comment %} <form hx-encoding="multipart/form-data" hx-post="{% url 'upload_cover_letter' paper.id %}" hx-target="#cover_letter" id="myform">
+                        {% csrf_token %}
+                        <div class="file-upload form-group">
+                            <label>Upload Cover Letter</label><br/>
+                            <input class="file-upload__input" type="file" name="cover_letter_file" style="display:none">
+                            <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File...</button>
+                            <span class="file-upload__label"></span>
+                            <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
+                        </div>
+
+                        <button type="button" class="btn btn-success btn-sm" id="upload-file-button"><i class="fas fa-upload"></i>&nbsp;Upload File</button>
+                    </form>    
+{% endcomment %}
+                               
+                </div>
+              </div>
+              <section id="cover_letter" class="col-12">
+                {% comment %} {% include 'partials/cover_letter.html' %} {% endcomment %}
+            </section>  
+              <hr>
+
+              <b>Manuscript Information</b>
+
+              <table class="table table-bordered table-striped" style="width: 800px;">
+                <tbody>
+                    <tr>
+                        <td><span class="red-asterisk">*</span> Number of figures (total)</td>
+                        <td>{{ form.number_of_figures }}</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><span class="red-asterisk">*</span> Number of tables</td>
+                        <td>{{ form.number_of_tables }}</td>
+                    </tr>
+
+                    <tr>
+                        <td><span class="red-asterisk">*</span> Word count</td>
+                        <td>{{ form.word_count }}</td>
+                    </tr>
+                </tbody>    
+              </table>
+              
+              <hr>
+
+              <b>Confirm the following:</b>
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span> Have you uploaded a Microsoft Word file for the main document?</label><br/>
+                        {{ form.MSWord_file }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
+                        {{ form.certification_form }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
+                        {{ form.certification_form }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span> Do you certify that this manuscript has not been published previously and is not currently under consideration for publication elsewhere?</label><br/>
+                        {{ form.publish_elsewhere }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span> Does this research require the approval of an institutional ethical committee/institutional review board (IRB)?</label><br/>
+                        {{ form.approval }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span> Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
+                        {{ form.appropriate_statement }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
+                        {{ form.figures_tables_published_elsewhere }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtained permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
+                        {{ form.figures_tables_published_elsewhere_desc }}
+                    </div>
+                </div>
+              </div>
+
+              <hr/>
+
+              <div style="display: inline-block; float: left;">
+                <a href="{% url 'submit_paper_step2' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
+              </div>
+              <div style="display: inline-block; float: right;">    
+                  <button type="submit" name="save" class="btn btn-dark btn-sm mb-3">Save</button>
+                  <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
+              </div>
+          </form>
+      </div>
+    </div>
+  </div>
+  
+
+  <script>
+    var formNextLinks = document.getElementsByClassName('form-next-link');
+    for (var i = 0; i < formNextLinks.length; i++) {
+      formNextLinks[i].addEventListener('click', function (e) {
+        e.preventDefault();
+        var form = document.getElementById('submit-paper-form_step5');
+        var next = this.getAttribute('next');
+        
+        form.action = form.action + '?next=' + next;
+        form.submit();
+      });
+    }
+
+
+    {% comment %} document.querySelectorAll(".file-upload__button").forEach(
+        function(button) {
+            const hiddenInput = button.parentElement.querySelector(
+                ".file-upload__input"
+            );
+            const label = button.parentElement.querySelector(".file-upload__label");
+            const defaultLabelText = "No file(s) selected";
+
+            label.textContent = defaultLabelText;
+            label.title = defaultLabelText;
+
+            button.addEventListener("click", function() {
+                hiddenInput.click();
+            });
+
+            hiddenInput.addEventListener("change", function() {
+                const filename = hiddenInput.files[0].name;
+                label.textContent = filename || defaultLabelText;
+                label.title = label.textContent;
+            });
+
+            const resetButton = button.parentElement.querySelector(".file-upload__reset"); 
+            resetButton.addEventListener("click", function() {
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+
+        }
+    ); {% endcomment %}
+
+    {% comment %} function submitForm() {
+        // Manually trigger the form submission
+        console.log("Hello");
+        document.getElementById('submit-paper-form_step5').submit();
+    } {% endcomment %}
+
+
+        {% comment %} $(document).ready(function() {
+            // When the "Upload File" button is clicked
+            $('#upload-file-button').click(function() {
+                // Trigger the form submission for the myform
+                $('#submit-paper-form_step5').submit();
+            });
+        });
+       {% endcomment %}
+        
+
+    document.querySelectorAll(".file-upload__button").forEach(
+        function(button) {
+            const hiddenInput = button.parentElement.querySelector(
+                ".file-upload__input"
+            );
+            const label = button.parentElement.querySelector(".file-upload__label");
+            const defaultLabelText = "No file selected";
+
+            label.textContent = defaultLabelText;
+            label.title = defaultLabelText;
+
+            button.addEventListener("click", function() {
+                hiddenInput.click();
+            });
+
+            hiddenInput.addEventListener("change", function() {
+                const filename = hiddenInput.files[0].name;
+                label.textContent = filename || defaultLabelText;
+                label.title = label.textContent;
+            });
+
+            const resetButton = button.parentElement.querySelector(".file-upload__reset"); 
+            resetButton.addEventListener("click", function() {
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                const form = document.querySelector("#myform");
+                // form.reset();
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+        }
+    );
+  </script>
+
+  <script>
+    function uploadFile() {
+        // Get the selected file
+        const fileInput = document.getElementById('cover-letter-file-input');
+        const file = fileInput.files[0];
+    
+        // Check if a file is selected
+        if (file) {
+            // Create a FormData object to send the file via AJAX
+            const formData = new FormData();
+            formData.append('cover_letter_file', file);
+
+            // Get the CSRF token value from the hidden input field
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    
+            // Send an AJAX request to the 'upload_cover_letter' URL
+            fetch("{% url 'upload_cover_letter' paper.id %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken, // Include the CSRF token in the headers
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Handle a successful response (e.g., show a success message)
+                    console.log('File uploaded successfully.');
+                } else {
+                    // Handle an error response (e.g., show an error message)
+                    console.error('File upload failed.');
+                }
+            })
+            .catch(error => {
+                // Handle network or other errors
+                console.error('An error occurred:', error);
+            });
+        } else {
+            // No file selected, handle accordingly
+            console.error('No file selected.');
+        }
+    }
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            $("#upload-file-button").click(function () {
+                // Create the toast element
+                var file = $("{% if paper.cover_letter_file %} <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a> <span class="badge badge-danger badge-pill" style="cursor: pointer;" hx-delete="{% url 'delete_cover_letter' paper.id %}" hx-target="#cover_letter" hx-confirm="Are you sure you wish to delete this file?">X</span> {% endif %}");
+        
+                
+                // Add the toast to the toast container and show it
+                $("#cover_letter").append(file);
+
+            });
+        });
+    </script>
+    
+{% endblock %}

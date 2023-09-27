@@ -1,0 +1,39 @@
+
+// [
+// {
+//     // "python.pythonPath": "venv\\Scripts\\python.exe",
+//     "editor.formatOnSave": true,
+//     "python.formatting.provider": "autopep8",
+//     "python.linting.enabled": true,
+//     "python.linting.lintOnSave": true,
+//     "files.associations": [{
+//       "**/*.html": "html",
+//       "**/templates/**/*.html": "django-html",
+//       "**/templates/**/*": "django-txt",
+//       "**/requirements{/**,*}.{txt,in}": "pip-requirements"
+//     }],
+//     "emmet.includeLanguages": [
+//         {
+//         "django-html": "html",
+//         "jinja-html": "html"
+//         }
+//     ]
+// }
+// ]
+
+
+
+// "[django-html]": [{
+//     "editor.defaultFormatter": "HookyQR.beautify",
+//     "editor.quickSuggestions": {
+//         "comments": true,
+//         "other": true,
+//         "strings": true
+//     },
+//     "editor.tabSize": 4,
+//     "editor.wordWrap": "on"
+// }]
+
+
+
+

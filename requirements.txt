@@ -1,0 +1,15 @@
+Django==4.0.3
+Pillow==10.0.0
+python-decouple==3.5
+psycopg2-binary
+django-extensions==3.2.3
+django-widget-tweaks==1.4.12 
+
+PyPDF2==3.0.1    
+reportlab==4.0.4
+python-docx==0.8.11
+xhtml2pdf==0.2.11
+docx2pdf==0.1.8 
+pywin32==306
+
+

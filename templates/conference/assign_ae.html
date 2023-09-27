@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% for paper in page_obj %}
+<h3>Assign AE</h3>
+<div class="card" style="max-width: 42rem; margin-left: 400px;">
+    <div class="card-header text-secondary" style="padding: 30px;">
+        <table class="table table-bordered" style="width: 600px;">
+            <thead class="table-active">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">DETAILS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td>{{ paper.journal_id }}</td>
+              </tr>
+              <tr>
+                <th>Title</th>
+                <td>{{ paper.title }}</td>
+              </tr>
+              <tr>
+                <th>Submitting Author</th>
+                <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>{{ paper.type }}</td>
+              </tr>
+              <tr>
+                <th>Submission</th>
+                <td><a href="{% url 'merge_pdfs' paper.id %}" target="_blank"><i class="fas fa-file-alt"></i> View Submission</a></td>
+              </tr>
+            </tbody>    
+        </table>
+    </div>
+    <div class="card-body text-secondary" id="ae">
+        {% if paper.associate_editor %}
+            {% include 'partials/assigned_ae.html' %}
+        {% else %}
+            <h5 class="card-title">Pick from a list:</h5>
+            <p class="card-text">
+                <form hx-post="{% url 'assign_ae' paper.id %}" hx-target='#ae'>
+                    {% csrf_token %}
+                    <select name="selected_ae" style="appearance: none; 
+                      background-color: #f0f0f0; 
+                      border: 1px solid #ccc;
+                      padding: 3px; 
+                      width: 300px; 
+                      border-radius: 4px;">
+                        <option selected disabled>Select an AE (# Current Assignments)...</option>
+                        {% for associate_editor in associate_editors %}
+                            <option value="{{ associate_editor.id }}">{{ associate_editor.first_name }} {{ associate_editor.last_name }} ({{ associate_editor.assigned_papers.count }})</option>
+                        {% endfor %}
+                    </select> 
+                    <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i>&nbsp;Assign</button>
+                </form>     
+            </p>
+        {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+<a href="{% url 'awaiting_ae_assignment' %}" class="btn btn-dark"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
+
+{% if page_obj.has_other_pages %}
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a href="{% url 'select_ae' 1 %}" class="btn btn-outline-secondary">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{% url 'select_ae' page_obj.previous_page_number %}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"></li>
+        {% endif %}
+
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}<span class="sr-only">(current)</span></span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'select_ae' i %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{% url 'select_ae' page_obj.next_page_number %}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a href="{% url 'select_ae' page_obj.paginator.num_pages %}" class="btn btn-outline-secondary">Last</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"></li>
+        {% endif %}
+    </ul>
+{% endif %}
+     
+
+{% endblock %}

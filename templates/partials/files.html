@@ -1,0 +1,50 @@
+{% load custom_filters %}     
+
+{% csrf_token %}
+<li class="list-group-item d-flex justify-content-between align-items-center">    
+    <span><b>ORDER FILE UPLOAD-DATE ACTION</b></span>
+</li>
+<form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_files' paper.id %}" hx-target="#files">
+    <div class="htmx-indicator">Updating...</div>
+    {% for file in paper.files.all %}
+        <div>
+            <input type="hidden" name="file_order" value="{{ file.pk }}"/>
+            <li class="list-group-item d-flex justify-content-between align-items-center">    
+                {% if file.file.name|is_image %}
+                    #{{ file.order }}
+                    <img src="{{ file.file.url }}" alt="{{ file|basename }}" style="max-width: 100px; max-height:100px;"/> 
+                    <a href="{{ file.file.url }}">{{ file|basename }}</a>
+                    {{ file.created_at|date }}
+                {% else %}
+                    <span>#{{ file.order }} <a href="{{ file.file.url }}">{{ file|basename }}</a>                 {{ file.created_at|date }}</span>
+                {% endif %}
+
+                <span class="badge badge-danger badge-pill" 
+                        style="cursor: pointer;"
+                        hx-delete="{% url 'delete_file' paper.id file.pk %}"
+                        hx-target="#files"
+                        hx-confirm="Are you sure you wish to delete this file?">X</span>
+            </li>
+        </div>    
+    {% endfor %}
+</form>    
+    
+
+    <script>
+        function initializeSortable() {
+            var sortables = document.querySelectorAll(".sortable");
+            for (var i = 0; i < sortables.length; i++) {
+                var sortable = sortables[i];
+                new Sortable(sortable, {
+                    animation: 150,
+                    ghostClass: 'blue-background-class'
+                });
+            }
+        }
+    
+        initializeSortable();
+    
+        htmx.onLoad(function(content) {
+            initializeSortable();
+        });
+    </script>    

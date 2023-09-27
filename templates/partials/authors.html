@@ -1,0 +1,91 @@
+{% csrf_token %}
+<li class="list-group-item d-flex justify-content-between align-items-center">    
+    <span><b>ORDER AUTHOR ACTION</b></span>
+</li>
+<form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_authors' %}" hx-target="#authors" >
+    <div class="htmx-indicator">Updating...</div>
+    {% for paper_author in paper_authors %}
+        <div>
+            <input type="hidden" name="author_order" value="{{ paper_author.pk }}"/>
+            <li class="list-group-item d-flex justify-content-between align-items-center">    
+                #{{ paper_author.order }} {{ paper_author.author.first_name }} {{ paper_author.author.last_name }} 
+                <select>
+                    <option selected disabled>Select...</option>
+                    {% if not paper_author.author.user %}
+                        <option data-toggle="modal" data-target="#editAuthorModal{{ paper_author.author.id }}">Edit</option> 
+                    {% endif %}    
+                    <option hx-delete="{% url 'delete_author' paper_author.paper.id paper_author.author.pk %}" hx-target="#authors" hx-confirm="Are you sure you wish to delete this author?">Delete</option>
+                </select>  
+            </li>
+        </div>    
+    {% endfor %}
+</form>    
+    
+{% for paper_author in paper_authors %}
+    <!-- Modal -->
+    <div class="modal fade" id="editAuthorModal{{ paper_author.author.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author <span style="color: grey;">{{ paper_author.author.email }}</span></h5>
+                
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="edit-author-form{{ paper_author.author.id }}" hx-post="{% url 'edit_author' paper_author.paper.id paper_author.author.id %}" hx-target='#authors'>
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>First name</label>
+                                <input type="text" class="form-control" name="first_name" value="{{ paper_author.author.first_name }}">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Last name</label>
+                                <input type="text" class="form-control" name="last_name" value="{{ paper_author.author.last_name }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author
+                        </button>
+                    </div>
+                </form>      
+            </div>
+        </div>
+    </div>
+    <!-- Modal end -->
+    <script>
+        document.getElementById('edit-author-form{{ paper_author.author.id }}').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            $('#editAuthorModal{{ paper_author.author.id }}').modal('hide');
+        });
+    </script>    
+{% endfor %}
+
+<script>
+    function initializeSortable() {
+        var sortables = document.querySelectorAll(".sortable");
+        for (var i = 0; i < sortables.length; i++) {
+            var sortable = sortables[i];
+            new Sortable(sortable, {
+                animation: 150,
+                ghostClass: 'blue-background-class'
+            });
+        }
+    }
+
+    initializeSortable();
+
+    htmx.onLoad(function(content) {
+        initializeSortable();
+    });
+
+        
+</script>    
+
+ 

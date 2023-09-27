@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h3>View Manuscripts</h3>
+
+<p>To take action on a manuscript or view the full manuscript record, click the "Take Action" button. To read the manuscript, click the "View Manuscript" link.</p>
+
+<span class="badge badge-info">Awaiting Reviewer Selection</span>
+<table class="table table-bordered">
+    <thead class="table-info">
+        <tr>
+            <th scope="col" rowspan="2">#</th>
+            <th scope="col">ID</th>
+            <th scope="col">Title</th>
+            <th scope="col" rowspan="2">Date Submitted</th>
+            <th scope="col" rowspan="2">Status</th>
+            <th scope="col" rowspan="2">Take Action</th>
+         </tr>
+        <tr>
+            <th scope="col">
+                Type   
+            </th>
+            <th scope="col">Submitting Author</th>
+        </tr>    
+    </thead>
+    <tbody>
+        {% for paper in page_obj %}
+            <tr>
+                <th scope="row" rowspan="2">{{ forloop.counter }}</th>
+                <td>
+                    {{ paper.journal_id }}
+                </td>
+                <td>
+                    {{ paper.title }} [ <a href="{% url 'merge_pdfs' paper.id %}" target="_blank">View Submission</a> ]
+                </td>
+                <td rowspan="2">
+                    {{ paper.date_submitted }}
+                </td>            
+                <td rowspan="2">
+                    {% if paper.reviewers.all %}
+                        AE: {{paper.associate_editor.first_name }} {{paper.associate_editor.last_name }}
+                    {% else %}
+                        Select Reviewers (Due 1-Jan-2023)<br/>
+                        <i>0 active selections; 0 invited; 0 agreed; 0 declined;</i> 
+                    {% endif %}
+                    <br/>Make Decision (Due 1-Jan-2023)
+                </td>  
+                <td scope="row" rowspan="2">
+                    <a href="{% url 'select_ae' forloop.counter %}"><i class="fas fa-tasks"></i></a>
+                </td>     
+            </tr>
+
+            <tr>
+                <td>{{ paper.type }}</td>
+                <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
+            </tr>
+        {% endfor %}    
+    </tbody>
+  </table>
+
+{% if page_obj.has_other_pages %}
+  <ul class="pagination">
+      {% if page_obj.has_previous %}
+          <li class="page-item">
+              <a href="?page=1" class="btn btn-outline-secondary">First</a>
+          </li>
+          <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                  <i class="fas fa-angle-double-left"></i>
+              </a>
+          </li>
+      {% else %}
+          <li class="page-item disabled"></li>
+      {% endif %}
+
+      {% for i in page_obj.paginator.page_range %}
+          {% if page_obj.number == i %}
+              <li class="page-item active">
+                  <span class="page-link">{{ i }}<span class="sr-only">(current)</span></span>
+              </li>
+          {% else %}
+              <li class="page-item">
+                  <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+              </li>
+          {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+          <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                  <i class="fas fa-angle-double-right"></i>
+              </a>
+          </li>
+          <li class="page-item">
+              <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-secondary">Last</a>
+          </li>
+      {% else %}
+          <li class="page-item disabled"></li>
+      {% endif %}
+  </ul>
+{% endif %}
+
+{% endblock %}

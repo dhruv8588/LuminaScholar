@@ -1,0 +1,11 @@
+{% autoescape off %}
+
+Hi {{ conference.creator.first_name }},
+
+{% if conference.is_approved %}
+    Congratulations! Your request for conference creation- {{ conference.name }}({{ conference.acronym }}) has been approved.
+{% else %}
+    We're sorry! Your request for conference creation- {{ conference.name }}({{ conference.acronym }}) has been rejected. For more details, please contact support@conferva.com.
+{% endif %}
+
+{% endautoescape %}

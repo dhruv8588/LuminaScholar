@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+{% block css %}
+<style>
+  body {
+    background: #222D32;
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .login-box {
+    margin-top: 175px;
+    
+    height: auto;
+    background: #1A2226;
+    text-align: center;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    padding: 20px;
+  }
+
+  .login-key {
+    height: 100px;
+    font-size: 80px;
+    line-height: 100px;
+    background: -webkit-linear-gradient(#27EF9F, #0DB8DE);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .login-title {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 2px;
+    margin-top: 15px;
+    font-weight: bold;
+    color: #ECF0F5;
+  }
+
+  .login-form {
+    margin-top: 25px;
+    margin-left: 50%;
+    text-align: left;
+  }
+
+  input[type=text] {
+    background-color: #1A2226;
+    border: none;
+    border-bottom: 2px solid #0DB8DE;
+    border-top: 0px;
+    border-radius: 0px;
+    font-weight: bold;
+    outline: 0;
+    margin-bottom: 20px;
+    padding-left: 0px;
+    color: #ECF0F5;
+  }
+
+  input[type=password] {
+    background-color: #1A2226;
+    border: none;
+    border-bottom: 2px solid #0DB8DE;
+    border-top: 0px;
+    border-radius: 0px;
+    font-weight: bold;
+    outline: 0;
+    padding-left: 0px;
+    margin-bottom: 20px;
+    color: #ECF0F5;
+  }
+
+  .form-group {
+    margin-bottom: 40px;
+    outline: 0px;
+  }
+
+  .form-control:focus {
+    border-color: inherit;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border-bottom: 2px solid #0DB8DE;
+    outline: 0;
+    background-color: #1A2226;
+    color: #ECF0F5;
+  }
+
+  input:focus {
+    outline: none;
+    box-shadow: 0 0 0;
+  }
+
+  label {
+    margin-bottom: 0px;
+    color: white;
+  }
+
+  .form-control-label {
+    font-size: 10px;
+    color: #6C6C6C;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .btn-outline-primary {
+    border-color: #0DB8DE;
+    color: #0DB8DE;
+    border-radius: 0px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #0DB8DE;
+    right: 0px;
+  }
+
+  .login-btm {
+    float: left;
+  }
+
+  .login-button {
+    padding-right: 0px;
+    text-align: right;
+    margin-bottom: 25px;
+  }
+
+  .login-text {
+    text-align: left;
+    padding-left: 0px;
+    color: #A2A4A4;
+  }
+
+  .loginbttm {
+    padding: 0px;
+  }
+</style>
+{%endblock%}
+<div class="col-lg-12 login-title">
+  <h2>Register</h2>
+</div>
+<div class="col-lg-12 login-key text-center">
+  <i class="fa fa-key" aria-hidden="true"></i>
+</div>
+<div class="login-box">
+<div class="col-lg-6 col-md-8">
+  <div class="col-lg-12 login-form">
+    <form enctype="multipart/form-data" class="form-group" action="{% url 'register_user' %}" method="post"
+      id="user_form">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>First name</label> {{ form.first_name }}
+        </div>
+        {% comment %}
+        <input type="text" name="first_name" placeholder="Enter your first name" value="{{ form.first_name.value }}" />
+        {% endcomment %}
+        <div class="form-group col-md-4">
+          <label>Last name</label> {{ form.last_name }}
+        </div>
+        <div class="form-group col-md-4">
+          <label>Email address</label> {{ form.email }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-6" id="item-research_areas">
+          <label>Research Areas</label>&nbsp; &nbsp;<a href="#" class="add-research_areas"><i
+              class="fas fa-plus"></i></a>
+          <br />
+          {{ formset.management_form }}
+          {% for rform in formset %}
+          {{ rform.management_form }}
+          <tr>
+            {% for field in rform.visible_fields %}
+            {% if field.name != 'DELETE' %}
+            <td>
+              {{ field }}
+              {% for error in field.errors %}
+              <span style="color: red">{{ error }}</span>
+              {% endfor %}
+            </td>
+            {% endif %}
+            {% endfor %}
+            {% if rform.instance.pk %}
+            <input type="hidden" name="{{ formset.prefix }}-{{ forloop.counter0 }}-id"
+              value="{{ rform.instance.pk }}" />
+            {% endif %}
+            {% comment %} for delete {% endcomment %}
+            {% if rform.instance.pk %}
+            <td>
+              <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
+                data-target="#exampleModal{{rform.instance.pk}}">
+                Delete
+              </button>
+              <!-- Modal -->
+              <div class="modal fade" id="exampleModal{{rform.instance.pk}}" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalLabel{{rform.instance.pk}}" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel{{rform.instance.pk}}">Are Your Sure You Want To
+                        Delete This?</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-footer">
+                      <a href="{% url 'delete_research_area' rform.instance.pk %}" type="button"
+                        class="btn btn-primary">Yes, Delete</a>
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+          <br />
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-lg-6 login-btm login-button">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+      
+
+      <ul class='errorList'>
+        {% for field in form %}
+        {% if field.errors %}
+        {% for error in field.errors %}
+        <li style="color: red;">{{ error }}</li>
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+
+        {% for error in non_field_errors %}
+        <li style="color: red;">{{ error }}</li>
+        {% endfor %}
+      </ul>
+
+    </form>
+  </div>
+</div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+  integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+
+<script>
+  $(document).ready(function () {
+    // when user clicks add more btn of variants
+    $(".add-research_areas").click(function (ev) {
+      ev.preventDefault();
+      var formPrefix = "research_areas";
+      var tmplMarkup = `
+            <tr>
+                {% for field in formset.empty_form.visible_fields %}
+                {% if field.name != 'DELETE' %}
+                    <td>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <span style="color: red">{{ error }}</span>
+                        {% endfor %}
+                    </td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        `;
+      var tmplMarkupWithValues = tmplMarkup;
+      var formCountInput = $("#id_" + formPrefix + "-TOTAL_FORMS");
+      var formCount = parseInt(formCountInput.val());
+
+      // update form count
+      formCount += 1;
+      formCountInput.val(formCount);
+
+      // add 'required' attribute to dynamically added form fields
+      tmplMarkupWithValues = tmplMarkupWithValues.replace(
+        /__prefix__/g,
+        formCount - 1
+      );
+      tmplMarkupWithValues = tmplMarkupWithValues.replace(
+        /research_areas-__prefix__/g,
+        "research_areas-" + (formCount - 1)
+      );
+
+      $("#item-research_areas").append(tmplMarkupWithValues);
+    });
+  });
+</script>
+
+{% endblock %}

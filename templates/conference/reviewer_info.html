@@ -1,0 +1,73 @@
+<style>
+    .spacer {
+      height: 10px; 
+    }
+
+</style>
+
+<!-- Modal -->
+<div class="modal fade" id="reviewer_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa fa-info-circle"></i>&nbsp;&nbsp;{{ reviewer.first_name }} {{ reviewer.last_name }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="redirectToViewPapers()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <h5>Research Areas:</h5>
+        {% for research_area in reviewer.user.research_areas.all %}
+            {{ research_area }}{% if not forloop.last %}, {% endif %}
+        {% endfor %} 
+        <br/><br/>
+        <div class="spacer"></div>
+        <div class="spacer"></div>
+        {% if review.is_submitted %}
+          <h5>Review:</h5>
+
+          <b>Reviewer recommendation for paper type</b>
+          {{ review.paper_type }}<div class="spacer"></div>
+          <b>Should this paper be considered for a best paper award?</b>
+          {{ review.has_best_paper_award_potential }}<div class="spacer"></div>
+          <b>Does the paper present innovative ideas or material?</b>
+          {{ review.is_innovative }}<div class="spacer"></div>
+          <b>Rate the paper on its contribution to the body of knowledge to this field(none=1, very important=5)</b>
+          {{ review.rating }}<div class="spacer"></div>
+          <b>Should anything be deleted from or condensed in the paper?</b>
+          {{ review.anything_to_be_deleted }}
+          <b>If so, please explain</b>
+          {{ review.what_should_be_deleted }}<div class="spacer"></div>
+          <b>What amount of copy editing do you think the paper needs?</b>
+          {{ review.amt_of_copy_editing }}<div class="spacer"></div>
+          <b>Is this paper of potential interest to developers and engineers?</b>
+          {{ review.interest_to_engineers }}<div class="spacer"></div>
+          <b>Would you be willing to review a revision of this manuscript?</b>
+          {{ review.will_review_revised_version }}<div class="spacer"></div>
+          <b>Recommendation</b>
+          {{ review.recommendation }}<div class="spacer"></div>
+          <b>Comments to Editor</b>
+          {{ review.comments_to_editor }}<div class="spacer"></div>
+          <b>Comments to Author</b>
+          {{ review.comments_to_author }}<div class="spacer"></div>
+
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#reviewer_info_modal').modal('show');
+  $('#reviewer_info_modal').on('click', function(event) {
+    if ($(event.target).is('#reviewer_info_modal')) {
+      redirectToViewPapers();
+    }
+  });
+}); 
+
+function redirectToViewPapers() {
+  window.location.href = "{% url 'view_papers' conference.id %}";
+}
+</script>
+
+

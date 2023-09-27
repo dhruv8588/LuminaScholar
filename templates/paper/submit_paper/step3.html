@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .list-group-item {
+    background-color: transparent; /* To remove default background */
+    padding: 0; /* To remove default padding */
+}
+
+.list-link {
+    display: block;
+    padding: 10px 15px; /* Add padding to create a clickable area */
+    text-decoration: none; /* Remove underline */
+    color: #333; /* Default color */
+    transition: color 0.3s; /* Smooth color transition on hover */
+}
+
+.list-link:hover {
+    cursor: pointer;
+    text-decoration: none;
+    background-color: #d3d3d3;
+    color: #808080; /* Change color on hover */
+}
+
+.selected {
+    background-color: #d3d3d3;
+    padding: 10px 15px; /* Add padding to create a clickable area */
+}
+
+.red-asterisk {
+  color: red;
+}
+
+.form-group select#id_attributes {
+  width: 100%;
+}
+
+.green-check {
+  color: green;
+} 
+</style>  
+
+    <div class="row">
+      <div class="col-md-4">
+        <br/><br/>
+        <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><b><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</b></a><br/><br/>
+          <div class="card" style="width: 18rem; margin-left: 50px;">
+              <div class="card-header">
+                  <b>Submission</b>
+              </div>
+              <ul class="list-group list-group-flush">
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step1">Step 1: Type, Title, & Abstract
+                    {% if paper.type and paper.title and paper.abstract %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}    
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step2">Step 2: Authors
+                    {% if paper.authors.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item selected">Step 3: Attributes
+                    {% if paper.attributes.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step4">Step 4: File Upload
+                    {% if paper.files.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="{% url 'submit_paper_step5' paper.id %}" class="list-link">Step 5: Details & Comments
+                    {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+                      {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                        {% if figures_tables_published_elsewhere_desc %}
+                          <i class="fas fa-check green-check"></i>
+                        {% endif %}  
+                      {% endif %}
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step6">Step 6: Review & Submit</a></li>
+            </ul>
+          </div>
+      </div>
+  
+      {% comment %} <div class="col-md-8">
+          <form id="submit-paper-form_step1" action="{% url 'submit_paper_step3' paper.id %}" method="post">
+              {% csrf_token %}
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <label><span class="red-asterisk">*</span>Attributes</label>
+                          {{ form.attributes }}
+                      </div>
+                  </div>
+              </div>
+  
+              <button type="submit" name="save" class="btn btn-dark btn-sm mb-3">Save</button>
+              <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
+          </form>
+      </div> {% endcomment %}
+
+
+      <div class="col-md-8">
+        <div style="margin-right: 100px;">
+          <br/>
+        <h2>Step 3: Attributes</h2>
+        <p style="color: #54626F;">Choose from predefined attributes or create new ones to accurately categorize your paper. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
+        <hr>  
+
+        <form id="submit-paper-form_step1" action="{% url 'submit_paper_step3' paper.id %}" method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label><span class="red-asterisk">*</span>Attributes</label>
+                        {{ form.attributes }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6" id="item-attributes">
+                <label>Additional Attributes</label>&nbsp; &nbsp;<a href="#" class="add-attributes"><i class="fas fa-plus"></i></a>
+                <br />
+                {{ formset.management_form }}
+                  {% for aform in formset %}
+                      {{ aform.management_form }}
+                      <tr>
+                        {% for field in aform.visible_fields %}
+                          {% if field.name != 'DELETE' %}
+                            <td>
+                              {{ field }}
+                            </td>
+                          {% endif %}
+                        {% endfor %}
+
+                        {% if aform.instance.pk %}
+                          <input type="hidden" name="{{ formset.prefix }}-{{ forloop.counter0 }}-id" value="{{ aform.instance.pk }}" />
+                        {% endif %}
+
+                        {% comment %} for delete {% endcomment %}
+                        {% if aform.instance.pk %}
+                            <td>
+                              <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#exampleModal{{aform.instance.pk}}">Delete</button>
+                                  <!-- Modal -->
+                                  <div class="modal fade" id="exampleModal{{aform.instance.pk}}" tabindex="-1" role="dialog"
+                                    aria-labelledby="exampleModalLabel{{aform.instance.pk}}" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="exampleModalLabel{{aform.instance.pk}}">Are you sure you want to Delete this attribute?</h5>
+                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                          </button>
+                                        </div>
+                                        <div class="modal-footer">
+                                          <a href="{% url 'delete_attribute' aform.instance.pk %}" type="button" class="btn btn-primary">Yes, Delete</a>
+                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <!-- Modal End -->
+                            </td>
+                        {% endif %}
+                        <br/>
+                      </tr>
+                <br />
+                {% endfor %}
+              </div>
+            </div>
+            <hr/>
+
+            <div style="display: inline-block; float: left;">
+              <a href="{% url 'submit_paper_step2' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
+            </div>
+            <div style="display: inline-block; float: right;">    
+                <button type="submit" name="save" class="btn btn-dark btn-sm mb-3">Save</button>
+                <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    $("#id_attributes").select2({
+      maximumSelectionLength: 3, 
+  });
+  </script>  
+
+  <script>
+    var formNextLinks = document.getElementsByClassName('form-next-link');
+    for (var i = 0; i < formNextLinks.length; i++) {
+      formNextLinks[i].addEventListener('click', function (e) {
+        e.preventDefault();
+        var form = document.getElementById('submit-paper-form_step1');
+        var next = this.getAttribute('next');
+        
+        form.action = form.action + '?next=' + next;
+        form.submit();
+      });
+    }
+  </script>
+
+  <script>
+    $(document).ready(function () {
+      // when user clicks add more btn of variants
+      $(".add-attributes").click(function (ev) {
+        ev.preventDefault();
+        var formPrefix = "attributes";
+        var tmplMarkup = `
+              <tr>
+                  {% for field in formset.empty_form.visible_fields %}
+                  {% if field.name != 'DELETE' %}
+                      <td>
+                          {{ field }}<br/><br/>
+                      </td>
+                      {% endif %}
+                  {% endfor %}
+              </tr>
+          `;
+        var tmplMarkupWithValues = tmplMarkup;
+        var formCountInput = $("#id_" + formPrefix + "-TOTAL_FORMS");
+        var formCount = parseInt(formCountInput.val());
+  
+        // update form count
+        formCount += 1;
+        formCountInput.val(formCount);
+  
+        // add 'required' attribute to dynamically added form fields
+        tmplMarkupWithValues = tmplMarkupWithValues.replace(
+          /__prefix__/g,
+          formCount - 1
+        );
+        tmplMarkupWithValues = tmplMarkupWithValues.replace(
+          /attributes-__prefix__/g,
+          "attributes-" + (formCount - 1)
+        );
+  
+        $("#item-attributes").append(tmplMarkupWithValues);
+      });
+    });
+  </script>
+
+{% endblock %}

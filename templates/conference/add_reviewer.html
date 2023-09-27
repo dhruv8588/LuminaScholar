@@ -1,0 +1,111 @@
+{% load custom_filters %}
+{% load custom_tags %}
+<!-- Modal -->
+<div class="modal fade bd-example-modal-lg" id="add_reviewer_modal" tabindex="-1" role="dialog" aria-hidden="true" width=100px>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% block modal-title %}<i class="fas fa-plus"></i>&nbsp;&nbsp;Add Reviewer to <i>{{ paper.title }}</i>{% endblock modal-title %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="redirectToViewPapers()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+
+<form action="{% url 'add_reviewer' conference.id paper.id %}" method="post">
+    {% csrf_token %}
+
+    {{ formset.management_form }}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Registered Users</th>
+            <th scope="col">Research Areas</th>
+            <th scope="col">
+              <input type="checkbox" onclick="toggle(this);"/>Add
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+          {% for form in formset %}
+            {% comment %} {% for reviewer in paper.reviewers.all %}
+              {% if reviewer.user is not form.instance %} {% endcomment %}
+                <tr>
+                  <input type="hidden" name="{{ form.prefix }}-id" value="{{ form.instance.id }}">
+                  <input type="hidden" name="{{ form.prefix }}-first_name" value="{{ form.instance.first_name }}">
+                  <input type="hidden" name="{{ form.prefix }}-last_name" value="{{ form.instance.last_name }}">
+                  <th scope="row">{{ forloop.counter }}</th>
+                  <td>{{ form.instance.first_name }} {{ form.instance.last_name }}</td>
+                  <td>
+                    {% for research_area in form.instance.research_areas.all %}
+                      {{ research_area }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    
+                    {% comment %} {% for research_area in form.instance.research_areas.all %}
+                      {% with False as flag %}
+                          {% for keyword in paper.keywords.all %}
+                            {% if keyword.name|lower|replace_spaces == research_area.name|lower|replace_spaces %}
+                              
+                                <b>{{ research_area.name }}</b> 
+                      
+                                {% update_variable True as flag %}
+                                {{flag|update_variable}}
+
+                            {% endif %}
+                          {% endfor %}
+
+                          {% if not flag %}
+                            {{ research_area.name }}
+                          {% endif %}  
+
+                        {% endwith %}
+                    {% endfor %} {% endcomment %}
+                    
+                  </td>
+                  <td>
+                    {{ form.is_invited }}
+                  </td>
+                </tr>
+              {% comment %} {% endif %}  
+            {% endfor %}   {% endcomment %}
+          {% endfor %}  
+        </tbody>
+    </table>
+    <div class="mt-4" style="width: 100%;"> 
+      <button type="submit" class="btn btn-secondary mb-3">
+          {% block btn-action %}<i class="fas fa-plus"></i>&nbsp;&nbsp;Add Reviewer{% endblock btn-action %}
+      </button>
+      <button type="reset" class="btn btn-outline-dark mb-3 ms-2" style="width: 50px;"><i class="fas fa-sync-alt"></i></button>
+    </div>
+</form> 
+  
+</div>
+</div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#add_reviewer_modal').modal('show');
+  $('#add_reviewer_modal').on('click', function(event) {
+    if ($(event.target).is('#add_reviewer_modal')) {
+      redirectToViewPapers();
+    }
+  });
+}); 
+
+function toggle(source) {
+  var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  for (var i = 0; i < checkboxes.length; i++) {
+      if (checkboxes[i] != source)
+          checkboxes[i].checked = source.checked;
+  }
+}
+
+function redirectToViewPapers() {
+  window.location.href = "{% url 'view_papers' conference.id %}";
+}
+</script>
+
+
+

@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<style>
+    .container {
+  margin-top: 20px;
+}
+
+h3 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.table {
+  margin-top: 20px;
+  {% comment %} width: 1113px; {% endcomment %}
+}
+
+.table th,
+.table td {
+  vertical-align: middle;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-top: none;
+  border-bottom: none;
+  font-weight: bold;
+  color: #000;
+}
+
+.table tbody td {
+  background-color: #fff;
+  border-top: none;
+  border-bottom: none;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f2f2f2;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.add-research_areas {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.add-research_areas:hover {
+  color: #0056b3;
+}
+
+.reviewer-name {
+  color: #007bff;
+  font-weight: bold;
+}
+</style>
+
+  {% if display_add_reviewer_modal %}
+    {% include 'conference/add_reviewer.html' %}
+  {% endif %}
+
+  {% if display_add_new_reviewer_modal %}
+    {% include 'conference/add_new_reviewer.html' %}
+  {% endif %}
+
+  {% if display_edit_reviewer_modal %}
+    {% include 'conference/edit_reviewer.html' %}
+  {% endif %} 
+
+  {% if display_reviewer_info_modal %}
+    {% include 'conference/reviewer_info.html' %}
+  {% endif %}
+
+  <div class="container mt-4">
+    <h3 class="text-primary">Papers submitted to the <i>{{ conference.name }} ({{ conference.acronym }})</i></h3>
+    {% if papers %}
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Title</th>
+              <th scope="col">Abstract</th>
+              <th scope="col">Keywords</th>
+              <th scope="col">Authors</th>
+              <th scope="col">View Paper</th>
+              <th scope="col">Pending Reviewers</th>  
+              <th scope="col">Accepted Reviewers</th> 
+              <th scope="col">Declined Reviewers</th> 
+            </tr>
+          </thead>
+          <tbody>
+            {% for paper in papers %}
+              <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ paper.title }}</td>
+                <td>{{ paper.abstract }}</td>
+                <td>
+                  {% for keyword in paper.keywords.all %}
+                    {{ keyword }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </td>            
+                <td>
+                  {% for author in paper.authors.all %}
+                    {{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %} 
+                </td>   
+                <td>
+                  {% if paper.file %}
+                    <a href='{{ paper.file.url }}' class="btn btn-info btn-sm"><i class="fas fa-file-alt"></i> View</a>  
+                  {% endif %}
+                </td>
+                <td>
+                  <div>
+                    <a href="{% url 'add_reviewer' conference.id paper.id %}" class="btn btn-dark btn-sm"><b>From Users</b> <i class="fas fa-plus"></i></a>
+                    <br/>
+                    {% for reviewer in paper.reviewers.all %}   
+                      {% if reviewer in pending_reviewers %}
+                        {% if reviewer.user %} 
+                          <span class="reviewer-name" style="color: unset">{{ reviewer.first_name }} {{reviewer.last_name }}</span>
+                          <a href="{% url 'reviewer_info' conference.id paper.id reviewer.id %}" class="text-info"><i class="fas fa-info-circle"></i></a>  
+                          <a href="{% url 'delete_reviewer' conference.id paper.id reviewer.id %}" onclick="return confirm('Are you sure you want to delete this reviewer?')" class="text-danger"><i class="fas fa-trash"></i></a> 
+                          <br>
+                        {% endif %}
+                      {% endif %}  
+                    {% endfor %}
+                  </div>
+                  <div class="mt-2">
+                    <a href="{% url 'add_new_reviewer' conference.id paper.id %}" class="btn btn-primary btn-sm"><b>From Yourself</b> <i class="fas fa-plus"></i></a>
+                    <br/>
+                    {% for reviewer in paper.reviewers.all %}
+                      {% if not reviewer.user %}
+                        <span class="reviewer-name text-primary">{{ reviewer.first_name }} {{reviewer.last_name }}</span> 
+                        <a href="{% url 'edit_reviewer' conference.id paper.id reviewer.id %}" class="text-dark"><i class="fas fa-edit"></i></a>   
+                        <a href="{% url 'delete_reviewer' conference.id paper.id reviewer.id %}" onclick="return confirm('Are you sure you want to delete this reviewer?')" class="text-danger"><i class="fas fa-trash"></i></a> 
+                        <br>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </td>
+
+                <td>
+                  <div>
+                    {% for reviewer in paper.reviewers.all %}  
+                      {% if reviewer in accepted_reviewers %}
+                        <span class="reviewer-name" style="color: unset">{{ reviewer.first_name }} {{reviewer.last_name }}</span>
+                        <a href="{% url 'reviewer_info' conference.id paper.id reviewer.id %}" class="text-info"><i class="fas fa-info-circle"></i></a>  
+                        <a href="{% url 'delete_reviewer' conference.id paper.id reviewer.id %}" onclick="return confirm('Are you sure you want to delete this reviewer?')" class="text-danger"><i class="fas fa-trash"></i></a> 
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </td>
+
+                <td>
+                  <div>
+                    {% for reviewer in paper.reviewers.all %}  
+                      {% if reviewer in declined_reviewers %}
+                        <span class="reviewer-name" style="color: unset">{{ reviewer.first_name }} {{reviewer.last_name }}</span>
+                        <a href="{% url 'reviewer_info' conference.id paper.id reviewer.id %}" class="text-info"><i class="fas fa-info-circle"></i></a>  
+                        <a href="{% url 'delete_reviewer' conference.id paper.id reviewer.id %}" onclick="return confirm('Are you sure you want to delete this reviewer?')" class="text-danger"><i class="fas fa-trash"></i></a> 
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </td>
+
+              </tr>
+            {% endfor %}    
+          </tbody>
+        </table>
+      </div>
+    {% else %}    
+      <p>No papers have been submitted yet!</p>
+    {% endif %}
+  </div>
+
+{% endblock %}

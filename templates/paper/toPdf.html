@@ -1,0 +1,108 @@
+{% load static %}
+{% load custom_filters %}     
+
+<style>
+    table {
+        width: 50px; /* Set a fixed width for the table */
+        margin: 0 auto; /* Center the table horizontally */
+        border-collapse: collapse;
+        border: 1px solid #ccc;
+        
+    }
+    
+    th, td {
+        border: 1px solid #ccc; /* Add a border to table header and data cells */
+        padding: 4px; /* Add padding to improve cell spacing */
+        text-align: left; /* Align text to the left within cells */
+    }
+
+    th {
+        background-color: #f2f2f2; /* Add a background color to table headers */
+        text-align: right;
+    }
+
+    p {
+        text-align: center;
+    }
+</style>
+
+
+<img src="../{% static 'images/pdf_logo.png' %}" alt="My Logo" width="200"/>
+<img src="../{% static "images/pdf_journal_logo.png" %}" alt="Journal" width="200">
+<br/><br/>
+<p style="font-size: 20px"><b>{{ paper.title }}</b></p>
+<div class="table-container" style="font-size: 15px;">
+    <table>
+        <tbody>
+            <tr>
+                <th>Journal:</th>
+                <td>
+                    Journal of Artificial Intelligence Research
+                </td>
+            </tr>
+            <tr>
+                <th>Manuscript ID:</th>
+                <td>
+                    {{ paper.journal_id }}
+                </td>
+            </tr>
+            <tr>
+                <th>Authors:</th>
+                <td>
+                    {% for author in paper.authors.all %}
+                        {{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+            </tr>
+            <tr>
+                <th>Manuscript Type:</th>
+                <td>
+                    {{ paper.type }}
+                </td>
+            </tr>
+            <tr>
+                <th>Attributes:</th>
+                <td>
+                    {% for attribute in paper.attributes.all %}
+                        {{ attribute.name }} {% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+            </tr>
+            <tr>
+                <th>Additional Attributes:</th>
+                <td>
+                    {% for attribute in paper.additional_attributes.all %}
+                        {{ attribute.name }} {% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+            </tr>
+            <tr>
+                <th>Abstract:</th>
+                <td>
+                    {{ paper.abstract }}
+                </td>
+            </tr>
+            <tr>
+                <th>Date Submitted by the Author:</th>
+                <td>
+                    {% if paper.is_submitted %}
+                        {{ paper.updated_at|date }}
+                    {% endif %}    
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br/><br/>
+    {% if failed_conversions %}
+        <p style="color: red;">
+            <b>Note:</b> The following files were submitted by the author for peer review, but cannot be converted to PDF. You must view these files online.
+        </p>
+        <ol style="color: green;">
+            {% for doc in failed_conversions %}
+                <li>{{ doc|filename }}</;i>
+            {% endfor %}
+        </ol>
+    {% endif %}
+</div>
+

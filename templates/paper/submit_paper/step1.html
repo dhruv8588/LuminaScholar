@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .list-group-item {
+    background-color: transparent; /* To remove default background */
+    padding: 0; /* To remove default padding */
+}
+
+.list-link {
+    display: block;
+    padding: 10px 15px; /* Add padding to create a clickable area */
+    text-decoration: none; /* Remove underline */
+    color: #333; /* Default color */
+    transition: color 0.3s; /* Smooth color transition on hover */
+}
+
+.list-link:hover {
+    cursor: pointer;
+    text-decoration: none;
+    background-color: #d3d3d3;
+    color: #808080; /* Change color on hover */
+}
+
+.selected {
+    background-color: #d3d3d3;
+    padding: 10px 15px; /* Add padding to create a clickable area */
+}
+
+.red-asterisk {
+    color: red;
+}
+
+.green-check {
+    color: green;
+} 
+</style>    
+
+    <div class="row">
+      <div class="col-md-4">
+        <br/><br/>
+        <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><b><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</b></a><br/><br/>  
+          <div class="card" style="width: 18rem; margin-left: 50px;">
+              <div class="card-header">
+                  <b>Submission</b>
+              </div>
+              <ul class="list-group list-group-flush">
+                  <li class="list-group-item selected">Step 1: Type, Title, & Abstract
+                    {% if paper.type and paper.title and paper.abstract %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}    
+                  </li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step2" hx-get="{% url 'step1_errors' paper.id %}" hx-trigger="click" hx-target='#step1_errors'>Step 2: Authors
+                    {% if paper.authors.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step3" hx-get="{% url 'step1_errors' paper.id %}" hx-trigger="click" hx-target='#step1_errors'>Step 3: Attributes
+                    {% if paper.attributes.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step4" hx-get="{% url 'step1_errors' paper.id %}" hx-trigger="click" hx-target='#step1_errors'>Step 4: File Upload
+                    {% if paper.files.all %}
+                        <i class="fas fa-check green-check"></i>
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="{% url 'submit_paper_step5' paper.id %}" class="list-link">Step 5: Details & Comments
+                    {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+                      {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                        {% if figures_tables_published_elsewhere_desc %}
+                          <i class="fas fa-check green-check"></i>
+                        {% endif %}  
+                      {% endif %}
+                    {% endif %}
+                  </a></li>
+                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step6" hx-get="{% url 'step1_errors' paper.id %}" hx-trigger="click" hx-target='#step1_errors'>Step 6: Review & Submit</a></li>
+            </ul>
+          </div>
+      </div>
+  
+      <div class="col-md-8">
+        <div style="margin-right: 100px;">
+          <br/>
+          <section id="success_message">
+            
+          </section>
+          <section id="step1_errors">
+            
+          </section>
+          
+          <h2>Step 1: Type, Title, & Abstract</h2>
+          <p style="color: #54626F;">Select your manuscript type. Enter your title and abstract into the appropriate boxes below. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
+          <hr>
+            <form id="submit-paper-form_step1" action="{% url 'submit_paper_step1' paper.id %}" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><span class="red-asterisk">*</span> <b>Type</b></label>
+                            {{ form.type }}
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><span class="red-asterisk">*</span> <b>Title</b></label>
+                            {{ form.title }}
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label><span class="red-asterisk">*</span> <b>Abstract</b></label><br/>
+                            {{ form.abstract }}
+                        </div>
+                    </div>
+                </div>
+                
+                <hr/>
+                
+                <div style="display: inline-block; float: right;">
+                  {% comment %} <button type="submit" name="save" class="btn btn-dark btn-sm mb-3" hx-get="{% url 'success_message' %}" hx-target='#success_message' >Save</button> {% endcomment %}
+
+                  <button type="submit" name="save" class="btn btn-dark btn-sm mb-3" data-toggle="alert">Save</button>
+                  <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3" data-toggle="modal" data-target="#IncompleteStepModal">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
+                </div>  
+            </form>
+        </div>
+      </div>
+  </div>
+
+  <!-- Toast-->
+  <div class="alert alert-warning alert-dismissible fade show" role="alert" style="max-width: 800px; border: 1px solid red;">
+    <i class="fas fa-star"></i> <strong>Success!</strong> Your work has been saved.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+  <!-- Toast End -->
+  
+
+  <!-- Modal -->
+  <div class="modal fade" id="IncompleteStepModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-plus"></i>&nbsp;&nbsp;Step Incomplete. Continue?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Please Close this window and correct the following errors or click Save & Go to Next Step to return to this step at a later time:
+        </div>  
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Close</button>
+          <button type="button" class="btn btn-primary">
+            <i class="fas fa-angle-right"></i>&nbsp;&nbsp;Save & Go to Next Step
+          </button>
+        </div>  
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    var formNextLinks = document.getElementsByClassName('form-next-link');
+    for (var i = 0; i < formNextLinks.length; i++) {
+      formNextLinks[i].addEventListener('click', function (e) {
+        e.preventDefault();
+        var form = document.getElementById('submit-paper-form_step1');
+        var next = this.getAttribute('next');
+        
+        form.action = form.action + '?next=' + next;
+        form.submit();
+      });
+    }
+  </script>
+
+  <script>
+    function handleButtonClick() {
+        // Add your JavaScript code here to perform the desired action
+        // For example, make an AJAX request to the URL and update the target element
+        // You can use JavaScript libraries like jQuery or fetch API for AJAX requests
+        fetch("{% url 'success_message' %}")
+            .then(response => response.text())
+            .then(data => {
+                // Update the target element with the response data
+                document.querySelector('#success_message').innerHTML = data;
+            })
+            .catch(error => {
+                console.error("An error occurred:", error);
+            });
+    }
+    </script>
+    
+
+{% endblock %}

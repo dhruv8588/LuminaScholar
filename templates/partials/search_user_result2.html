@@ -1,0 +1,106 @@
+{% if user %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="addUserAsAuthor2" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Did you mean this Author?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <b>{{ user.first_name }} {{ user.last_name }}</b><br/>
+            {{ user.email }}
+        </div>    
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No</button>
+          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_user_as_author' paper_id user.id %}" hx-target="#authors">Yes&nbsp;<i class="fas fa-angle-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script> 
+      $(document).ready(function() {
+          var yesButtonClicked = false; 
+    
+          $('#addUserAsAuthor2').modal('show');
+          $('#AddNewAuthor').modal('hide');
+    
+          $('#addUserAsAuthor2').on('hidden.bs.modal', function () {
+              if (!yesButtonClicked) { 
+                  $('#email').val("");
+  
+                  var message = "We removed the e-mail address you entered because it is associated with an existing account you chose not to use. Use a different e-mail address or, if you have changed your mind, you may enter the e-mail address again and link to the existing account.";
+                  $('#message').text(message);
+  
+                  $('#AddNewAuthor').modal('show');
+              } else {
+                  yesButtonClicked = false;
+              }
+            });
+  
+          $('#addUserAsAuthor2 .btn-primary').click(function () {
+            yesButtonClicked = true;
+          }); 
+      }); 
+    </script>
+
+
+{% elif author %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="addAuthorAsAuthor2" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Did you mean this Author?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <b>{{ author.first_name }} {{ author.last_name }}</b><br/>
+            {{ author.email }}
+        </div>    
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No</button>
+          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_author_as_author' paper_id author.id %}" hx-target="#authors">Yes&nbsp;<i class="fas fa-angle-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script> 
+    $(document).ready(function() {
+        var yesButtonClicked = false; 
+  
+        $('#addAuthorAsAuthor2').modal('show');
+        $('#AddNewAuthor').modal('hide');
+  
+        $('#addAuthorAsAuthor2').on('hidden.bs.modal', function () {
+            if (!yesButtonClicked) { 
+                $('#email').val("");
+
+                var message = "We removed the e-mail address you entered because it is associated with an existing account you chose not to use. Use a different e-mail address or, if you have changed your mind, you may enter the e-mail address again and link to the existing account.";
+                $('#message').text(message);
+
+                $('#AddNewAuthor').modal('show');
+            } else {
+                yesButtonClicked = false;
+            }
+          });
+
+        $('#addAuthorAsAuthor2 .btn-primary').click(function () {
+          yesButtonClicked = true;
+        }); 
+    }); 
+  </script>
+
+
+{% endif %}
+
+

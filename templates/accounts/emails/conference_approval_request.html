@@ -1,0 +1,8 @@
+{% autoescape off %}
+
+Hi {{ user.first_name }},
+
+A new conference has been created. Click on below link to see its details.
+http://{{domain}}{% url 'edit_is_approved' conference_id %}
+
+{% endautoescape %} 

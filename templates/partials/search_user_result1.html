@@ -1,0 +1,92 @@
+{% if user %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="addUserAsAuthor" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ user.email }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Author</th>
+                    <th scope="col">Institution</th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ user.first_name }} {{ user.last_name }}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
+          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_user_as_author' paper_id user.id %}" hx-target="#authors"><i class="fas fa-plus"></i>&nbsp;Add Author</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      $('#addUserAsAuthor').modal('show');
+    }); 
+  </script>
+
+
+{% elif author %}
+  <!-- Modal -->
+  <div class="modal fade" id="addAuthorAsAuthor" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ author.email }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Author</th>
+                    <th scope="col">Institution</th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ author.first_name }} {{ author.last_name }}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="color: red;"><b>Note:</b> You may edit the details of this author by first adding him/her as author to this paper.</p>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
+          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_author_as_author' paper_id author.id %}" hx-target="#authors"><i class="fas fa-plus"></i>&nbsp;Add Author</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      $('#addAuthorAsAuthor').modal('show');
+    }); 
+  </script>
+
+{% else %}
+
+  <div style='color:red;'>
+    <i class="fas fa-exclamation-triangle"></i>&nbsp;No co-author found. Please search again using another e-mail address or <a href='#' class="btn btn-danger btn-sm" data-toggle="modal" data-target="#AddNewAuthor">create a new co-author</a>
+  </div>
+
+{% endif %}

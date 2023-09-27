@@ -1,0 +1,65 @@
+<!-- Modal -->
+<div class="modal fade" {% block modal-id %}id="add_reviewer_modal"{% endblock modal-id %} tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{% block modal-title %}<i class="fas fa-plus"></i>&nbsp;&nbsp;Add Reviewer to <i>{{ paper.title }}</i>{% endblock modal-title %}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="redirectToViewPapers()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+          <form {% block action %}action="{% url 'add_new_reviewer' conference.id paper.id %}"{% endblock action %} method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>First name</label> {{ form.first_name }}
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Last name</label> {{ form.last_name }}
+                    </div>
+                </div>  
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Email</label> {{ form.email }}
+                    </div>
+                </div>
+              <div class="mt-4" style="width: 100%;"> 
+                <button type="submit" class="btn btn-secondary mb-3">
+                    {% block btn-action %}<i class="fas fa-plus"></i>&nbsp;&nbsp;Add Reviewer{% endblock btn-action %}
+                </button>
+                <button type="reset" class="btn btn-outline-dark mb-3 ms-2" style="width: 50px;"><i class="fas fa-sync-alt"></i></button>
+              </div>
+              <ul class='errorList'>
+                {% for field in form %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <li style="color: red;">{{ error }}</li>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+        </form>      
+      </div>
+    </div>
+  </div>
+
+  {% block js %}
+  <script>
+    $(document).ready(function() {
+      $('#add_reviewer_modal').modal('show');
+      $('#add_reviewer_modal').on('click', function(event) {
+        if ($(event.target).is('#add_reviewer_modal')) {
+          redirectToViewPapers();
+        }
+      });
+    }); 
+   {% endblock js %}
+
+    function redirectToViewPapers() {
+      window.location.href = "{% url 'view_papers' conference.id %}";
+    }
+  </script>
+  
+
