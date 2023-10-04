@@ -8,18 +8,15 @@
     }
 </style>    
 
-{% if not paper.title or not paper.abstract or not paper.type %}
+{% if not paper.additionalAttributes.all or not paper.attributes.all %}
     <div class="error-box"> 
         <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
         <ul>
-            {% if not paper.title %}
-                <li>Title is a required field.</li>
+            {% if not paper.attributes.all  %}
+                <li>Minimum entries for attributes not entered.</li>
             {% endif %}    
-            {% if not paper.abstract %}
-                <li>Abstract is a required field.</li>
-            {% endif %}
-            {% if not paper.type %}
-                <li>Type is a required field.</li>
+            {% if not paper.additionalAttributes.all %}
+                <li>Minimum additional attributes not chosen.</li>
             {% endif %}   
         </ul> 
     </div>

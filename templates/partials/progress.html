@@ -1,0 +1,30 @@
+<form hx-post="{% url 'change_req_reviews' paper.id %}" hx-target='#progress'>
+    {% csrf_token %}
+    <table class="table table-bordered">
+        <tbody>
+          <tr>
+            <th class="text-secondary"># reviews required to make decision</th>
+            <td><input type="number" value="{{ paper.required_reviews }}" style="width: 50px;" name="required_reviews"></input></td>
+          </tr>
+          <tr>
+            <th class="text-secondary"># active selections</th>
+            <td>{{ paper.reviewers.count }}</td>
+          </tr>
+          <tr>
+            <th class="text-secondary"># invited</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th class="text-secondary"># agreed</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th class="text-secondary"># declined</th>
+            <td></td>
+          </tr>
+        </tbody>    
+    </table> 
+  <div style="display: inline-block; float: right;">  
+    <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-check"></i> Save</button> 
+  </div>  
+</form> 

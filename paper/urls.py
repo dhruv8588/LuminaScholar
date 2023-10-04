@@ -59,7 +59,9 @@ htmx_urlpatterns = [
     path('success_message', views.success_message, name="success_message"),
 
     path('<int:paper_id>/upload_cover_letter/', views.upload_cover_letter, name="upload_cover_letter"),
-    path('<int:paper_id>/delete_cover_letter', views.delete_cover_letter, name="delete_cover_letter")
+    path('<int:paper_id>/delete_cover_letter', views.delete_cover_letter, name="delete_cover_letter"),
+    path('<int:paper_id>/show_cover_letter/', views.show_cover_letter, name="show_cover_letter"),
+
 ]
 
 urlpatterns += htmx_urlpatterns

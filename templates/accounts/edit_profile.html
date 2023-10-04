@@ -1,27 +1,71 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+
 {% block content %}
+    <style>
+        .red-asterisk {
+            color: red;
+          }
+    </style>      
+
     <div class="container mt-4">
-        <form enctype="multipart/form-data"
-              id="user_form"
-              action="{% url 'edit_profile' %}"
-              method="post">
+        {% if changed %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" style="max-width: 500px; border: 1px solid red;">
+                <i class="fas fa-star"></i> <strong>Success!</strong> Your Profile has been changed!
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endif %}
+        <form enctype="multipart/form-data" id="user_form" action="{% url 'edit_profile' %}" method="post">
             {% csrf_token %}
             <div class="form-row">
                 <div class="form-group col-md-4">
-                    <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                    <label for="{{ form.first_name.id_for_label }}"><span class="red-asterisk">*</span> First Name</label>
                     {{ form.first_name|add_class:'form-control' }}
                 </div>
                 <div class="form-group col-md-4">
-                    <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                    <label for="{{ form.last_name.id_for_label }}"><span class="red-asterisk">*</span> Last Name</label>
                     {{ form.last_name|add_class:'form-control' }}
                 </div>
                 <input type="hidden" name="email" value="{{ form.instance.email }}" />
             </div>
             <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="{{ form.username.id_for_label }}"><span class="red-asterisk">*</span> Username</label>
+                    {% render_field form.username hx-post="/check-username/" hx-swap="outerhtml" hx-target=".username-msg" hx-trigger="keyup changed" class="form-control"  %} 
+
+                    <div class="username-msg"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="{{ form.institution.id_for_label }}"><span class="red-asterisk">*</span> Institution</label>
+                    {{ form.institution|add_class:'form-control' }}
+                </div>
+                <div class="form-group col-md-2.5">
+                    <label for="{{ form.last_name.id_for_label }}"><span class="red-asterisk">*</span> Country</label>
+                    {{ form.country|add_class:'form-control' }}
+                </div>
+                <div class="form-group col-md-2.5">
+                    <label for="{{ form.state.id_for_label }}">State</label>
+                    {{ form.state|add_class:'form-control' }}
+                </div>
+                <div class="form-group col-md-2.5">
+                    <label for="{{ form.city.id_for_label }}">City</label>
+                    {{ form.city|add_class:'form-control' }}
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="{{ form.researchAreas.id_for_label }}"><span class="red-asterisk">*</span> Research Areas</label>
+                    <span class="badge badge-info">REQUIRED 1. MAX 3.</span>
+                    {{ form.researchAreas|add_class:'form-control' }}
+                </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group col-md-6" id="item-research_areas">
-                    <label>Research Areas</label>
-                    <a href="#" class="add-research_areas"><i class="fas fa-plus"></i></a>
+                    <label><span class="red-asterisk">*</span> Additional Research Areas</label>&nbsp; &nbsp;<a href="#" class="add-research_areas btn btn-success btn-sm"><i class="fas fa-plus"></i> Add</a>&nbsp;&nbsp; &nbsp;<span class="badge badge-info">REQUIRED 1. MAX 3.</span>
                     {{ formset.management_form }}
                     {% for rform in formset %}
                         {{ rform.management_form }}
@@ -29,8 +73,7 @@
                             {% for field in rform.visible_fields %}
                                 {% if field.name != 'DELETE' %}
                                     <div class="form-group col-md-6">
-                                        {{ field }}
-                                        {% for error in field.errors %}<span style="color: red">{{ error }}</span>{% endfor %}
+                                        {{ field|add_class:'form-control ra' }} 
                                     </div>
                                 {% endif %}
                             {% endfor %}
@@ -38,96 +81,118 @@
                                 <input type="hidden"
                                        name="{{ formset.prefix }}-{{ forloop.counter0 }}-id"
                                        value="{{ rform.instance.pk }}" />
-                            {% endif %}
-                            {% comment %} for delete {% endcomment %}
-                            {% if rform.instance.pk %}
+                            
+                                <div class="form-group col-md-6">    
+                                    <a href="{% url 'delete_research_area' rform.instance.pk %}" onclick="return confirm('Are you sure you want to delete this Research Area?')" class="btn btn-danger btn-sm">Delete</a>       
+                                </div>    
+                            {% else %}    
                                 <div class="form-group col-md-6">
-                                    <button type="button"
-                                            class="btn btn-danger btn-sm"
-                                            data-toggle="modal"
-                                            data-target="#exampleModal{{ rform.instance.pk }}">Delete</button>
-                                    <!-- Modal -->
-                                    <div class="modal fade"
-                                         id="exampleModal{{ rform.instance.pk }}"
-                                         tabindex="-1"
-                                         role="dialog"
-                                         aria-labelledby="exampleModalLabel{{ rform.instance.pk }}"
-                                         aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLabel{{ rform.instance.pk }}">Are You Sure You Want To Delete This?</h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <a href="{% url 'delete_research_area' rform.instance.pk %}"
-                                                       type="button"
-                                                       class="btn btn-primary">Yes, Delete</a>
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    <button class="btn btn-sm btn-warning ra_reset" type="button" style="color: brown;">Reset</button>
+                                </div>    
                             {% endif %}
                         </div>
                     {% endfor %}
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <ul class='errorList'>
-                {% for field in form %}
-                    {% if field.errors %}
-                        {% for error in field.errors %}<li style="color: red;">{{ error }}</li>{% endfor %}
-                    {% endif %}
-                {% endfor %}
-                {% for error in non_field_errors %}<li style="color: red;">{{ error }}</li>{% endfor %}
-            </ul>
+            <button type="submit" class="btn btn-primary" id="submit-btn" hx-select-oob="#submit-btn">Submit</button>
+            
         </form>
     </div>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-            crossorigin="anonymous"></script>
+    
+
     <script>
-  $(document).ready(function () {
-    // when user clicks add more btn of variants
-    $(".add-research_areas").click(function (ev) {
-      ev.preventDefault();
-      var formPrefix = "research_areas";
-      var tmplMarkup = `
-            <tr>
-                {% for field in formset.empty_form.visible_fields %}
-                {% if field.name != 'DELETE' %}
-                    <td>
-                        {{ field }}
-                        {% for error in field.errors %}<span style="color: red">{{ error }}</span>{% endfor %}
-                    </td>
-                    {% endif %}
-                {% endfor %}
-            </tr>
-        `;
-      var tmplMarkupWithValues = tmplMarkup;
-      var formCountInput = $("#id_" + formPrefix + "-TOTAL_FORMS");
-      var formCount = parseInt(formCountInput.val());
+        $("#id_researchAreas").select2({
+            maximumSelectionLength: 3, 
+        });
 
-      // update form count
-      formCount += 1;
-      formCountInput.val(formCount);
 
-      // add 'required' attribute to dynamically added form fields
-      tmplMarkupWithValues = tmplMarkupWithValues.replace(
-        /__prefix__/g,
-        formCount - 1
-      );
-      tmplMarkupWithValues = tmplMarkupWithValues.replace(
-        /research_areas-__prefix__/g,
-        "research_areas-" + (formCount - 1)
-      );
+        $(document).ready(function () {
+            $(".add-research_areas").click(function (ev) {
+            ev.preventDefault();
+            var formPrefix = "research_areas";
+            var tmplMarkup = `
+                    <div class="form-row">
+                        {% for field in formset.empty_form.visible_fields %}
+                            {% if field.name != 'DELETE' %}
+                                <div class="form-row form-group align-items-center">
+                                    <div class="col-auto">
+                                        {% render_field field class="form-control ra" style="width:277px;" %}
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-sm btn-warning ra_reset" type="button" style="color: brown;">Reset</button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                `;
+            var tmplMarkupWithValues = tmplMarkup;
+            var formCountInput = $("#id_" + formPrefix + "-TOTAL_FORMS");
+            var formCount = parseInt(formCountInput.val());
 
-      $("#item-research_areas").append(tmplMarkupWithValues);
-    });
-  });
+            // update form count
+            formCount += 1;
+            formCountInput.val(formCount);
+
+            // add 'required' attribute to dynamically added form fields
+            tmplMarkupWithValues = tmplMarkupWithValues.replace(
+                /__prefix__/g,
+                formCount - 1
+            );
+            tmplMarkupWithValues = tmplMarkupWithValues.replace(
+                /research_areas-__prefix__/g,
+                "research_areas-" + (formCount - 1)
+            );
+
+            $("#item-research_areas").append(tmplMarkupWithValues);
+            });
+
+
+
+            $("#user_form").submit(function (event) {
+                var minForms = 1; 
+                var maxForms = 3; 
+
+                var filledForms = 0;
+                $(".ra").each(function () {
+                    var isEmpty = true;
+                        if ($(this).val() !== "") {
+                            isEmpty = false;
+                        }
+                    if (!isEmpty) {
+                        filledForms++;
+                    }
+                });
+                if (filledForms < minForms) {
+                    alert("You must fill a minimum of " + minForms + " Additional Research Area.");   // Display an error message
+                    event.preventDefault(); // Prevent form submission
+                }
+                else if (filledForms > maxForms) {
+                    alert("You can fill a maximum of only " + maxForms + " Research Areas.");
+                    event.preventDefault(); 
+                }
+            });
+
+        });
+
+
+        // Reset button click event
+        $(document).on('click', '.ra_reset', function() {
+            var formRow = $(this).closest('.form-row');
+            formRow.find('.ra').val(''); // Reset input field(s) with class 'ra'
+        });
+    
+
+        {% comment %} const usernameInput = document.getElementById('username-input');
+        const submitButton = document.getElementById('submit-btn');
+        
+        usernameInput.addEventListener('input', function() {
+            const usernameError = document.getElementById('username-error');
+        
+            // Disable the submit button if username-error div is present, otherwise enable it
+            submitButton.disabled = usernameError !== null;
+        }); {% endcomment %}
+        
     </script>
 {% endblock %}
+

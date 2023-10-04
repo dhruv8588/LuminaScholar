@@ -1,5 +1,5 @@
 from django import forms
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import resolve
 from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import get_object_or_404, redirect, render
@@ -7,16 +7,13 @@ from django.contrib import messages, auth
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied
-from django.contrib.sessions.models import Session
-from itertools import chain, groupby
 
-from conference.models import Editor
 from paper.models import Author, Paper, Paper_Reviewer
 
 from .utils import detectUser, send_verification_email
 
-from .models import ResearchArea, User
-from .forms import ResearchAreaFormSet, UserForm
+from .models import additionalResearchArea, User
+from .forms import additionalResearchAreaFormSet, UserForm
 
 
 def register_user(request):
@@ -25,7 +22,7 @@ def register_user(request):
         return redirect('myAccount')
     elif request.method=='POST':
         form = UserForm(request.POST)
-        formset = ResearchAreaFormSet(request.POST, prefix='research_areas')
+        formset = additionalResearchAreaFormSet(request.POST, prefix='research_areas')
 
         if form.is_valid() and formset.is_valid():
             user = form.save(commit=False)
@@ -57,7 +54,7 @@ def register_user(request):
             print(form.errors)
     else:
         form = UserForm()
-        formset = ResearchAreaFormSet(prefix='research_areas')
+        formset = additionalResearchAreaFormSet(prefix='research_areas')
     context = {
         'form': form,
         'formset': formset,
@@ -67,55 +64,61 @@ def register_user(request):
 
 
 def edit_profile(request):
+    changed = None
     if request.method=='POST':
         form = UserForm(request.POST, instance=request.user)
-        formset = ResearchAreaFormSet(request.POST, prefix='research_areas', instance=user)
+        formset = additionalResearchAreaFormSet(request.POST, prefix='research_areas', instance=request.user)
         if formset.is_valid():
             for rform in formset:
                 research_area = rform.save(commit=False)
                 if research_area.name != '':
-                    research_area.user = user
+                    research_area.user = request.user
                     research_area.save()
                 elif research_area.name == '' and rform.instance.id:
                     rform.instance.delete()
         else:
             print(formset.errors)
-
+ 
         if form.is_valid():
-            user = form.save(commit=False)
-            user.save()
-
-            messages.success(request, 'Your profile has been edited sucessfully!')
-            return redirect('myAccount')
+            # user = form.save(commit=False) # This won't save research_areas
+            # user.save()
+            form.save()
         else:
             print(form.errors)
+
+        changed = True    
     else:
         form = UserForm(instance=request.user)
-        formset = ResearchAreaFormSet(prefix='research_areas', instance=request.user)
+        formset = additionalResearchAreaFormSet(prefix='research_areas', instance=request.user)
     
     context = {
         'form': form,
         'formset': formset,
-        'non_field_errors': form.non_field_errors(),
+        'changed': changed
     } 
 
     return render(request, 'accounts/edit_profile.html', context)
 
 
+def check_username(request):
+    username = request.POST.get('username')
+
+    username_exists = False
+    if User.objects.filter(username=username).exists():
+        username_exists = True
+
+    context = {
+        'username_exists': username_exists
+    }
+
+    return render(request, 'partials/check_username.html', context)
+
 def delete_research_area(request, pk):
-    try:
-        research_area = ResearchArea.objects.get(id=pk)
-    except ResearchArea.DoesNotExist:
-        messages.success(
-            request, 'Research Area does not exist'
-            )
-        return redirect('edit_profile', research_area.user.id)
+    research_area = get_object_or_404(additionalResearchArea, id=pk)
 
     research_area.delete()
-    messages.success(
-            request, 'Research Area deleted successfully'
-            )
-    return redirect('edit_profile', research_area.user.id)
+    
+    return redirect('edit_profile')
 
 
 def activate(request, uidb64, token):
@@ -156,8 +159,7 @@ def login(request):
 
 def logout(request):
     auth.logout(request)
-    messages.info(request, 'You are logged out.')
-    return redirect('myAccount')
+    return redirect('login')
 
 @login_required(login_url='login')
 def home(request):
@@ -189,6 +191,7 @@ def forgot_password(request):
 
 
 def reset_password(request):
+    changed = None
     if request.method=='POST':
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
@@ -197,10 +200,14 @@ def reset_password(request):
             user = request.user
             user.set_password(password)
             user.save()
-            messages.success(request, 'Password changed sucessfully!')
-            return redirect('login')
+            auth.login(request, user)
+            changed = True
         else:
-            messages.error(request, 'Password do not match!')
-            return redirect('reset_password')
-    return render(request, 'accounts/reset_password.html')
+            changed = False
+
+    context = {
+        'changed': changed
+    }        
+    
+    return render(request, 'accounts/reset_password.html', context)
 

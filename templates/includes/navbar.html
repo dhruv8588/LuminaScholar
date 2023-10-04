@@ -90,12 +90,12 @@
               <li>
                 <a href="{% url 'home' %}">Home</a>
               </li>  
-              {% if user|has_role:"Associate Editor" %}
+              {% if user|has_role:"AE" %}
                 <li>
                   <a href="{% url 'ae_dashboard' %}">Associate Editor</a>
                 </li> 
               {% endif %}
-              {% if user|has_role:"Editor-in-Chief" %}
+              {% if user|has_role:"EC" %}
                 <li>
                   <a href="{% url 'eic_dashboard' %}">Editor-in-Chief</a>
                 </li> 

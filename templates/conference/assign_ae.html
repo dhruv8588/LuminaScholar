@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %} 
 
 {% block content %}
 {% for paper in page_obj %}
@@ -30,11 +31,21 @@
                 <td>{{ paper.type }}</td>
               </tr>
               <tr>
-                <th>Submission</th>
-                <td><a href="{% url 'merge_pdfs' paper.id %}" target="_blank"><i class="fas fa-file-alt"></i> View Submission</a></td>
+                <th>Date Submitted</th>
+                <td>{{ paper.date_submitted }}</td>
               </tr>
             </tbody>    
         </table>
+       
+        <a href="{% url 'merge_pdfs' paper.id %}" target="_blank"><i class="fas fa-file-alt"></i> Submission</a>
+        <a href="#" data-toggle="modal" data-target="#OriginalFiles"><i class="fa fa-file-alt"></i> Original Files</a>
+        {% if paper.cover_letter or paper.cover_letter_file %}
+            <a href="#" data-toggle="modal" data-target="#CoverLetter"><i class="fas fa-file-pen"></i> Cover Letter</a>
+        {% else %}    
+            <a href="#" data-toggle="modal" data-target="#CoverLetter" style="pointer-events: none; opacity: .4;"><i class="fas fa-file-pen"></i> Cover Letter</a>
+        {% endif %}
+        <a href="#" data-toggle="modal" data-target="#Abstract"><i class="fa fa-pen"></i> Abstract</a>
+    
     </div>
     <div class="card-body text-secondary" id="ae">
         {% if paper.associate_editor %}
@@ -61,12 +72,90 @@
         {% endif %}
     </div>
   </div>
-{% endfor %}
 
-<a href="{% url 'awaiting_ae_assignment' %}" class="btn btn-dark"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
 
+<!-- Modal -->
+<div class="modal fade" id="OriginalFiles" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Original Files</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <ol>
+                {% for file in paper.files.all %}
+                    <li><a href="{{ file.file.url }}">{{ file|basename }}</a><br/></li>
+                {% endfor %}
+            </ol>
+        </div>
+        <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal End -->
+
+  <!-- Modal -->
+<div class="modal fade" id="Abstract" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Abstract</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            {{ paper.abstract }}
+        </div>
+        <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal End -->
+
+  <!-- Modal -->
+<div class="modal fade" id="CoverLetter" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Cover Letter</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            {% if paper.cover_letter %}
+                {{ paper.cover_letter }}<br/><br/>
+            {% endif %}
+            {% if paper.cover_letter_file %}
+                <b>Attached Files:</b><br/>
+                <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a>
+            {% endif %}
+        </div>
+        <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal End -->
+
+  {% endfor %}
+
+<br/>  
+<div style="display: inline-block; float: left;">  
+  <a href="{% url 'awaiting_ae_assignment' %}" class="btn btn-dark" style="margin-left: 400px;"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
+</div>
+<div style="display: inline-block; float: right;">    
 {% if page_obj.has_other_pages %}
-    <ul class="pagination">
+    <ul class="pagination" style="margin-right: 465px;">
         {% if page_obj.has_previous %}
             <li class="page-item">
                 <a href="{% url 'select_ae' 1 %}" class="btn btn-outline-secondary">First</a>
@@ -106,6 +195,6 @@
         {% endif %}
     </ul>
 {% endif %}
-     
+  </div>     
 
 {% endblock %}

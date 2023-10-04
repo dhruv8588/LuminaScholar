@@ -103,12 +103,14 @@ select {
 
           <form hx-post="{% url 'search_user1' paper.id %}" hx-target='#search_user_result1'>
             {% csrf_token %}
-            <input type="text" 
-                id="email-input"
-                name="email" 
-                class="form-control-sm mr-2" 
-                placeholder="Enter an author's email" />
-            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-search"></i>&nbsp;Search</button>
+            <div class="form-row">
+              <input type="text" 
+                  id="email-input"
+                  name="email" 
+                  class="form-control" 
+                  placeholder="Enter an author's email" style="width: 350px;" />&nbsp;&nbsp;
+              <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-search"></i>&nbsp;Search</button>
+            </div>
           </form>
 
           <section id="search_user_result1" class="col-12">

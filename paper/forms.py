@@ -1,7 +1,7 @@
 from django import forms
 from accounts.models import Role
 from conference.models import Attribute
-from paper.models import Author, Paper, Review, File, additional_Attribute
+from paper.models import Author, Paper, Review, File, additionalAttribute
 
 
 # class PaperForm(forms.ModelForm):
@@ -76,9 +76,9 @@ class PaperForm2(forms.ModelForm):
 
 
 class PaperForm3(forms.ModelForm):
-    def __init__(self, *args, conference=None, **kwargs):
-        super(PaperForm3, self).__init__(*args, **kwargs)
-        # self.fields['attributes'].queryset = Attribute.objects.filter(conference=conference)
+    # def __init__(self, *args, conference=None, **kwargs):
+    #     super(PaperForm3, self).__init__(*args, **kwargs)
+    #     self.fields['attributes'].queryset = Attribute.objects.filter(conference=conference)
 
     class Meta:
         model = Paper
@@ -100,12 +100,12 @@ class AssignEditorForm(forms.ModelForm):
 
 class additionalAttributeForm(forms.ModelForm):
     class Meta:
-        models: additional_Attribute
+        models: additionalAttribute
         fields = ['name']    
 
 additionalAttributeFormSet = forms.inlineformset_factory(
-    Paper, additional_Attribute, form=additionalAttributeForm,
-    extra=1, max_num=3
+    Paper, additionalAttribute, form=additionalAttributeForm,
+    extra=1
 )        
 
 class AuthorForm(forms.ModelForm):

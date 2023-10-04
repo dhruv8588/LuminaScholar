@@ -72,6 +72,8 @@ class Paper(models.Model):
 
     associate_editor = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='assigned_papers', blank=True, null=True)
 
+    required_reviews = models.PositiveSmallIntegerField(default=2, blank=True, null=True)
+
     def written_by(self):
         return ", ".join([str(i) for i in self.authors.all()])
     
@@ -119,26 +121,28 @@ class File(models.Model):
 
 class Paper_Reviewer(models.Model):
     status_choices = (
-        ('pending', 'pending'),
-        ('accepted', 'accepted'),
-        ('declined', 'declined'),
+        ('Agreed', 'Agreed'),
+        ('Declined', 'Declined'),
     )
     paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
     reviewer = models.ForeignKey(Reviewer, on_delete=models.CASCADE)
-    status = models.CharField(max_length=50, choices=status_choices, default='pending')
+    order = models.PositiveSmallIntegerField(blank=True, null=True)
+    status = models.CharField(max_length=50, choices=status_choices, blank=True)
+    is_invited = models.BooleanField(default=False)
     class Meta:
+        ordering = ['order']
         unique_together = ('paper', 'reviewer')
         verbose_name = 'Paper_Reviewer_pair'
         verbose_name_plural = 'Paper_Reviewer_pairs'
     
     
-class additional_Attribute(models.Model):
+class additionalAttribute(models.Model):
     name = models.CharField(max_length=100, blank=True)
-    paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='additional_attributes', blank=True, null=True)
+    paper = models.ForeignKey(Paper, on_delete=models.CASCADE, related_name='additionalAttributes', blank=True, null=True)
 
     class Meta:
-        verbose_name = 'additional_Attribute'
-        verbose_name_plural = 'additional_Attributes'
+        verbose_name = 'additionalAttribute'
+        verbose_name_plural = 'additionalAttributes'
 
     def __str__(self):
         return self.name

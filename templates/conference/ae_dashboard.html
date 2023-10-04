@@ -2,7 +2,7 @@
 
 {% block content %}
 <h3>Dashboard</h3>
-<p>You can access manuscripts in each peer review status by clicking on the status queue title. The number next to each status queue title indicates the number of manuscripts in that status. You may search for specific manuscripts with the Quick Manuscript Search form.</p> 
+<p>You can access manuscripts in each peer review status by clicking on the status queue title. The number next to each status queue title indicates the number of manuscripts in that status.</p> 
 <div class="card border-secondary mb-3" style="max-width: 18rem;">
     <div class="card-header"><b>Associate Editor Lists</b>
         <p>
@@ -11,9 +11,9 @@
     <div class="card-body text-secondary">
       <h5 class="card-title">AE Tasks</h5>
       <p class="card-text">
-        <a href="{% url 'awaiting_reviewer_selection' %}">Awaiting Reviewer Selection</a><br/>
-        <a href="{% url 'awaiting_reviewer_invitation' %}">Awaiting Reviewer Invitation</a><br/>
-        <a href="{% url 'awaiting_reviewer_assignment' %}">Awaiting Reviewer Assignment</a><br/>
+        <a href="{% url 'awaiting_rev_selection' %}">Awaiting Reviewer Selection</a><br/>
+        <a href="{% url 'awaiting_rev_invitation' %}">Awaiting Reviewer Invitation</a><br/>
+        <a href="{% url 'awaiting_rev_assignment' %}">Awaiting Reviewer Assignment</a><br/>
     </p>
     </div>
   </div>

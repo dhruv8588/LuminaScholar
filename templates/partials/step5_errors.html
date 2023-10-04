@@ -1,0 +1,44 @@
+<style>
+    .error-box {
+        border: 2px solid red;
+        background-color: lightcoral;
+        color: darkred;
+        padding: 10px;
+        width: 800px;
+    }
+</style>    
+
+{% if not paper.number_of_figures or not paper.number_of_tables or not paper.word_count or not paper.MSWord_file or not paper.certification_form or not paper.publish_elsewhere or not paper.approval or not paper.figures_tables_published_elsewhere or paper.figures_tables_published_elsewhere == 'Yes' and not paper.figures_tables_published_elsewhere_desc %}
+    <div class="error-box"> 
+        <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+        <ul>
+            {% if not paper.number_of_figures %}
+                <li>Number of Figures is a required field.</li>
+            {% endif %}    
+            {% if not paper.number_of_tables %}
+                <li>Number of Tables is a required field.</li>
+            {% endif %}
+            {% if not paper.word_count %}
+                <li>Number of Words is a required field.</li>
+            {% endif %}  
+            {% if not paper.MSWord_file %}
+                <li>MS Word File is a required field.</li>
+            {% endif %}  
+            {% if not paper.certification_form %}
+                <li>Certification Form is a required field.</li>
+            {% endif %}  
+            {% if not paper.publish_elsewhere  %}
+                <li>Publish Elsewhere is a required field.</li>
+            {% endif %}
+            {% if not paper.approval %}
+                <li>Does this research require the approval of an institutional ethical committee/institutional review board (IRB)? is a required field.</li>
+            {% endif %}  
+            {% if not paper.figures_tables_published_elsewhere %}
+                <li>Does your manuscript include figures or tables that have already been published elsewhere? is a required field.</li>
+            {% endif %}  
+            {% if paper.figures_tables_published_elsewhere == 'Yes' %}
+                <li>You indicated that your manuscript includes figures or tables that have been published elsewhere. Please provide details.</li>
+            {% endif %}        
+        </ul> 
+    </div>
+{% endif %}

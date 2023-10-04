@@ -1,57 +1,58 @@
 {% csrf_token %}
 <li class="list-group-item d-flex justify-content-between align-items-center">    
-    <span><b>ORDER AUTHOR ACTION</b></span>
+    <span><b>ORDER NAME STATUS REMOVE</b></span>
 </li>
-<form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_authors' %}" hx-target="#authors" >
+<form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
     <div class="htmx-indicator">Updating...</div>
-    {% for paper_author in paper_authors %}
+    {% for paper_reviewer in paper_reviewers %}
         <div>
-            <input type="hidden" name="author_order" value="{{ paper_author.pk }}"/>
+            <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
             <li class="list-group-item d-flex justify-content-between align-items-center">    
-                #{{ paper_author.order }} {{ paper_author.author.first_name }} {{ paper_author.author.last_name }} 
+                #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} 
                 <select>
                     <option selected disabled>Select...</option>
-                    {% if not paper_author.author.user %}
-                        <option data-toggle="modal" data-target="#editAuthorModal{{ paper_author.author.id }}">Edit</option> 
+                    {% if not paper_reviewer.reviewer.user %}
+                        <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
                     {% endif %}    
-                    <option hx-delete="{% url 'delete_author' paper_author.paper.id paper_author.author.pk %}" hx-target="#authors" hx-confirm="Are you sure you wish to delete this Author?">Delete</option>
+                    <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
                 </select>  
             </li>
         </div>    
     {% endfor %}
 </form>    
-    
-{% for paper_author in paper_authors %}
-    {% if not paper_author.author.user %}
+
+
+{% for paper_reviewer in paper_reviewers %}
+    {% if not paper_reviewer.reviewer.user %}
         <!-- Modal -->
-        <div class="modal fade" id="editAuthorModal{{ paper_author.author.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal fade" id="editReviewerModal{{ paper_reviewer.reviewer.id }}" tabindex="-1" role="dialog" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title"><i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author <span style="color: grey;">{{ paper_author.author.email }}</span></h5>
+                        <h5 class="modal-title"><i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Reviewer <span style="color: grey;">{{ paper_reviewer.reviewer.email }}</span></h5>
                     
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form id="edit-author-form{{ paper_author.author.id }}" hx-post="{% url 'edit_author' paper_author.paper.id paper_author.author.id %}" hx-target='#authors'>
+                    <form id="edit-reviewer-form{{ paper_reviewer.reviewer.id }}" hx-post="{% url 'edit_author' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers'>
                         {% csrf_token %}
                         <div class="modal-body">
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>First name</label>
-                                    <input type="text" class="form-control" name="first_name" value="{{ paper_author.author.first_name }}">
+                                    <input type="text" class="form-control" name="first_name" value="{{ paper_reviewer.reviewer.first_name }}">
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Last name</label>
-                                    <input type="text" class="form-control" name="last_name" value="{{ paper_author.author.last_name }}">
+                                    <input type="text" class="form-control" name="last_name" value="{{ paper_reviewer.reviewer.last_name }}">
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer justify-content-between">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author
+                                <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Reviewer
                             </button>
                         </div>
                     </form>      
@@ -60,14 +61,15 @@
         </div>
         <!-- Modal end -->
         <script>
-            document.getElementById('edit-author-form{{ paper_author.author.id }}').addEventListener('submit', function(event) {
+            document.getElementById('edit-reviewer-form{{ paper_reviewer.reviewer.id }}').addEventListener('submit', function(event) {
                 event.preventDefault();
 
-                $('#editAuthorModal{{ paper_author.author.id }}').modal('hide');
+                $('#editReviewerModal{{ paper_reviewer.reviewer.id }}').modal('hide');
             });
         </script>
     {% endif %}        
 {% endfor %}
+
 
 <script>
     function initializeSortable() {

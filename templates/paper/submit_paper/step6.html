@@ -108,23 +108,7 @@
           Step 1: Type, Title, & Abstract
         </h5>
         <a href="{% url 'submit_paper_step1' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% if not paper.title or not paper.abstract or not paper.type %}
-          <div class="error-box"> 
-              <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
-              <ul>
-              {% if not paper.title %}
-                  <li>Title is a required field.</li>
-              {% endif %}    
-              {% if not paper.abstract %}
-                  <li>Abstract is a required field.</li>
-              {% endif %}
-              {% if not paper.type %}
-                  <li>Type is a required field.</li>
-              {% endif %}   
-              </ul> 
-          </div>
-          <br/>
-        {% endif %}
+        {% include 'partials/step1_errors.html' %}<br/>
         <table class="table table-bordered table-striped" style="width: 800px;">
             <thead class="thead-dark">
               <tr>
@@ -173,15 +157,7 @@
           Step 2: Authors 
         </h5>
         <a href="{% url 'submit_paper_step2' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% if not paper.authors.all %}
-          <div class="error-box"> 
-              <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
-              <ul>
-                <li>No Authors Entered.</li>  
-              </ul> 
-          </div>
-          <br/>
-        {% endif %}
+        {% include 'partials/step2_errors.html' %}<br/>
         <table class="table table-bordered table-striped" style="width: 800px;">
             <thead class="thead-dark">
               <tr>
@@ -212,15 +188,7 @@
           Step 3: Attributes
         </h5>
         <a href="{% url 'submit_paper_step3' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% if not paper.authors.all %}
-          <div class="error-box"> 
-              <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
-              <ul>
-                <li>No Attributes Entered.</li>  
-              </ul> 
-          </div>
-          <br/>
-        {% endif %}
+        {% include 'partials/step3_errors.html' %}<br/>
         <table class="table table-bordered table-striped" style="width: 800px;">
             <thead class="thead-dark">
               <tr>
@@ -250,15 +218,7 @@
           Step 4: File Upload
         </h5>
         <a href="{% url 'submit_paper_step4' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% if not paper.files.all %}
-          <div class="error-box"> 
-              <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
-              <ul>
-                <li>Minimum number of files not uploaded.</li>  
-              </ul> 
-          </div>
-          <br/>
-        {% endif %}
+        {% include 'partials/step4_errors.html' %}<br/>
         <table class="table table-bordered table-striped" style="width: 800px;">
             <thead class="thead-dark">
               <tr>
@@ -289,22 +249,13 @@
           Step 5: Details & Comments
         </h5>
         <a href="{% url 'submit_paper_step5' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% if not paper.files.all %}
-          <div class="error-box"> 
-              <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
-              <ul>
-                <li>Minimum number of files not uploaded.</li>  
-              </ul> 
-          </div>
-          <br/>
-        {% endif %}
-          <br/>
+        {% include 'partials/step5_errors.html' %}<br/>
           <b>Cover Letter</b>
               <div class="row">
                   <div class="col-md-6">
                       <div class="form-group">
                           <label>Write Cover Letter</label>
-                          {{ form.cover_letter }}
+                          {{ form.cover_letter|add_class:'form-control' }}
                       </div>
                   </div>
               </div>
@@ -313,8 +264,9 @@
                 <div class="col-md-6">
                     <div class="file-upload form-group">
                         <label>Upload Cover Letter</label><br/>
-                      
-                        {{ form.cover_letter_file }}
+                        {% if paper.cover_letter_file %}
+                          <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a>
+                        {% endif %}
                         
                     </div>
                 </div>
@@ -327,17 +279,17 @@
                 <tbody>
                     <tr>
                         <td><span class="red-asterisk">*</span> Number of figures (total)</td>
-                        <td>{{ form.number_of_figures }}</td>
+                        <td>{% render_field form.number_of_figures class="form-control" style="width: 250px" %}</td>
                     </tr>
                     
                     <tr>
                         <td><span class="red-asterisk">*</span> Number of tables</td>
-                        <td>{{ form.number_of_tables }}</td>
+                        <td>{% render_field form.number_of_tables class="form-control" style="width: 250px" %}</td>
                     </tr>
 
                     <tr>
                         <td><span class="red-asterisk">*</span> Word count</td>
-                        <td>{{ form.word_count }}</td>
+                        <td>{% render_field form.word_count class="form-control" style="width: 250px" %}</td>
                     </tr>
                 </tbody>    
               </table>
@@ -403,7 +355,7 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtained permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
-                        {{ form.figures_tables_published_elsewhere_desc }}
+                        {{ form.figures_tables_published_elsewhere_desc|add_class:'form-control' }}
                     </div>
                 </div>
               </div>

@@ -1,11 +1,11 @@
 from django import forms
 
-from .models import ResearchArea, User
+from .models import additionalResearchArea, User
 
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email'] 
+        fields = ['first_name', 'last_name', 'email', 'username', 'institution', 'country', 'state', 'city', 'researchAreas'] 
 
     # def clean(self):
     #     cleaned_data =  super(UserForm, self).clean()    
@@ -18,9 +18,9 @@ class UserForm(forms.ModelForm):
     #             "Password does not match!"
     #         )    
         
-class ResearchAreaForm(forms.ModelForm):
+class additionalResearchAreaForm(forms.ModelForm):
     class Meta:
-        model = ResearchArea       
+        model = additionalResearchArea       
         fields = ['name']
 
 # ResearchAreaModelFormset = forms.formset_factory(
@@ -30,8 +30,13 @@ class ResearchAreaForm(forms.ModelForm):
 #     extra = 0
 # )
 
-ResearchAreaFormSet = forms.inlineformset_factory(
-    User, ResearchArea, form=ResearchAreaForm,
+additionalResearchAreaFormSet = forms.inlineformset_factory(
+    User, additionalResearchArea, form=additionalResearchAreaForm,
     extra=1,
+    # max_num=2, absolute_max=2, 
+    # validate_max = True,
+    # min_num=1,
+    # validate_min=True
+    
 )        
 

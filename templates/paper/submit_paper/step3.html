@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 {% block content %}
 
 <style>
@@ -82,24 +83,6 @@
             </ul>
           </div>
       </div>
-  
-      {% comment %} <div class="col-md-8">
-          <form id="submit-paper-form_step1" action="{% url 'submit_paper_step3' paper.id %}" method="post">
-              {% csrf_token %}
-              <div class="row">
-                  <div class="col-md-6">
-                      <div class="form-group">
-                          <label><span class="red-asterisk">*</span>Attributes</label>
-                          {{ form.attributes }}
-                      </div>
-                  </div>
-              </div>
-  
-              <button type="submit" name="save" class="btn btn-dark btn-sm mb-3">Save</button>
-              <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
-          </form>
-      </div> {% endcomment %}
-
 
       <div class="col-md-8">
         <div style="margin-right: 100px;">
@@ -110,63 +93,41 @@
 
         <form id="submit-paper-form_step1" action="{% url 'submit_paper_step3' paper.id %}" method="post">
             {% csrf_token %}
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span>Attributes</label>
-                        {{ form.attributes }}
-                    </div>
+            
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label><span class="red-asterisk">*</span> Attributes</label>
+                    <span class="badge badge-info">REQUIRED 1. MAX 3.</span>
+                    {{ form.attributes|add_class:'form-control' }}
                 </div>
             </div>
 
             <div class="form-row">
               <div class="form-group col-md-6" id="item-attributes">
-                <label>Additional Attributes</label>&nbsp; &nbsp;<a href="#" class="add-attributes"><i class="fas fa-plus"></i></a>
-                <br />
+                <label><span class="red-asterisk">*</span> Additional Attributes</label>&nbsp; &nbsp;<a href="#" class="add-attributes btn btn-success btn-sm"><i class="fas fa-plus"></i> Add</a>&nbsp;&nbsp; &nbsp;<span class="badge badge-info">REQUIRED 1. MAX 3.</span>
                 {{ formset.management_form }}
                   {% for aform in formset %}
                       {{ aform.management_form }}
-                      <tr>
-                        {% for field in aform.visible_fields %}
-                          {% if field.name != 'DELETE' %}
-                            <td>
-                              {{ field }}
-                            </td>
+                      <div class="form-row">
+                          {% for field in aform.visible_fields %}
+                            {% if field.name != 'DELETE' %}
+                              <div class="form-group col-md-6">
+                                {{ field|add_class:'form-control a' }}
+                              </div>
+                            {% endif %}
+                          {% endfor %}
+                          {% if aform.instance.pk %}
+                            <input type="hidden" name="{{ formset.prefix }}-{{ forloop.counter0 }}-id" value="{{ aform.instance.pk }}" />
+
+                            <div class="form-group col-md-6">    
+                              <a href="{% url 'delete_attribute' aform.instance.pk %}" onclick="return confirm('Are you sure you want to delete this Attribute?')" class="btn btn-danger btn-sm">Delete</a>       
+                            </div> 
+                          {% else %}    
+                            <div class="form-group col-md-6">
+                                <button class="btn btn-sm btn-warning a_reset" type="button" style="color: brown;">Reset</button>
+                            </div>      
                           {% endif %}
-                        {% endfor %}
-
-                        {% if aform.instance.pk %}
-                          <input type="hidden" name="{{ formset.prefix }}-{{ forloop.counter0 }}-id" value="{{ aform.instance.pk }}" />
-                        {% endif %}
-
-                        {% comment %} for delete {% endcomment %}
-                        {% if aform.instance.pk %}
-                            <td>
-                              <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#exampleModal{{aform.instance.pk}}">Delete</button>
-                                  <!-- Modal -->
-                                  <div class="modal fade" id="exampleModal{{aform.instance.pk}}" tabindex="-1" role="dialog"
-                                    aria-labelledby="exampleModalLabel{{aform.instance.pk}}" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                      <div class="modal-content">
-                                        <div class="modal-header">
-                                          <h5 class="modal-title" id="exampleModalLabel{{aform.instance.pk}}">Are you sure you want to Delete this attribute?</h5>
-                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                          </button>
-                                        </div>
-                                        <div class="modal-footer">
-                                          <a href="{% url 'delete_attribute' aform.instance.pk %}" type="button" class="btn btn-primary">Yes, Delete</a>
-                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <!-- Modal End -->
-                            </td>
-                        {% endif %}
-                        <br/>
-                      </tr>
-                <br />
+                      </div> 
                 {% endfor %}
               </div>
             </div>
@@ -183,12 +144,7 @@
       </div>
     </div>
   </div>
-  
-  <script>
-    $("#id_attributes").select2({
-      maximumSelectionLength: 3, 
-  });
-  </script>  
+   
 
   <script>
     var formNextLinks = document.getElementsByClassName('form-next-link');
@@ -205,21 +161,32 @@
   </script>
 
   <script>
+    $("#id_attributes").select2({
+      maximumSelectionLength: 3, 
+    });
+
+
     $(document).ready(function () {
       // when user clicks add more btn of variants
       $(".add-attributes").click(function (ev) {
         ev.preventDefault();
         var formPrefix = "attributes";
         var tmplMarkup = `
-              <tr>
-                  {% for field in formset.empty_form.visible_fields %}
-                  {% if field.name != 'DELETE' %}
-                      <td>
-                          {{ field }}<br/><br/>
-                      </td>
-                      {% endif %}
-                  {% endfor %}
-              </tr>
+              <div class="form-row">
+                {% for field in formset.empty_form.visible_fields %}
+                    {% if field.name != 'DELETE' %}
+                        <div class="form-row form-group align-items-center">
+                            <div class="col-auto">
+                                {% comment %} {% render_field field class="form-control a" %} {% endcomment %}
+                                {{ field|add_class:'form-control a' }}
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-sm btn-warning a_reset" type="button" style="color: brown;">Reset</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
           `;
         var tmplMarkupWithValues = tmplMarkup;
         var formCountInput = $("#id_" + formPrefix + "-TOTAL_FORMS");
@@ -242,6 +209,37 @@
         $("#item-attributes").append(tmplMarkupWithValues);
       });
     });
+
+
+    $("#submit-paper-form_step1").submit(function (event) {
+      var minForms = 1; 
+      var maxForms = 3; 
+
+      var filledForms = 0;
+      $(".a").each(function () {
+          var isEmpty = true;
+              if ($(this).val() !== "") {
+                  isEmpty = false;
+              }
+          if (!isEmpty) {
+              filledForms++;
+          }
+      });
+      if (filledForms < minForms) {
+          alert("You must fill a minimum of " + minForms + " Additional Research Area.");   // Display an error message
+          event.preventDefault(); // Prevent form submission
+      }
+      else if (filledForms > maxForms) {
+          alert("You can fill a maximum of only " + maxForms + " Research Areas.");
+          event.preventDefault(); 
+      }
+  });
+
+          // Reset button click event
+          $(document).on('click', '.a_reset', function() {
+            var formRow = $(this).closest('.form-row');
+            formRow.find('.a').val(''); // Reset input field(s) with class 'ra'
+        });
   </script>
 
 {% endblock %}

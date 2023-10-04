@@ -23,3 +23,9 @@ urlpatterns = [
 
     path('registerUser/deleteResearchArea/<int:pk>/', views.delete_research_area, name="delete_research_area"),
 ]  
+
+hmtx_urlpatterns = [
+    path("check-username/", views.check_username, name='check-username'),
+]
+
+urlpatterns += hmtx_urlpatterns

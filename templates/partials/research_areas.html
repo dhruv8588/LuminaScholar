@@ -1,0 +1,35 @@
+{% load widget_tweaks %}
+
+<div class="form-group col-md-6" id="item-research_areas">
+    <label><span class="red-asterisk">*</span> Additional Research Areas</label>&nbsp; &nbsp;<a href="#" class="add-research_areas btn btn-success btn-sm"><i class="fas fa-plus"></i> Add</a>&nbsp;&nbsp; &nbsp;<span class="badge badge-info">REQUIRED 1. MAX 3.</span>
+    {{ formset.management_form }}
+    {% for rform in formset %}
+        {{ rform.management_form }}
+        <div class="form-row">
+            {% for field in rform.visible_fields %}
+                {% if field.name != 'DELETE' %}
+                    <div class="form-group col-md-6">
+                        {{ field|add_class:'form-control ra' }} 
+                    </div>
+                {% endif %}
+            {% endfor %}
+            {% if rform.instance.pk %}
+                <input type="hidden"
+                       name="{{ formset.prefix }}-{{ forloop.counter0 }}-id"
+                       value="{{ rform.instance.pk }}" />
+            
+                <div class="form-group col-md-6">
+                    <button type="button"
+                            class="btn btn-danger btn-sm"
+                            hx-delete="{% url 'delete_research_area' rform.instance.pk %}"
+                            hx-confirm="Are you sure you wish to delete this Research Area?"
+                            hx-target="#item-research_areas">Delete</button>
+                </div>
+            {% else %}    
+                <div class="form-group col-md-6">
+                    <button class="btn btn-sm btn-warning ra_reset" type="button" style="color: brown;">Reset</button>
+                </div>    
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>

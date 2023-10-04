@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 
 from LuminaScholar import settings
+from conference.models import Attribute
 
 # Create your models here.
 class UserManager(BaseUserManager):
@@ -43,14 +44,7 @@ class UserManager(BaseUserManager):
 
 
 class Role(models.Model):
-    ROLE_CHOICE = (
-        ('Author', 'Author'),
-        ('Reviewer', 'Reviewer'),
-        ('Associate Editor', 'Associate Editor'),
-        ('Editor-in-Chief', 'Editor-in-Chief')
-    )
-
-    name = models.CharField(choices=ROLE_CHOICE, max_length=50, blank=True)
+    name = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
         return self.name
@@ -62,12 +56,15 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100)
 
-    # institution = models.CharField(max_length=200)
-    # country = models.CharField(max_length=100)
-    # state = models.CharField(max_length=100)
-    # city = models.CharField(max_length=100)
+    institution = models.CharField(max_length=200)
+    country = models.CharField(max_length=100)
+    state = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100, blank=True)
 
     roles = models.ManyToManyField(Role, related_name='users', blank=True)
+
+    researchAreas = models.ManyToManyField(Attribute)
+
 
     # required fields
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -98,11 +95,13 @@ class User(AbstractBaseUser):
 
 
 
-
-
-class ResearchArea(models.Model):
+class additionalResearchArea(models.Model):
     name = models.CharField(max_length=50, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='research_areas', blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='additionalResearchAreas', blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'additionalResearchArea'
+        verbose_name_plural = 'additionalResearchAreas'
 
     def __str__(self):
         return self.name

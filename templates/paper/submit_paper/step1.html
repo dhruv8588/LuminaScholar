@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 {% block content %}
 
 <style>
@@ -86,7 +87,7 @@
             
           </section>
           <section id="step1_errors">
-            
+            {% include 'partials/step1_errors.html' %}
           </section>
           
           <h2>Step 1: Type, Title, & Abstract</h2>
@@ -107,7 +108,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label><span class="red-asterisk">*</span> <b>Title</b></label>
-                            {{ form.title }}
+                            {{ form.title|add_class:'form-control' }}
                         </div>
                     </div>
                 </div>
@@ -116,7 +117,7 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <label><span class="red-asterisk">*</span> <b>Abstract</b></label><br/>
-                            {{ form.abstract }}
+                            {{ form.abstract|add_class:'form-control' }}
                         </div>
                     </div>
                 </div>
@@ -126,8 +127,8 @@
                 <div style="display: inline-block; float: right;">
                   {% comment %} <button type="submit" name="save" class="btn btn-dark btn-sm mb-3" hx-get="{% url 'success_message' %}" hx-target='#success_message' >Save</button> {% endcomment %}
 
-                  <button type="submit" name="save" class="btn btn-dark btn-sm mb-3" data-toggle="alert">Save</button>
-                  <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3" data-toggle="modal" data-target="#IncompleteStepModal">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
+                  <button type="submit" name="save" class="btn btn-dark btn-sm mb-3">Save</button>
+                  <button type="submit" name="save_and_continue" class="btn btn-dark btn-sm mb-3">Save & Continue&nbsp;<i class="fas fa-angle-right"></i></button>
                 </div>  
             </form>
         </div>
@@ -142,30 +143,6 @@
     </button>
 </div>
   <!-- Toast End -->
-  
-
-  <!-- Modal -->
-  <div class="modal fade" id="IncompleteStepModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-plus"></i>&nbsp;&nbsp;Step Incomplete. Continue?</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          Please Close this window and correct the following errors or click Save & Go to Next Step to return to this step at a later time:
-        </div>  
-        <div class="modal-footer justify-content-between">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Close</button>
-          <button type="button" class="btn btn-primary">
-            <i class="fas fa-angle-right"></i>&nbsp;&nbsp;Save & Go to Next Step
-          </button>
-        </div>  
-      </div>
-    </div>
-  </div>
 
 
   <script>

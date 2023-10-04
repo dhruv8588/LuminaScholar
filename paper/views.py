@@ -22,7 +22,7 @@ from reportlab.lib.pagesizes import letter
 from accounts.models import Role, User
 
 from .forms import AuthorForm, PaperForm1, PaperForm2, PaperForm3, ReviewForm, additionalAttributeFormSet
-from .models import Author, File, Paper, Paper_Author, Paper_Reviewer, Review, additional_Attribute
+from .models import Author, File, Paper, Paper_Author, Paper_Reviewer, Review, additionalAttribute
 from .utils import get_max_order_author, get_max_order_file, reorder_authors, reorder_files
 
 # Create your views here.
@@ -45,6 +45,15 @@ def upload_cover_letter(request, paper_id):
     context = {
         'paper': paper 
     }
+    return render(request, 'paper/submit_paper/step5.html', context)    
+
+
+def show_cover_letter(request, paper_id):
+    paper = get_object_or_404(Paper, id=paper_id)
+
+    context = {
+        'paper': paper 
+    }
     return render(request, 'partials/cover_letter.html', context)    
 
 
@@ -52,6 +61,7 @@ def upload_cover_letter(request, paper_id):
 def delete_cover_letter(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
     paper.cover_letter_file = None
+    paper.save()
 
     return render(request, 'partials/cover_letter.html')
 
@@ -351,7 +361,7 @@ def submit_paper_step3(request, paper_id):
 
 
 def delete_attribute(request, attribute_id):
-    attribute = additional_Attribute.objects.get(id=attribute_id)
+    attribute = additionalAttribute.objects.get(id=attribute_id)
 
     attribute.delete()
    
@@ -445,13 +455,11 @@ def submit_paper_step5(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
 
     if request.method == 'POST':
-        print(0)
         form = PaperForm2(request.POST, request.FILES, instance=paper)
           
         if form.is_valid():
-            print(paper.title)
             form.save() 
-            print(paper.number_of_figures)
+            
         else:
             form.errors()    
 

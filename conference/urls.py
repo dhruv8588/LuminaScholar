@@ -18,15 +18,18 @@ urlpatterns = [
     path('select_ae/paper/<int:page_number>/', views.select_ae, name='select_ae'),
 
     path('ae_dashboard/', views.ae_dashboard, name='ae_dashboard'),
-    path('awaiting_reviewer_selection', views.awaiting_reviewer_selection, name='awaiting_reviewer_selection'),
-    path('awaiting_reviewer_invitation', views.awaiting_reviewer_invitation, name='awaiting_reviewer_invitation'),
-    path('awaiting_reviewer_assignment', views.awaiting_reviewer_assignment, name='awaiting_reviewer_assignment'),
+    path('awaiting_rev_selection', views.awaiting_rev_selection, name='awaiting_rev_selection'),
+    path('awaiting_rev_invitation', views.awaiting_rev_invitation, name='awaiting_rev_invitation'),
+    path('awaiting_rev_assignment', views.awaiting_rev_assignment, name='awaiting_rev_assignment'),
+
+    path('assign_rev/paper/<int:paper_id>/page=<int:page_number>/', views.assign_rev, name="assign_rev")
 
 
 ]
 
 htmx_urlpatterns = [
-    path('assign_ae/paper/<int:paper_id>/', views.assign_ae, name="assign_ae")
+    path('assign_ae/paper/<int:paper_id>/', views.assign_ae, name="assign_ae"),
+    path('<int:paper_id>/change_req_reviews/', views.change_req_reviews, name="change_req_reviews"),
 ]
 
 urlpatterns += htmx_urlpatterns

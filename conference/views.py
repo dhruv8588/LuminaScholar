@@ -5,8 +5,6 @@ from django.urls import resolve
 from django.core.paginator import Paginator
 
 from accounts.models import Role, User
-from conference.models import Editor
-from paper.forms import AssignEditorForm
 from paper.models import Paper, Paper_Reviewer, Review, Reviewer
 from conference.utils import send_review_invitation_email
 # from .utils import send_approval_request_email
@@ -432,7 +430,7 @@ def ae_dashboard(request):
     return render(request, 'conference/ae_dashboard.html')
 
 
-def awaiting_reviewer_selection(request):
+def awaiting_rev_selection(request):
     papers = Paper.objects.all()
 
     paginator = Paginator(papers, 3)
@@ -446,8 +444,90 @@ def awaiting_reviewer_selection(request):
     return render(request, 'conference/awaiting_rev_selection.html', context)
 
 
-def awaiting_reviewer_invitation():
+def awaiting_rev_invitation():
     pass
 
-def awaiting_reviewer_assignment():
+def awaiting_rev_assignment():
     pass
+
+
+
+def change_req_reviews(request, paper_id):
+    paper = get_object_or_404(Paper, id=paper_id)
+
+    if request.method == 'POST':
+        required_reviews = request.POST.get('required_reviews')
+        paper.required_reviews = required_reviews
+        paper.save()
+
+    context = {
+        'paper': paper
+    }    
+
+    return render(request, 'partials/progress.html', context)
+
+
+
+
+
+def assign_rev(request, paper_id, page_number):
+    paper = get_object_or_404(Paper, id=paper_id)
+    # users = User.objects.filter(researchAreas__in=paper.attributes.all()).distinct()
+
+    # users = User.objects.all()
+
+    # additionalAttributes = paper.additionalAttributes.all()
+    # id_list = []
+
+    # for user in users:
+    #     research_areas_names = []
+    #     for additionalResearchArea in user.additionalResearchAreas.all():
+    #         research_areas_names.append(additionalResearchArea.name)
+    #     for additionalAttribute in additionalAttributes:                  
+    #         if any(additionalAttribute.name.replace(" ", "").lower() == research_area_name.replace(" ", "").lower() for research_area_name in research_areas_names):    
+    #                 id_list.append(user.id)
+    #                 break
+
+    # users = User.objects.filter(id__in=id_list)        
+
+    additional_attributes = paper.additionalAttributes.values_list('name', flat=True)
+    matching_users = User.objects.filter(
+        additionalResearchAreas__name__in=additional_attributes
+    ).distinct()
+
+
+    
+
+
+
+    papers = Paper.objects.all()
+    paginator = Paginator(papers, 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'users': matching_users,
+        "page_obj": page_obj,
+        'papers':papers,
+    }
+    return render(request, 'conference/assign_rev.html', context)
+
+
+def select_rev(request, paper_id, user_id):
+    user = User.objects.get(id=user_id)
+    paper = Paper.objects.get(id=paper_id)
+
+    try:
+        reviewer = Reviewer.objects.get(user=user)
+    except:
+        reviewer = Reviewer.objects.create(user=user, first_name=user.first_name, last_name=user.last_name, email=user.email)
+        reviewer.save()
+                    
+    paper.reviewers.add(reviewer)  
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+
+    context = {
+        'paper_reviewers': paper_reviewers
+    }
+    return render(request, 'partials/reviewers.html', context)
+

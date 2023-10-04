@@ -4,50 +4,50 @@
 {% block content %}
 
 <style>
-  .list-group-item {
-    background-color: transparent; /* To remove default background */
-    padding: 0; /* To remove default padding */
-}
+    .list-group-item {
+        background-color: transparent; /* To remove default background */
+        padding: 0; /* To remove default padding */
+    }
 
-.list-link {
-    display: block;
-    padding: 10px 15px; /* Add padding to create a clickable area */
-    text-decoration: none; /* Remove underline */
-    color: #333; /* Default color */
-    transition: color 0.3s; /* Smooth color transition on hover */
-}
+    .list-link {
+        display: block;
+        padding: 10px 15px; /* Add padding to create a clickable area */
+        text-decoration: none; /* Remove underline */
+        color: #333; /* Default color */
+        transition: color 0.3s; /* Smooth color transition on hover */
+    }
 
-.list-link:hover {
-    cursor: pointer;
-    text-decoration: none;
-    background-color: #d3d3d3;
-    color: #808080; /* Change color on hover */
-}
+    .list-link:hover {
+        cursor: pointer;
+        text-decoration: none;
+        background-color: #d3d3d3;
+        color: #808080; /* Change color on hover */
+    }
 
-.selected {
-    background-color: #d3d3d3;
-    padding: 10px 15px; /* Add padding to create a clickable area */
-}
+    .selected {
+        background-color: #d3d3d3;
+        padding: 10px 15px; /* Add padding to create a clickable area */
+    }
 
-.red-asterisk {
-    color: red;
-}
+    .red-asterisk {
+        color: red;
+    }
 
-.file-upload__label {
-    color: #aaa;
-  }
+    .file-upload__label {
+        color: #aaa;
+    }
 
-.green-check {
-    color: green;
-}  
+    .green-check {
+        color: green;
+    }  
 </style>  
     <div class="row">
-      <div class="col-md-4">
+      <div class="col-md-4 text-secondary">
         <br/><br/>
-        <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><b><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</b></a><br/><br/>
+        <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><h5><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</h5></a><br/><br/>
           <div class="card" style="width: 18rem; margin-left: 50px;">
               <div class="card-header">
-                  <b>Submission</b>
+                  <h5 class="text-secondary">Submission</h5>
               </div>
               <ul class="list-group list-group-flush">
                   <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step1">Step 1: Type, Title, & Abstract
@@ -56,7 +56,7 @@
                     {% endif %}    
                   </a></li>
                   <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step2">Step 2: Authors
-                    {% if paper.authors %}
+                    {% if paper.authors.all %}
                         <i class="fas fa-check green-check"></i>
                     {% endif %}
                   </a></li>
@@ -66,7 +66,7 @@
                     {% endif %}
                   </a></li>
                   <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step4">Step 4: File Upload
-                    {% if paper.files %}
+                    {% if paper.files.all %}
                         <i class="fas fa-check green-check"></i>
                     {% endif %}
                   </a></li>
@@ -80,7 +80,7 @@
                     {% endif %}
                   </li>
                   <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step6">Step 6: Review & Submit</a></li>
-            </ul>
+              </ul>
           </div>
       </div>
   
@@ -97,7 +97,7 @@
                   <div class="col-md-6">
                       <div class="form-group">
                           <label>Write Cover Letter</label>
-                          {{ form.cover_letter }}
+                          {{ form.cover_letter|add_class:'form-control' }}
                       </div>
                   </div>
               </div>
@@ -106,40 +106,24 @@
                 <div class="col-md-6">
                     <div class="file-upload form-group">
                         <label>Upload Cover Letter</label><br/>
+
+                        <section id="cover_letter" class="col-12">
+                            {% include 'partials/cover_letter.html' %}
+                        </section> 
+
+                        <br/>
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
                         {% comment %} {% render_field form.cover_letter_file class="file-upload__input" style="display:none" %} {% endcomment %}
                         <input class="file-upload__input" type="file" name="cover_letter_file" id="cover-letter-file-input" style="display:none">
                         <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File...</button>
                         <span class="file-upload__label"></span>
-                        <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
-
+                        <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button><br/><br/>
                         <button type="button" class="btn btn-success btn-sm" id="upload-file-button" onclick="uploadFile()"><i class="fas fa-upload"></i>&nbsp;Upload File</button>
                     </div>
                 </div>
               </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                    {% comment %} <form hx-encoding="multipart/form-data" hx-post="{% url 'upload_cover_letter' paper.id %}" hx-target="#cover_letter" id="myform">
-                        {% csrf_token %}
-                        <div class="file-upload form-group">
-                            <label>Upload Cover Letter</label><br/>
-                            <input class="file-upload__input" type="file" name="cover_letter_file" style="display:none">
-                            <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File...</button>
-                            <span class="file-upload__label"></span>
-                            <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
-                        </div>
-
-                        <button type="button" class="btn btn-success btn-sm" id="upload-file-button"><i class="fas fa-upload"></i>&nbsp;Upload File</button>
-                    </form>    
-{% endcomment %}
-                               
-                </div>
-              </div>
-              <section id="cover_letter" class="col-12">
-                {% comment %} {% include 'partials/cover_letter.html' %} {% endcomment %}
-            </section>  
+               
               <hr>
 
               <b>Manuscript Information</b>
@@ -148,17 +132,17 @@
                 <tbody>
                     <tr>
                         <td><span class="red-asterisk">*</span> Number of figures (total)</td>
-                        <td>{{ form.number_of_figures }}</td>
+                        <td>{% render_field form.number_of_figures class="form-control" style="width: 250px" %}</td>
                     </tr>
                     
                     <tr>
                         <td><span class="red-asterisk">*</span> Number of tables</td>
-                        <td>{{ form.number_of_tables }}</td>
+                        <td>{% render_field form.number_of_tables class="form-control" style="width: 250px" %}</td>
                     </tr>
 
                     <tr>
                         <td><span class="red-asterisk">*</span> Word count</td>
-                        <td>{{ form.word_count }}</td>
+                        <td>{% render_field form.word_count class="form-control" style="width: 250px" %}</td>
                     </tr>
                 </tbody>    
               </table>
@@ -171,15 +155,6 @@
                     <div class="form-group">
                         <label><span class="red-asterisk">*</span> Have you uploaded a Microsoft Word file for the main document?</label><br/>
                         {{ form.MSWord_file }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
-                        {{ form.certification_form }}
                     </div>
                 </div>
               </div>
@@ -214,7 +189,7 @@
               <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
+                        <label>Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
                         {{ form.appropriate_statement }}
                     </div>
                 </div>
@@ -223,7 +198,7 @@
               <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label>Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
+                        <label><span class="red-asterisk">*</span> Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
                         {{ form.figures_tables_published_elsewhere }}
                     </div>
                 </div>
@@ -233,7 +208,7 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtained permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
-                        {{ form.figures_tables_published_elsewhere_desc }}
+                        {{ form.figures_tables_published_elsewhere_desc|add_class:'form-control' }}
                     </div>
                 </div>
               </div>
@@ -353,6 +328,12 @@
         }
     );
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+  <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
+
+
 
   <script>
     function uploadFile() {
@@ -378,10 +359,16 @@
                     'X-CSRFToken': csrfToken, // Include the CSRF token in the headers
                 },
             })
+
+           
             .then(response => {
                 if (response.ok) {
                     // Handle a successful response (e.g., show a success message)
                     console.log('File uploaded successfully.');
+
+                     // After successful upload, update the content of the #cover_letter element
+                     fetchUpdatedContent();
+                  
                 } else {
                     // Handle an error response (e.g., show an error message)
                     console.error('File upload failed.');
@@ -396,6 +383,22 @@
             console.error('No file selected.');
         }
     }
+
+
+// Function to fetch updated content for #cover_letter
+function fetchUpdatedContent() {
+    // Send an AJAX request to the 'show_cover_letter' URL
+    fetch("{% url 'show_cover_letter' paper.id %}")
+    .then(response => response.text())
+    .then(data => {
+        // Update the content of the #cover_letter element
+        document.getElementById('cover_letter').innerHTML = data;
+    })
+    .catch(error => {
+        // Handle any errors in fetching the content
+        console.error('An error occurred while fetching the updated content:', error);
+    });
+}
     </script>
 
     <script>
