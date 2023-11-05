@@ -1,0 +1,14 @@
+{% comment %} {% for rev_file in review.rev_files.all %}
+    {{ rev_file.file }} {{ rev_file.view }}<br/>
+{% endfor %} {% endcomment %}
+{% load custom_filters %}        
+
+{% for form in formset %}
+    <a href="{{ form.file.value.url }}">{{ form.file.value|basename }}</a>  {{ form.view }}
+    {% comment %} <button type="button" class="btn btn-warning btn-sm" style="color: red;">Remove</button> {% endcomment %}
+    <span class="badge badge-danger badge-pill" 
+                        style="cursor: pointer;"
+                        hx-delete="#"
+                        hx-target="#files">X</span>
+    <br/>
+{% endfor %}

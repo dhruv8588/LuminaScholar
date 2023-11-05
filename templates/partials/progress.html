@@ -1,30 +1,145 @@
-<form hx-post="{% url 'change_req_reviews' paper.id %}" hx-target='#progress'>
-    {% csrf_token %}
-    <table class="table table-bordered">
-        <tbody>
-          <tr>
-            <th class="text-secondary"># reviews required to make decision</th>
-            <td><input type="number" value="{{ paper.required_reviews }}" style="width: 50px;" name="required_reviews"></input></td>
-          </tr>
-          <tr>
-            <th class="text-secondary"># active selections</th>
-            <td>{{ paper.reviewers.count }}</td>
-          </tr>
-          <tr>
-            <th class="text-secondary"># invited</th>
-            <td></td>
-          </tr>
-          <tr>
-            <th class="text-secondary"># agreed</th>
-            <td></td>
-          </tr>
-          <tr>
-            <th class="text-secondary"># declined</th>
-            <td></td>
-          </tr>
-        </tbody>    
-    </table> 
-  <div style="display: inline-block; float: right;">  
-    <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-check"></i> Save</button> 
-  </div>  
-</form> 
+{% if changed %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert" style="border: 1px solid red;">
+      <strong>Saved </strong> # Required reviews!
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+{% endif %}
+
+ 
+<div class="card border-secondary mb-3" style="max-width: 18rem;">
+  <h5 class="card-header text-secondary">Progress</h5>
+  <div class="card-body">
+      <form hx-post="{% url 'change_req_reviews' paper.id %}" hx-target='#progress'>
+          {% csrf_token %}
+          <table class="table table-bordered">
+              <tbody>
+                  <tr>
+                      <th class="text-secondary"># reviews required to make decision</th>
+                      <td><input type="number" value="{{ paper.required_reviews }}" style="width: 50px;" name="required_reviews"></input></td>
+                  </tr>
+                  <tr>
+                      <th class="text-secondary"># active selections</th>
+                      <td>{{ paper.reviewers.count }}</td>
+                  </tr>
+                  <tr>
+                      <th class="text-secondary"># invited</th>
+                      <td>{{ status_count.0 }}</td>
+                  </tr>
+                  <tr>
+                      <th class="text-secondary"># agreed</th>
+                      <td>{{ status_count.1 }}</td>
+                  </tr>
+                  <tr>
+                      <th class="text-secondary"># declined</th>
+                      <td>{{ status_count.2 }}</td>
+                  </tr>
+              </tbody>    
+          </table> 
+          <div style="display: inline-block; float: right;">  
+              <button type="submit" class="btn btn-secondary btn-sm" id="change-req-rev-btn"><i class="fa-solid fa-check"></i> Save</button> 
+          </div>  
+      </form> 
+  </div>
+</div>
+
+<div class="card border-secondary mb-3" style="max-width: 18rem;">
+  <h5 class="card-header text-secondary">Create Reviewer Account</h5>
+  <div class="card-body">
+    <a href="#" type="button" class="btn btn-secondary btn-sm" id="add-rev" data-toggle="modal" data-target="#AddNewReviewer"><i class="fas fa-plus"></i>&nbsp; Add New Reviewer</a>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="AddNewReviewer" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus"></i>&nbsp;&nbsp;Add Reviewer</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+        <form id="add-reviewer-form" class="modal-form">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label>First name</label>
+                <input type="text" class="form-control" id="first-name" name="first_name">
+                <div id="first-name-error" class="error-message" style="color:red;"></div>
+              </div>
+              <div class="form-group col-md-6">
+                <label>Last name</label>
+                <input type="text" class="form-control" id="last-name" name="last_name">
+                <div id="last-name-error" class="error-message" style="color:red;"></div>
+              </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Email</label>
+                  <input type="text" class="form-control" id="email" name="email" value="" hx-post="{% url 'search_user_rev' paper.id %}" hx-trigger="blur" hx-target='#search_user_rev_result'>
+                  <div id="email-error" class="error-message" style="color:red;"></div>
+                </div>
+                <div id="message" style="color:red;"></div>
+            </div>
+          </div>  
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
+
+            <a href="#" id="add-reviewer-button-hidden" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_new_reviewer' paper.id %}" hx-target="#add-remove_reviewers" style="display: none;"></a>
+            <a href="#" id="add-reviewer-button" type="button" class="btn btn-primary"><i class="fas fa-plus"></i>&nbsp;Add Reviewer</a>
+          </div>
+      </form>      
+    </div>
+  </div>
+</div>
+
+<section id="search_user_rev_result" class="col-12">
+
+</section>
+
+
+<script>
+
+  hiddenButton = document.getElementById('add-reviewer-button-hidden');
+  button = document.getElementById('add-reviewer-button');
+  button.addEventListener("click", function() {
+    email = document.getElementById('email');
+    firstName = document.getElementById('first-name');
+    lastName = document.getElementById('last-name');
+
+    emailError = document.getElementById('email-error');
+    firstNameError = document.getElementById('first-name-error');
+    lastNameError = document.getElementById('last-name-error');
+
+    if (email.value == '') 
+      emailError.innerHTML = 'Email is required';
+    else
+      emailError.innerHTML = '';
+
+    if (firstName.value == '')
+      firstNameError.innerHTML = 'First Name is required';
+    else
+      firstNameError.innerHTML = '';
+  
+    if (lastName.value == '')
+      lastNameError.innerHTML = 'Last Name is required';
+    else
+      lastNameError.innerHTML = '';
+  
+    if (email.value && firstName.value && lastName.value) 
+      hiddenButton.click();
+  
+});
+
+$('#add-rev').click(function() {
+  $('#message').text('');
+  $('.error-message').text('');
+  $('.form-control').val('');
+}); 
+
+
+</script>

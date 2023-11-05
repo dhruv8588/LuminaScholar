@@ -1,0 +1,121 @@
+{% comment %} <form action="{% url 'dropzone-image' %}" class="dropzone" id="my-awesome-dropzone">{% csrf_token %}
+    <div class="dz-message">Click Here or Drop Files Here To Upload. (Maximum 5 at a time)</div>
+    
+  </form>
+  <br/>
+  <button type="submit" class="btn btn-success btn-sm" id="upload-files"><i class="fas fa-upload"></i>&nbsp;Upload Files</button>
+
+  <script>
+    let myDropzone = new Dropzone("#my-awesome-dropzone", {
+      addRemoveLinks: true,
+
+      //autoProcessQueue: false, //stops from uploading files until user submits form
+      paramName: "file", // The name that will be used to transfer the file
+      clickable: true, // This allows the dropzone to select images onclick
+      maxFiles: 5, //Maximum number of files/images in dropzone
+      parallelUploads: 5,
+
+    
+
+    });
+  </script>
+
+
+  var inputFile = document.getElementById("file-input");
+  inputFile.value = file.name; {% endcomment %}
+
+
+  <div class="dropzone" id="dropzone">
+    <img class="dropzone-icon" src="https://wickedev.com/wp-content/uploads/2021/02/cloud-uploading.png" />
+      
+    Drop files or Click here to select files to upload.
+    <form hx-post="{% url 'upload_rev_file' review.id %}" hx-target="#rev_files" hx-encoding="multipart/form-data">
+      {% csrf_token %}
+      <input type="file" name="rev_file" class="dropzone-input" />
+      <button type='submit' id='file-input-btn'></button>
+    </form>
+  </div>
+
+  <div id="rev_files">
+  </div>
+
+
+</div>     
+</div>
+
+<script>
+var dropzone = document.getElementById('dropzone');
+var dropzone_input = dropzone.querySelector('.dropzone-input');
+var multiple = dropzone_input.getAttribute('multiple') ? true : false;
+
+['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function(event) {
+dropzone.addEventListener(event, function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+});
+});
+
+dropzone.addEventListener('dragover', function(e) {
+this.classList.add('dropzone-dragging');
+}, false);
+
+dropzone.addEventListener('dragleave', function(e) {
+this.classList.remove('dropzone-dragging');
+}, false);
+
+dropzone.addEventListener('drop', function(e) {
+this.classList.remove('dropzone-dragging');
+var files = e.dataTransfer.files;
+var dataTransfer = new DataTransfer();
+
+Array.prototype.forEach.call(files, file => {
+    dataTransfer.items.add(file);
+    if (!multiple) {
+        return false;
+    }
+});
+
+var filesToBeAdded = dataTransfer.files;
+dropzone_input.files = filesToBeAdded;
+}, false);
+
+dropzone.addEventListener('click', function(e) {
+dropzone_input.click();
+}, false);
+
+
+
+
+
+
+dropzone_input.addEventListener("change", function(event) {
+var selectedFiles = event.target.files;
+
+if (selectedFiles.length > 0) {
+console.log("Selected file(s):");
+for (var i = 0; i < selectedFiles.length; i++) {
+  console.log("File name: " + selectedFiles[i].name);
+  console.log("File size: " + selectedFiles[i].size + " bytes");
+  console.log("File type: " + selectedFiles[i].type);
+}
+
+console.log(dropzone_input.files)
+
+var inputFileButton = document.getElementById("file-input-btn");
+inputFileButton.click();
+
+
+} else {
+console.log("No file selected.");
+}
+});
+
+
+
+</script>
+
+
+
+
+
+{% endblock %}  

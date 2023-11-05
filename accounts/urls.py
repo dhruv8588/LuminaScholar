@@ -18,7 +18,7 @@ urlpatterns = [
 
     path('reset_password/', views.reset_password, name='reset_password'),
 
-    path('conference/', include('conference.urls')),
+    path('', include('conference.urls')),
     path('paper/', include('paper.urls')),
 
     path('registerUser/deleteResearchArea/<int:pk>/', views.delete_research_area, name="delete_research_area"),

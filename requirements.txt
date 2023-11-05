@@ -12,4 +12,4 @@ xhtml2pdf==0.2.11
 docx2pdf==0.1.8 
 pywin32==306
 
-
+python-multipart==0.0.6

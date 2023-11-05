@@ -13,10 +13,10 @@
         <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
         <ul>
             {% if not paper.attributes.all  %}
-                <li>Minimum entries for attributes not entered.</li>
+                <li>Minimum entries for attributes not chosen.</li>
             {% endif %}    
             {% if not paper.additionalAttributes.all %}
-                <li>Minimum additional attributes not chosen.</li>
+                <li>Minimum additional attributes not entered.</li>
             {% endif %}   
         </ul> 
     </div>

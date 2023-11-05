@@ -1,0 +1,229 @@
+<section id="reviewers_progress" style="margin-left: 210px;">  
+    <section id="reviewers" style="display: inline-block; float: left;">
+        {% include 'partials/reviewers.html' %}
+    </section>
+    <section id="progress" style="display: inline-block; float: right; margin-right: 210px;">
+        {% include 'partials/progress.html' %}
+    </section>
+</section>
+
+
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+
+
+
+<div class="container">
+  <h4>Potential Reviewers</h4>
+  <div class="form-row" style="float: right;">
+    <input class="form-control" type="search" id="search" placeholder="Global search..." aria-label="Search" style="width:400px;">
+    <button class="btn btn-secondary" id="reset" onclick="clearSearch();"><i class="fas fa-sync-alt"></i></button>
+  </div>
+  
+  <br/><br/>
+
+  <table class="table table-bordered" id="add-reviewer" style="text-align: center;">
+      <thead class="table-success">
+          <tr>
+              <th style="width: 5%;">#</th>
+              <th style="width: 17%;">Name</th>
+              <th style="width: 20%;">Email</th>
+              <th style="width: 10%;">Roles</th>
+              <th style="width: 20%;">Institution</th>
+              <th style="width: 20%;">Research Areas</th>
+              <th class="action-color" style="width: 8%;"></th>
+          </tr>
+      </thead>
+      {% for user in users %}
+          <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ user.first_name }} {{ user.last_name }}</td>
+              <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
+              <td>{% for role in user.roles.all %}{{ role.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+              <td>
+                {{ user.institution }}{% if user.city %}, {{ user.city }}{% endif %}{% if user.state  %}, {{ user.state }}{% endif %}, {{ user.country }}
+              </td>
+              <td>
+                {% for researchArea in user.researchAreas.all %}{{ researchArea.name }}{% if not forloop.last %}, {% endif %}{% endfor %},
+                {% for additionalResearchArea in user.additionalResearchAreas.all %}{{ additionalResearchArea.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              </td>
+              <td><a href="#" class="btn btn-success btn-sm" hx-post="{% url 'select_rev' user.id paper.id %}" hx-target="#add-remove_reviewers"><i class="fas fa-plus"></i> Add</a></td>
+          </tr>
+      {% endfor %}    
+  </table>            
+</div>
+
+
+<!-- Datatables script -->
+<script>
+
+    function clearSearch() {
+      document.getElementById("search").value = "";
+  
+      var table = $('#add-reviewer').DataTable(); 
+      table.search('').columns().search('').draw();
+    }
+  
+  
+    $(document).ready(function() {
+        $('#add-reviewer thead tr')
+            .clone(true)
+            .addClass('filters')
+            .appendTo('#add-reviewer thead');
+  
+        var table = $('#add-reviewer').DataTable({
+            // Datatables config
+            paging: true, // Pagination
+            pageLength: 10, // Data entries per page
+            lengthChange: true, // Show entries per page
+            autoWidth: false, // Set auto width on columns
+            searching: true, // Input global search(filter)
+            bInfo: true, // entries info 
+            bSort: true, // Sort columns alphabetically and numerically in asc or desc order
+  
+            orderCellsTop: true, // Put the filter to 1st thead
+  
+            // Disable sort columns
+           "columnDefs": [{
+                "targets": 6, // 1 column
+                // "targets": [4, 5], // More than 1 column
+                "orderable": false
+            }], 
+  
+            initComplete: function() {
+                var api = this.api();
+  
+                // Set the columns you wish filtering
+                api
+                    .columns([0, 1, 2, 3, 4, 5])
+                    .eq(0)
+                    .each(function(colIdx) {
+                        var cell = $('.filters th').eq(
+                            $(api.column(colIdx).header()).index()
+                        );
+                        var title = $(cell).text();
+                        $(cell).html('<input type="text" placeholder="' + title + '"/>');
+  
+                        $(
+                            'input',
+                            $('.filters th').eq($(api.column(colIdx).header()).index())
+                        )
+                        .off('keyup change')
+                        .on('keyup change', function(e) {
+                            e.stopPropagation();
+  
+                            $(this).attr('title', $(this).val());
+                            var regexr = '({search})';
+  
+                            var cursorPosition = this.selectionStart;
+  
+                            api
+                                .column(colIdx)
+                                .search(
+                                    this.value != ''
+                                        ? regexr.replace('{search}', '(((' + this.value + ')))')
+                                        : '',
+                                    this.value != '',
+                                    this.value == ''    
+                                )
+                            .draw();
+  
+                        $(this)
+                            .focus()[0]
+                            .setSelectionRange(cursorPosition, cursorPosition);
+  
+                        });
+                    });
+            },
+  
+             // Buttons 
+            dom: 'lBfrtip',
+            buttons: [
+  
+                {
+                    // COPY 
+                    extend: 'copy',
+                    text: '<i class="fas fa-clone"></i>',
+                    className: 'btn btn-secondary',
+                    titleAttr: 'Copy',
+  
+                    // Choose the columns you wish to copy
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+                },
+  
+  
+                {
+                    // EXCEL
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i>',
+                    className: 'btn btn-secondary',
+                    titleAttr: 'Excel',
+  
+                    // Choose the columns you wish to export to excel
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+                },
+  
+                {
+                    // PRINT
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i>',
+                    className: 'btn btn-secondary',
+                    titleAttr: 'Print',
+  
+                    // Choose the columns you wish to print
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+                    // Font size (when export to print)
+                    customized: function( win ){
+                        $(win.document.body).css('font-size', '10pt')
+                        $(win.document.body).find('table')
+                            .addClass('compact')
+                            .css('font-size', 'inherit');
+                    }
+                },
+  
+                {
+                    // PDF
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i>',
+                    className: 'btn btn-secondary',
+                    titleAttr: 'PDF',
+  
+                    // Choose the columns you wish to export to pdf
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5]
+                    },
+  
+                    // Center the table
+                    tableHeader: {
+                        alignment: 'center'
+  
+                    },
+                    // Font size and optimization
+                    customize: function (doc) {
+                        doc.styles.tableHeader.alignment = 'center'; // Header position
+                        doc.styles.tableBodyOdd.alignment = 'center'; // Body position 1 (grey color)
+                        doc.styles.tableBodyEven.alignment = 'center'; // Body position 2 (white color)
+                        doc.styles.tableHeader.fontSize = 9; // Header font-size
+                        doc.defaultStyle.fontSize = 8; // Body font-size
+                        // To get 100% width of the table
+                        doc.content[1].table.widths = Array(doc.content[1].table.body[1].length + 1).join('*').split('');
+                    }
+                },
+                
+            ]
+  
+        });
+  
+        // Enable Searchbox Outside
+        var newSearch = $("#add-reviewer").DataTable();
+        $("#search").keyup(function() {
+            newSearch.search($(this).val()).draw();
+        }); 
+    });
+  </script>    

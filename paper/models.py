@@ -94,7 +94,7 @@ class Paper_Author(models.Model):
 
     class Meta:
         ordering = ['order']
-        unique_together = ('paper_id', 'author_id')
+        unique_together = ('paper', 'author')
         verbose_name = 'Paper_Author_pair'
         verbose_name_plural = 'Paper_Author_pairs'
 
@@ -103,6 +103,7 @@ class File(models.Model):
     paper = models.ForeignKey(Paper, related_name="files", on_delete=models.CASCADE)
     file = models.FileField(upload_to='files', blank=True, null=True)
     order = models.PositiveSmallIntegerField(blank=True, null=True)
+    designation = models.CharField(max_length=70, blank=True)
 
     # attribute = models.CharField(max_length=100, blank=True)
     
@@ -121,14 +122,17 @@ class File(models.Model):
 
 class Paper_Reviewer(models.Model):
     status_choices = (
+        ('Invited', 'Invited'),
         ('Agreed', 'Agreed'),
         ('Declined', 'Declined'),
+        ('Submitted', 'Submitted')
     )
     paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
     reviewer = models.ForeignKey(Reviewer, on_delete=models.CASCADE)
     order = models.PositiveSmallIntegerField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=status_choices, blank=True)
-    is_invited = models.BooleanField(default=False)
+    invite_sent_date = models.DateField(blank=True, null=True)
+    
     class Meta:
         ordering = ['order']
         unique_together = ('paper', 'reviewer')
@@ -151,8 +155,8 @@ class additionalAttribute(models.Model):
 class Review(models.Model):
     paper = models.ForeignKey(Paper, related_name="reviews", on_delete=models.CASCADE)
     reviewer = models.ForeignKey(Reviewer, related_name="reviews", on_delete=models.CASCADE)
-    # body = models.TextField()
-    date_reviewed = models.DateTimeField(auto_now_add=True)
+
+    date_submitted = models.DateTimeField(blank=True, null=True)
 
     paper_type = models.CharField(max_length=100, blank=True)
     has_best_paper_award_potential = models.CharField(max_length=10, blank=True)
@@ -167,6 +171,14 @@ class Review(models.Model):
     comments_to_editor = models.TextField(blank=True)
     comments_to_author = models.TextField(blank=True)
 
-    is_submitted = models.BooleanField(default=False)
     
+
+class Rev_File(models.Model):
+    view_choices = (
+        ('Editor Only', 'Editor Only'),
+        ('Author & Editor', 'Author & Editor'),
+    )
+    review = models.ForeignKey(Review, related_name="rev_files", on_delete=models.CASCADE, blank=True, null=True)
+    file = models.FileField(upload_to='files', blank=True, null=True)    
+    view = models.CharField(max_length=50, blank=True, choices=view_choices)
 

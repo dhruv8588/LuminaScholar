@@ -21,14 +21,14 @@
             <tbody>
               <tr>
                 <td>{{ user.first_name }} {{ user.last_name }}</td>
-                <td></td>
+                <td>{{ user.institution }}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="modal-footer justify-content-between">
           <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
-          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_user_as_author' paper_id user.id %}" hx-target="#authors"><i class="fas fa-plus"></i>&nbsp;Add Author</a>
+          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_user_as_author' paper_id user.id %}" hx-target="#add_authors" onclick="clearSearch();"><i class="fas fa-plus"></i>&nbsp;Add Author</a>
         </div>
       </div>
     </div>
@@ -40,8 +40,8 @@
     }); 
   </script>
 
-
 {% elif author %}
+
   <!-- Modal -->
   <div class="modal fade" id="addAuthorAsAuthor" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -67,11 +67,11 @@
               </tr>
             </tbody>
           </table>
-          <p style="color: red;"><b>Note:</b> You may edit the details of this author by first adding him/her as author to this paper.</p>
+          <p style="color: red;"><b>Note:</b> You may edit the details of this author by first adding him/her as author to this manuscript.</p>
         </div>
         <div class="modal-footer justify-content-between">
           <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
-          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_author_as_author' paper_id author.id %}" hx-target="#authors"><i class="fas fa-plus"></i>&nbsp;Add Author</a>
+          <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_author_as_author' paper_id author.id %}" hx-target="#add_authors" onclick="clearSearch();"><i class="fas fa-plus"></i>&nbsp;Add Author</a>
         </div>
       </div>
     </div>
@@ -85,8 +85,9 @@
 
 {% else %}
 
-  <div style='color:red;'>
+  <div id="errorMessage" style='color:red;'>
     <i class="fas fa-exclamation-triangle"></i>&nbsp;No co-author found. Please search again using another e-mail address or <a href='#' class="btn btn-danger btn-sm" data-toggle="modal" data-target="#AddNewAuthor">create a new co-author</a>
   </div>
 
 {% endif %}
+

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .list-group-item {
+      background-color: transparent; /* To remove default background */
+      padding: 0px; /* Add padding to create a clickable area */
+  }
+  
+  .list-link {
+      display: block;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+      text-decoration: none; /* Remove underline */
+      color: #333; /* Default color */
+      transition: color 0.3s; /* Smooth color transition on hover */
+  }
+  
+  .list-link:hover {
+      cursor: pointer;
+      text-decoration: none;
+      background-color: #d3d3d3;
+      color: #808080; /* Change color on hover */
+  }
+  
+  .selected {
+      background-color: #d3d3d3;
+      padding: 10px 15px;
+  }
+
+  #rev {
+    background-color: #555;
+  }
+
+  select {
+    appearance: none; /* Remove default styles */
+    background-color: #f0f0f0; /* Background color */
+    border: 1px solid #ccc; /* Border color */
+    padding: 3px; /* Padding */
+    width: 150px; /* Width of the select box */
+    border-radius: 4px; /* Rounded corners */
+  }
+
+  a{
+    text-decoration: none;
+  }
+</style>  
+  
+
+{% comment %} <li class="list-group-item">
+    <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step1">
+      <div class="d-flex align-items-center">
+        {% if paper.type and paper.title and paper.abstract %}
+              <i class="fas fa-check green-check"></i>&nbsp;
+          {% else %}
+              &nbsp;&nbsp;&nbsp;&nbsp;    
+          {% endif %}
+          <span>Step 1: Type, Title, & Abstract</span>
+      </div>
+      <i class="fas fa-angle-right"></i>
+    </a>
+  </li>
+ {% endcomment %}
+
+    <h2 class="text-center">Active Reviews</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card" style="width: 18rem; margin-left: 50px;">
+                <div class="card-header">
+                  <h5 class="text-secondary">&nbsp;&nbsp;Reviewer Dashboard</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                      <li class="list-group-item">
+                        <a href="{% url 'rev_invitations' %}" class="list-link d-flex justify-content-between align-items-center">
+                          <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Invitations
+                          </div>
+                          <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item selected text-secondary">
+                          <div class="d-flex justify-content-between align-items-center">
+                              <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                  Active Reviews
+                              </div>
+                              <i class="fas fa-angle-right"></i>
+                          </div>
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'submitted_reviews' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Submitted Reviews
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                </ul>
+            </div>
+        </div>
+  
+  
+      <div class="col-md-8">
+        {% if papers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Continue</th>
+                        <th scope="col">Due Date</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">ID/Title</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in papers %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>
+                                <a href="{% url 'review' paper.id %}">Continue</a>                          
+                            </td>
+                            <td>
+                                
+                            </td>    
+                            <td>
+                                {{ paper.type }}
+                            </td>
+                            <td>
+                                {{ paper.journal_id }}<br/>
+                                {{ paper.title }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+      </div>
+  </div>
+  
+
+{% endblock %}

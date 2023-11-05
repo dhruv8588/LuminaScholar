@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% block content %}
 
 <style>
@@ -6,6 +7,11 @@
       background-color: transparent; /* To remove default background */
       padding: 0; /* To remove default padding */
   }
+
+  .file {
+    padding: 5px;
+  }
+
   
   .list-link {
       display: block;
@@ -31,9 +37,31 @@
     color: #aaa;
   }
 
+  select {
+    appearance: none; /* Remove default styles */
+    background-color: #f0f0f0; /* Background color */
+    border: 1px solid #ccc; /* Border color */
+    padding: 3px; /* Padding */
+    width: 200px; /* Width of the select box */
+    border-radius: 4px; /* Rounded corners */
+    margin-left: 20px;
+  }
+
   .green-check {
     color: green;
   } 
+
+  #au {
+    background-color: #555;
+  }
+
+  .error-box {
+    border: 2px solid red;
+    background-color: lightcoral;
+    color: darkred;
+    padding: 10px;
+    width: 800px;
+}
   
 </style>  
 
@@ -44,40 +72,93 @@
         <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><h5><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</h5></a><br/><br/>
         <div class="card" style="width: 18rem; margin-left: 50px;">
             <div class="card-header">
-                <h5 class="text-secondary">Submission</h5>
+                <h5 class="text-secondary" style="margin-left: 10px;">Submission</h5>
             </div>
             <ul class="list-group list-group-flush text-secondary">
-                <li class="list-group-item"><a href="{% url 'submit_paper_step1' paper.id %}" class="list-link text-secondary">Step 1: Type, Title, & Abstract
-                  {% if paper.type and paper.title and paper.abstract %}
-                        <i class="fas fa-check"></i>
-                  {% endif %}   
-                </a></li>
-                <li class="list-group-item"><a href="{% url 'submit_paper_step2' paper.id %}" class="list-link text-secondary">Step 2: Authors
-                  {% if paper.authors.all %}
-                    <i class="fas fa-check green-check"></i>
-                  {% endif %}
-                </a></li>
-                <li class="list-group-item"><a href="{% url 'submit_paper_step3' paper.id %}" class="list-link text-secondary">Step 3: Attributes
-                  {% if paper.attributes.all %}
-                        <i class="fas fa-check green-check"></i>
-                  {% endif %}
-                </a></li>
-                <li class="list-group-item selected">Step 4: File Upload
-                  {% if paper.files.all %}
-                      <i class="fas fa-check green-check"></i>
-                  {% endif %}
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      {% if paper.type and paper.title and paper.abstract %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;    
+                        {% endif %}
+                        <span>Step 1: Type, Title, & Abstract</span>
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                  </a>
                 </li>
-                <li class="list-group-item"><a href="{% url 'submit_paper_step5' paper.id %}" class="list-link text-secondary">Step 5: Details & Comments
-                  {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
-                    {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                      {% if figures_tables_published_elsewhere_desc %}
-                        <i class="fas fa-check green-check"></i>
-                      {% endif %}  
-                    {% endif %}
-                  {% endif %}
-                </a></li>
-                <li class="list-group-item"><a href="{% url 'submit_paper_step6' paper.id %}" class="list-link text-secondary">Step 6: Review & Submit</a></li>
-            </ul>
+
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step2' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if paper.authors.all %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;    
+                        {% endif %}
+                        <span>Step 2: Authors</span>
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+                
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step3' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center">
+                          {% if paper.attributes.all and paper.additionalAttributes.all %}
+                              <i class="fas fa-check green-check"></i>&nbsp;
+                          {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;    
+                          {% endif %}
+                          <span>Step 3: Attributes</span>
+                      </div>    
+                      <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+
+                <li class="list-group-item selected text-secondary">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      {% if paper.files.all %}
+                        <i class="fas fa-check green-check"></i>&nbsp;
+                      {% else %}
+                        &nbsp;&nbsp;&nbsp;&nbsp;    
+                      {% endif %}
+                      <span>Step 4: File Upload</span>
+                    </div>    
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step5' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                    {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+                      {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                          {% if figures_tables_published_elsewhere_desc %}
+                            <i class="fas fa-check green-check"></i>  
+                          {% endif %}  
+                      {% else %}
+                          <i class="fas fa-check green-check"></i>&nbsp; 
+                      {% endif %}
+                    {% else %}
+                      &nbsp;&nbsp;&nbsp;&nbsp;
+                    {% endif %}  
+                  <span>Step 5: Details & Comments</span>
+                </div>    
+                <i class="fas fa-angle-right"></i>
+              </a>
+            </li>
+
+              
+            <li class="list-group-item">
+                <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                    &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+          </ul>
         </div>
     </div>
 
@@ -93,6 +174,7 @@
         </section>
         <br/>
 
+        <br/><br/>
         <form hx-encoding="multipart/form-data" hx-post="{% url 'upload_file' paper.id %}" hx-target="#files" id="myform">
             {% csrf_token %}
 
@@ -101,6 +183,12 @@
                 <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File 1...</button>
                 <span class="file-upload__label"></span>
                 <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
+                <select name="desig1" class="file-designation">
+                    <option selected disabled>Choose File Designation...</option>
+                    <option>Main Document</option>
+                    <option>Supplemental File</option>
+                </select>  
+                <div class="error-message" style="color: red;"></div>
             </div>
 
             <div class="file-upload form-group">
@@ -108,6 +196,12 @@
                 <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File 2...</button>
                 <span class="file-upload__label"></span>
                 <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
+                <select name="desig2" class="file-designation">
+                  <option selected disabled>Choose File Designation...</option>
+                  <option>Main Document</option>
+                  <option>Supplemental File</option>
+                </select>  
+                <div class="error-message" style="color: red;"></div>
             </div>
 
             <div class="file-upload form-group">
@@ -115,9 +209,15 @@
                 <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File 3...</button>
                 <span class="file-upload__label"></span>
                 <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button>
+                <select name="desig3" class="file-designation">
+                  <option selected disabled>Choose File Designation...</option>
+                  <option>Main Document</option>
+                  <option>Supplemental File</option>
+                </select>  
+                <div class="error-message" style="color: red;"></div>
             </div>
-
-            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-upload"></i>&nbsp;Upload Files</button>
+            <br/>
+            <button type="submit" class="btn btn-success btn-sm" id="upload-files"><i class="fas fa-upload"></i>&nbsp;Upload Files</button>
 
             <button type="button" class="btn btn-danger btn-sm" hx-delete="{% url 'delete_all_files' paper.id %}" hx-target="#files"
             hx-confirm="Are you sure you wish to delete all files?">
@@ -125,7 +225,8 @@
             </button>
         </form>
 
-        <hr/>
+        
+        <br/><hr/>
         <div style="display: inline-block; float: left;">
             <a href="{% url 'submit_paper_step3' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
           </div>
@@ -137,47 +238,95 @@
 </div> 
 
   
+
 <script>
 
-    document.querySelectorAll(".file-upload__button").forEach(
-        function(button) {
-            const hiddenInput = button.parentElement.querySelector(
-                ".file-upload__input"
-            );
-            const label = button.parentElement.querySelector(".file-upload__label");
-            const defaultLabelText = "No file selected";
+  document.querySelectorAll(".file-upload__button").forEach(function(button) {
+      const parentDiv = button.parentElement;
+      const hiddenInput = parentDiv.querySelector(".file-upload__input");
+      const label = parentDiv.querySelector(".file-upload__label");
+      const designation = parentDiv.querySelector(".file-designation");
+      const errorMessage = parentDiv.querySelector(".error-message");
+  
+      const defaultLabelText = "No file selected";
+  
+      label.textContent = defaultLabelText;
+      label.title = defaultLabelText;
+  
+      button.addEventListener("click", function() {
+          hiddenInput.click();
+      });
+  
+      hiddenInput.addEventListener("change", function() {
+          const filename = hiddenInput.files[0] ? hiddenInput.files[0].name : null;
+          label.textContent = filename || defaultLabelText;
+          label.title = label.textContent;
+          console.log(hiddenInput.value);
+      });
+  
+      const resetButton = parentDiv.querySelector(".file-upload__reset");
+      resetButton.addEventListener("click", function() {
+          hiddenInput.value = "";
+          label.textContent = defaultLabelText;
+          label.title = defaultLabelText;
+      });
 
-            label.textContent = defaultLabelText;
-            label.title = defaultLabelText;
-
-            button.addEventListener("click", function() {
-                hiddenInput.click();
-            });
-
-            hiddenInput.addEventListener("change", function() {
-                const filename = hiddenInput.files[0].name;
-                label.textContent = filename || defaultLabelText;
-                label.title = label.textContent;
-            });
-
-            const resetButton = button.parentElement.querySelector(".file-upload__reset"); 
-            resetButton.addEventListener("click", function() {
-                hiddenInput.value = ""; 
-                label.textContent = defaultLabelText;
-                label.title = defaultLabelText;
-            });
-
-            document.body.addEventListener('htmx:afterSwap', function(evt) {
-                const form = document.querySelector("#myform");
-                // form.reset();
-                hiddenInput.value = ""; 
-                label.textContent = defaultLabelText;
-                label.title = defaultLabelText;
-            });
+      document.body.addEventListener('htmx:afterSwap', function(evt) {
+        // const form = document.querySelector("#myform");
+        // form.reset();
+        if (hiddenInput.value != '') {
+          if (designation.value != 'Choose File Designation...') {
+              hiddenInput.value = ""; 
+              label.textContent = defaultLabelText;
+              label.title = defaultLabelText;
+              designation.value = 'Choose File Designation...';
+              errorMessage.innerHTML = '';
+          }
+          else {
+              errorMessage.innerHTML = 'Please select a designation for this File...';
+          }
         }
-    );
+    });
+  
+  });
 
-</script>
+  function initializeSortable() {
+      var sortables = document.querySelectorAll(".sortable");
+      for (var i = 0; i < sortables.length; i++) {
+          var sortable = sortables[i];
+          new Sortable(sortable, {
+              animation: 150,
+              ghostClass: 'blue-background-class'
+          });
+      }
+  }
+
+  initializeSortable();
+
+  htmx.onLoad(function(content) {
+      initializeSortable();
+  });
+
+
+  dropContainer.ondragover = dropContainer.ondragenter = function(evt) {
+    evt.preventDefault();
+  };
+  
+  dropContainer.ondrop = function(evt) {
+    // pretty simple -- but not for IE :(
+    fileInput.files = evt.dataTransfer.files;
+  
+    // If you want to use some of the dropped files
+    const dT = new DataTransfer();
+    dT.items.add(evt.dataTransfer.files[0]);
+    dT.items.add(evt.dataTransfer.files[3]);
+    fileInput.files = dT.files;
+  
+    evt.preventDefault();
+  };
+  
+</script>    
+
 
 {% endblock %}
 

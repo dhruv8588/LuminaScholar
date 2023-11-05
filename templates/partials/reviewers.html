@@ -1,26 +1,85 @@
-{% csrf_token %}
-<li class="list-group-item d-flex justify-content-between align-items-center">    
-    <span><b>ORDER NAME STATUS REMOVE</b></span>
-</li>
-<form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
-    <div class="htmx-indicator">Updating...</div>
-    {% for paper_reviewer in paper_reviewers %}
-        <div>
-            <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
-            <li class="list-group-item d-flex justify-content-between align-items-center">    
-                #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} 
-                <select>
-                    <option selected disabled>Select...</option>
-                    {% if not paper_reviewer.reviewer.user %}
-                        <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
-                    {% endif %}    
-                    <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
-                </select>  
-            </li>
-        </div>    
-    {% endfor %}
-</form>    
+<div class="card" style="max-width: 42rem;">
+    <div class="card-header text-secondary" style="padding: 30px;">
+        <h5 class="card-title text-secondary">Manuscript Details:</h5>
+        <table class="table table-bordered" style="width: 600px;">
+            <thead class="table-active">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">DETAILS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td>{{ paper.journal_id }}</td>
+              </tr>
+              <tr>
+                <th>Title</th>
+                <td>{{ paper.title }}</td>
+              </tr>
+              <tr>
+                <th>Submitting Author</th>
+                <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>{{ paper.type }}</td>
+              </tr>
+              <tr>
+                <th>Date Submitted</th>
+                <td>{{ paper.date_submitted|date }}</td>
+              </tr>
+            </tbody>    
+        </table>
+       
+        <a href="{% url 'merge_pdfs' paper.id %}" target="_blank" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
+        <a href="#" data-toggle="modal" data-target="#OriginalFiles" style="margin-right: 60px;"><i class="fa fa-file-alt"></i> Original Files</a>
+        {% if paper.cover_letter or paper.cover_letter_file %}
+            <a href="#" data-toggle="modal" data-target="#CoverLetter" style="margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
+        {% else %}    
+            <a href="#" data-toggle="modal" data-target="#CoverLetter" style="pointer-events: none; opacity: .4; margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
+        {% endif %}
+        <a href="#" data-toggle="modal" data-target="#Abstract"><i class="fa fa-pen"></i> Abstract</a>
+    </div>
 
+    <div class="card-body">
+        <h5 class="card-title text-secondary">Reviewer List:</h5>
+        <p class="card-text">
+            {% csrf_token %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">    
+                <span><b>ORDER REVIEWER STATUS ACTION</b></span>
+            </li>
+            <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
+                <div class="htmx-indicator">Updating...</div>
+                {% for paper_reviewer in paper_reviewers %}
+                    <div>
+                        <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">    
+                            #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
+                            {% if paper_reviewer.status %}
+                                {{ paper_reviewer.status }}
+                            {% else %}
+                                <button type="button" class="btn btn-success btn-sm invite-btn" hx-post="{% url 'invite_rev' paper_reviewer.id %}" hx-target="#reviewers_progress" hx-trigger="click"><i class="fas fa-check"></i>&nbsp;Invite</button>
+                                <div class="spinner" style="display: none;">
+                                    <div class="spinner-border text-success" role="status" style="width: 1.2rem; height: 1.2rem;"></div> <span style="color: grey">Inviting...</span>   
+                                </div>                                   
+                            {% endif %}
+                            <select>
+                                <option selected disabled>Select...</option>
+                                {% if not paper_reviewer.reviewer.user %}
+                                    <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
+                                {% endif %}    
+                                <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#add-remove_reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
+                            </select>  
+                        </li>
+                    </div>    
+                {% endfor %}
+            </form>    
+            <br/>
+            <button type="button" class="btn btn-success btn-sm" id="inviteAll-btn" style="float: right;" data-toggle="modal" data-target="#InviteAllReviewers"><i class="fas fa-check"></i>&nbsp;Invite All</button>
+        </p>
+    </div>
+</div>    
 
 {% for paper_reviewer in paper_reviewers %}
     {% if not paper_reviewer.reviewer.user %}
@@ -35,25 +94,28 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form id="edit-reviewer-form{{ paper_reviewer.reviewer.id }}" hx-post="{% url 'edit_author' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers'>
+                    <form id="edit-reviewer-form{{ paper_reviewer.reviewer.id }}">
                         {% csrf_token %}
                         <div class="modal-body">
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>First name</label>
-                                    <input type="text" class="form-control" name="first_name" value="{{ paper_reviewer.reviewer.first_name }}">
+                                    <input type="text" id="first-name-edit{{ paper_reviewer.reviewer.id }}" class="form-control" name="first_name" value="{{ paper_reviewer.reviewer.first_name }}">
+                                    <div id="first-name-error-edit{{ paper_reviewer.reviewer.id }}" class="error-message" style="color:red;"></div>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Last name</label>
-                                    <input type="text" class="form-control" name="last_name" value="{{ paper_reviewer.reviewer.last_name }}">
+                                    <input type="text" id="last-name-edit{{ paper_reviewer.reviewer.id }}" class="form-control" name="last_name" value="{{ paper_reviewer.reviewer.last_name }}">
+                                    <div id="last-name-error-edit{{ paper_reviewer.reviewer.id }}" class="error-message" style="color:red;"></div>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer justify-content-between">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="button" class="btn btn-primary" id="edit-rev-btn{{ paper_reviewer.reviewer.id }}">
                                 <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Reviewer
                             </button>
+                            <button type="submit" id="edit-rev-btn-hidden{{ paper_reviewer.reviewer.id }}" style="display: none;" hx-post="{% url 'edit_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers' hx-trigger='click'></button>
                         </div>
                     </form>      
                 </div>
@@ -61,14 +123,67 @@
         </div>
         <!-- Modal end -->
         <script>
-            document.getElementById('edit-reviewer-form{{ paper_reviewer.reviewer.id }}').addEventListener('submit', function(event) {
+            {% comment %} document.getElementById('edit-reviewer-form{{ paper_reviewer.reviewer.id }}').addEventListener('submit', function(event) {
                 event.preventDefault();
 
                 $('#editReviewerModal{{ paper_reviewer.reviewer.id }}').modal('hide');
-            });
+            }); {% endcomment %}
+
+                
+                button2 = document.getElementById('edit-rev-btn{{ paper_reviewer.reviewer.id }}');
+                hiddenButton2 = document.getElementById('edit-rev-btn-hidden{{ paper_reviewer.reviewer.id }}');
+
+                button2.addEventListener("click", function() {
+                    console.log('{{ paper_reviewer.reviewer.id }}');
+                    firstName = document.getElementById('first-name-edit{{ paper_reviewer.reviewer.id }}');
+                    console.log(firstName.value);
+                    lastName = document.getElementById('last-name-edit{{ paper_reviewer.reviewer.id }}');
+                
+                    firstNameError = document.getElementById('first-name-error-edit{{ paper_reviewer.reviewer.id }}');
+                    lastNameError = document.getElementById('last-name-error-edit{{ paper_reviewer.reviewer.id }}');
+                
+                    if (firstName.value == '')
+                        firstNameError.innerHTML = 'First Name is required';
+                    else
+                        firstNameError.innerHTML = '';
+                    
+                    if (lastName.value == '')
+                        lastNameError.innerHTML = 'Last Name is required';
+                    else
+                        lastNameError.innerHTML = '';
+                    
+                    if (firstName.value && lastName.value) {
+                        console.log("Rosyyy");
+                        hiddenButton2.click();
+                        $('#editReviewerModal{{ paper_reviewer.reviewer.id }}').modal('hide');
+                    }
+                });
+            
         </script>
     {% endif %}        
 {% endfor %}
+
+
+ <!-- Modal -->
+ <div class="modal fade" id="InviteAllReviewers" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Invite all Reviewers?</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            You are about to invite all of the reviewers listed below. Would you like to proceed?
+        </div>  
+        <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Cancel</button>
+            <a href="#" type="button" class="btn btn-primary" id="inviteAll-btnModal" data-dismiss="modal" hx-post="{% url 'invite_rev_all' paper.id %}" hx-target="#reviewers_progress"><i class="fas fa-check"></i>&nbsp;Yes, Invite</a>
+        </div>  
+      </div>
+    </div>
+</div>
 
 
 <script>
@@ -88,6 +203,33 @@
     htmx.onLoad(function(content) {
         initializeSortable();
     });
-</script>    
 
- 
+
+
+    var inviteBtns = document.querySelectorAll('.invite-btn');
+    var spinnerDivs = document.querySelectorAll('.spinner');
+
+    var inviteAllBtn = document.getElementById('inviteAll-btn');
+    var inviteAllBtnModal = document.getElementById('inviteAll-btnModal');
+
+    if(inviteBtns.length > 0){
+        inviteBtns.forEach(function(btn, index) {
+            btn.addEventListener('click', function() {
+                btn.style.display = 'none';
+                spinnerDivs[index].style.display = 'block';
+            });
+        });
+    }
+    else {
+        inviteAllBtn.style.display = 'none';
+   }
+
+   inviteAllBtnModal.addEventListener('click', function() {
+        inviteBtns.forEach(function(btn, index) {
+            btn.style.display = 'none';
+            spinnerDivs[index].style.display = 'block';
+        });    
+        inviteAllBtn.style.display = 'none';
+   });
+
+</script>

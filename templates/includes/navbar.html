@@ -88,26 +88,29 @@
         {% if user.is_authenticated %} 
           <ul class="nav-links">
               <li>
-                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'home' %}" id="home">Home</a>
               </li>  
               {% if user|has_role:"AE" %}
                 <li>
-                  <a href="{% url 'ae_dashboard' %}">Associate Editor</a>
+                  <a href="{% url 'ae_dashboard' %}" id="ae">Associate Editor</a>
                 </li> 
               {% endif %}
               {% if user|has_role:"EC" %}
                 <li>
-                  <a href="{% url 'eic_dashboard' %}">Editor-in-Chief</a>
+                  <a href="{% url 'eic_dashboard' %}" id="ec">Editor-in-Chief</a>
                 </li> 
               {% endif %}
               <li>
-                  <a href="{% url 'unsubmitted_manuscripts' %}">Author</a>
+                  <a href="{% url 'unsubmitted_manuscripts' %}" id="au">Author</a>
               </li>
               <li>
-                  <a href="{% url 'edit_profile' %}">Edit profile</a>
+                <a href="{% url 'rev_invitations' %}" id="rev">Reviewer</a>
               </li>
               <li>
-                  <a href="{% url 'reset_password' %}">Reset Password</a>
+                  <a href="{% url 'edit_profile' %}" id="ep">Edit profile</a>
+              </li>
+              <li>
+                  <a href="{% url 'reset_password' %}" id="rp">Reset Password</a>
               </li>
               <li>
                   <a href="{% url 'logout' %}">Log Out</a>

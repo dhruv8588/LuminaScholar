@@ -1,7 +1,8 @@
 
 {% if username_exists %}
     <div style='color: red;'>A user with this username already exists</div>
-    <button type="submit" class="btn btn-primary" id="submit-btn" disabled>Submit</button>
+    <button type="submit" class="btn btn-primary" id="submit-btn" disabled hx-swap-oob="true">Submit</button>
 {% else %}
     <div style='color: green;'>This username is available</div>
+    <button type="submit" class="btn btn-primary" id="submit-btn" hx-swap-oob="true">Submit</button>
 {% endif %}    

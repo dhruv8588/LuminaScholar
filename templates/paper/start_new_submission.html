@@ -26,25 +26,59 @@
     background-color: #d3d3d3;
     padding: 10px 15px; /* Add padding to create a clickable area */
 }
+
+#au {
+    background-color: #555;
+  }
+  
 </style>  
 
     <h2 class="text-center">Start New Submission</h2>
 
     <div class="row">
       <div class="col-md-4">
-          <div class="card" style="width: 18rem;">
-              <div class="card-header">
-                <b>Author Dashboard</b> 
-              </div>
-              <ul class="list-group list-group-flush">
-                  <li class="list-group-item"><a href="{% url 'unsubmitted_manuscripts' %}" class="list-link">Unsubmitted Manuscripts in Draft</a></li>
-                  <li class="list-group-item"><a href="{% url 'submitted_manuscripts' %}" class="list-link">Submitted Manuscripts</a></li>
-                  <li class="list-group-item"><a href="{% url 'coAuthored_manuscripts' %}" class="list-link">Manuscripts I have Co-Authored</a></li>
-                  <li class="list-group-item selected"><b>Start New Submission</b></li>
-                  <li class="list-group-item"><a href="#" class="list-link">5 Most Recent E-mails</a></li>
-              </ul>
-          </div>
-      </div>
+        <div class="card" style="width: 18rem; margin-left: 50px;">
+            <div class="card-header">
+              <h5 class="text-secondary">&nbsp;&nbsp;Author Dashboard</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                  <li class="list-group-item">
+                      <a href="{% url 'unsubmitted_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center" style="margin-left: 15px;">
+                          Unsubmitted Manuscripts in Draft
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                      </a>  
+                  </li>
+                  <li class="list-group-item">
+                        <a href="{% url 'submitted_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Submitted Manuscripts
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                  </li>
+                  <li class="list-group-item">
+                      <a href="{% url 'coAuthored_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center" style="margin-left: 15px;">
+                          Manuscripts I have Co-Authored
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                      </a>  
+                  </li>
+                  <li class="list-group-item selected text-secondary">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Start New Submission
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </div>  
+                  </li>
+            </ul>
+        </div>
+    </div>
+
+  
   
       <div class="col-md-8">
         <b style="color: #54626F;">Please make sure to upload your revised paper as a REVISION and not a NEW SUBMISSION. Do not start a new submission for revised papers.</b><br/><br/>

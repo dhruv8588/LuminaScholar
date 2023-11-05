@@ -1,6 +1,7 @@
 from datetime import datetime
+import json
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import resolve
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied
@@ -21,8 +22,8 @@ from reportlab.lib.pagesizes import letter
 
 from accounts.models import Role, User
 
-from .forms import AuthorForm, PaperForm1, PaperForm2, PaperForm3, ReviewForm, additionalAttributeFormSet
-from .models import Author, File, Paper, Paper_Author, Paper_Reviewer, Review, additionalAttribute
+from .forms import AuthorForm, PaperForm1, PaperForm2, PaperForm3, Rev_FileModelFormset, ReviewForm, additionalAttributeFormSet
+from .models import Author, File, Paper, Paper_Author, Paper_Reviewer, Rev_File, Review, additionalAttribute
 from .utils import get_max_order_author, get_max_order_file, reorder_authors, reorder_files
 
 # Create your views here.
@@ -66,7 +67,6 @@ def delete_cover_letter(request, paper_id):
     return render(request, 'partials/cover_letter.html')
 
 
-
 def delete_author(request, paper_id, author_id):
     paper = get_object_or_404(Paper, id=paper_id)
     paper.authors.remove(author_id)
@@ -81,9 +81,18 @@ def delete_author(request, paper_id, author_id):
     if not papers:
         author.delete()
 
-    paper_authors = Paper_Author.objects.filter(paper=paper)    
+    paper_authors = Paper_Author.objects.filter(paper=paper)  
 
-    return render(request, 'partials/authors.html', {'paper_authors': paper_authors})
+    papers = Paper.objects.filter(submitter=request.user)
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+    
+    context = {
+        'paper': paper,
+        'authors': authors,
+        'paper_authors': paper_authors,
+    }  
+
+    return render(request, 'partials/add_authors.html', context)
 
 
 def search_user1(request, paper_id):
@@ -140,32 +149,44 @@ def add_user_as_author(request, paper_id, user_id):
     author = Author.objects.get_or_create(user=user, first_name=user.first_name, last_name=user.last_name, email=user.email)[0]
 
     paper = Paper.objects.get(id=paper_id)
-    Paper_Author.objects.create(paper=paper, author=author, order=get_max_order_author(paper_id))
+
+    if not Paper_Author.objects.filter(paper=paper, author=author).exists():
+        Paper_Author.objects.create(paper=paper, author=author, order=get_max_order_author(paper_id))
 
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
+    papers = Paper.objects.filter(submitter=request.user)
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
     context = {
         'paper': paper,
+        'authors': authors,
         'paper_authors': paper_authors
     }
 
-    return render(request, 'partials/authors.html', context)
+    return render(request, 'partials/add_authors.html', context)
 
 
 def add_author_as_author(request, paper_id, author_id):
     author = get_object_or_404(Author, id=author_id)
 
     paper = Paper.objects.get(id=paper_id)
-    Paper_Author.objects.create(paper=paper, author=author, order=get_max_order_author(paper_id))
+
+    if not Paper_Author.objects.filter(paper=paper, author=author).exists():
+        Paper_Author.objects.create(paper=paper, author=author, order=get_max_order_author(paper_id))
 
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
+    papers = Paper.objects.filter(submitter=request.user)
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
     context = {
         'paper': paper,
+        'authors': authors,
         'paper_authors': paper_authors
     }
 
-    return render(request, 'partials/authors.html', context)
+    return render(request, 'partials/add_authors.html', context)
 
 
 def add_new_author(request, paper_id):
@@ -181,11 +202,37 @@ def add_new_author(request, paper_id):
     Paper_Author.objects.create(paper=paper, author=author, order=get_max_order_author(paper_id))
 
     paper_authors = Paper_Author.objects.filter(paper=paper)
+
+    papers = Paper.objects.filter(submitter=request.user)
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
     context = {
+        'paper': paper,
+        'authors': authors,
         'paper_authors': paper_authors
     }
 
-    return render(request, 'partials/authors.html', context)
+    return render(request, 'partials/add_authors.html', context)
+
+
+def add_author_from_my_previous_papers(request, author_id, paper_id):
+    author = get_object_or_404(Author, id=author_id)
+
+    paper = Paper.objects.get(id=paper_id)
+    Paper_Author.objects.create(paper=paper, author=author, order=get_max_order_author(paper_id))
+
+    paper_authors = Paper_Author.objects.filter(paper=paper)
+
+    papers = Paper.objects.filter(submitter=request.user)
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    context = {
+        'paper': paper,
+        'paper_authors': paper_authors,
+        'authors': authors
+    }
+
+    return render(request, 'partials/add_authors.html', context)
 
 
 def sort_authors(request):
@@ -197,7 +244,11 @@ def sort_authors(request):
         paper_author.save()
         paper_authors.append(paper_author)
 
-    return render(request, 'partials/authors.html', {'paper_authors': paper_authors})
+    context = {
+        'paper_authors': paper_authors,
+    }    
+
+    return render(request, 'partials/authors.html', context)
 
 
 def sort_files(request, paper_id):
@@ -220,17 +271,20 @@ def sort_files(request, paper_id):
 def edit_author(request, paper_id, author_id):
     first_name = request.POST.get('first_name').capitalize()
     last_name = request.POST.get('last_name').capitalize()
+    print(first_name)
 
     author = get_object_or_404(Author, id=author_id)
+    print(author)
     author.first_name = first_name
     author.last_name = last_name
     author.save()
-
+    print(author)
     paper = get_object_or_404(Paper, id=paper_id)
     paper_authors = Paper_Author.objects.filter(paper=paper)
+
     context = {
-        'paper_authors': paper_authors
-    }
+        'paper_authors': paper_authors,
+    }  
 
     return render(request, 'partials/authors.html', context)
 
@@ -266,6 +320,40 @@ def unsubmitted_manuscripts(request):
         'papers': papers,
     }
     return render(request, 'paper/unsubmitted_manuscripts.html', context)
+
+
+def rev_invitations(request):
+    try: 
+        papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Invited')
+    except:
+        papers = None    
+    context = {
+        'papers': papers,
+    }
+    return render(request, 'paper/reviewer_invitations.html', context)
+
+
+def active_reviews(request):
+    try: 
+        papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Agreed')
+    except:
+        papers = None    
+    context = {
+        'papers': papers,
+    }
+    return render(request, 'paper/active_reviews.html', context)
+
+
+def submitted_reviews(request):
+    try: 
+        papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Submitted')
+    except:
+        papers = None    
+    context = {
+        'papers': papers,
+    }
+    return render(request, 'paper/submitted_reviews.html', context)
+
 
 def start_new_submission(request):
     return render(request, 'paper/start_new_submission.html')
@@ -315,8 +403,13 @@ def submit_paper_step1(request, paper_id):
 def submit_paper_step2(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
     paper_authors = Paper_Author.objects.filter(paper=paper)
+
+    papers = Paper.objects.filter(submitter=request.user)
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+    
     context = {
         'paper': paper,
+        'authors': authors,
         'paper_authors': paper_authors,
     }
     return render(request, 'paper/submit_paper/step2.html', context)    
@@ -331,11 +424,13 @@ def submit_paper_step3(request, paper_id):
         if form.is_valid() and formset.is_valid():
             form.save() 
 
-            for form in formset:
-                attribute = form.save(commit=False)
+            for aform in formset:
+                attribute = aform.save(commit=False)
                 if attribute.name != '':
                     attribute.paper = paper
                     attribute.save()
+                elif attribute.name == '' and aform.instance.id:
+                    aform.instance.delete()    
 
         next = request.GET.get('next')
         if next == 'step4' or 'save_and_continue' in request.POST:
@@ -346,7 +441,7 @@ def submit_paper_step3(request, paper_id):
             return redirect('submit_paper_step2', paper_id)
         elif next == 'step5':
             return redirect('submit_paper_step5', paper_id)
-        else:
+        elif next == 'step6':
             return redirect('submit_paper_step6', paper_id)
     else:
         form = PaperForm3(instance=paper)
@@ -404,18 +499,56 @@ def submit_paper_step4(request, paper_id):
 
 def upload_file(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
-    file1 = request.FILES.get('file1')
+
+    duplicate_files = []
+    
+    saved_files = File.objects.filter(paper=paper)
+    file_list = []
+    for file in saved_files:
+        file_list.append(os.path.basename(file.file.name))
+
+    file1 = request.FILES.get('file1') 
     file2 = request.FILES.get('file2')
     file3 = request.FILES.get('file3')
+    
     if file1:
-        file = File.objects.create(paper=paper, file=file1, order=get_max_order_file(paper_id))
+        desig1 = request.POST.get('desig1')
+        if desig1 != "Choose File Designation...":
+            if file1.name in file_list:
+                duplicate_files.append(file1.name)
+            else:
+                file_list.append(file1.name)
+                file = File.objects.create(paper=paper, file=file1, order=get_max_order_file(paper_id))
+                file.designation = desig1
+                file.save()
+
     if file2:
-        file = File.objects.create(paper=paper, file=file2, order=get_max_order_file(paper_id)) 
+        desig2 = request.POST.get('desig2')
+        if desig2 != "Choose File Designation...":
+            if file2.name in file_list:
+                duplicate_files.append(file2.name) 
+            else:
+                file_list.append(file2.name)    
+                file = File.objects.create(paper=paper, file=file2, order=get_max_order_file(paper_id))
+                file.designation = desig2
+                file.save()
+    
     if file3:
-        file = File.objects.create(paper=paper, file=file3, order=get_max_order_file(paper_id)) 
+        desig3 = request.POST.get('desig3')
+        if desig3 != "Choose File Designation...":
+            if file3.name in file_list:
+                duplicate_files.append(file3.name)
+            else:  
+                file_list.append(file3.name)    
+                file = File.objects.create(paper=paper, file=file3, order=get_max_order_file(paper_id))
+                file.designation = desig3
+                file.save()
+        
 
     context = {
-        'paper': paper
+        'paper': paper,
+        'duplicate_files': duplicate_files
+
     }
     return render(request, 'partials/files.html', context)    
 
@@ -505,13 +638,19 @@ def submit_paper(request, paper_id):
 
     paper.is_submitted = True
 
-    paper.journal_id = 'JAIR-' + str(paper.id)
+    current_date = datetime.now()
+    current_year = current_date.year % 100
+    current_month = current_date.month
 
-    paper.date_submitted = datetime.now().date()
+    papers_count = Paper.objects.filter(date_submitted__year=current_year, date_submitted__month=current_month).count()
+
+    paper.journal_id = 'JAIR-' + str(current_year%100) + '-' + str(current_month) + '-' + str(papers_count + 1)
+
+    paper.date_submitted = current_date.date()
 
     paper.save()
 
-    role = Role.objects.get(name='Author')
+    role = Role.objects.get(name='AU')
     paper.submitter.roles.add(role)
 
     return redirect(submitted_manuscripts)
@@ -528,7 +667,7 @@ def delete_paper(request, paper_id):
         if not papers:
             author.delete()
 
-    reviewers_to_delete = paper.authors.all()
+    reviewers_to_delete = paper.reviewers.all()
     
     for reviewer in reviewers_to_delete:
         papers = Paper.objects.filter(reviewers=reviewer).exclude(id=paper_id)
@@ -614,11 +753,42 @@ def delete_review(request, paper_id):
 
     # o1 = Option.objects.create(text="", question=q2)
 
+
+def dropzone_image(request):
+	
+	if request.method == "POST":
+		
+		user = request.user
+		file = request.FILES.get('file')
+		# img = UserImage.objects.create(image = image, user = user)
+		
+	return HttpResponse({},content_type="application/json")
+
+	# return HttpResponse(
+	# 	json.dumps({"result": result, "message": message}),
+	# 	content_type="application/json"
+	# 	)
+
+
+def upload_rev_file(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    file = request.FILES.get('rev_file') 
+    if file:
+        rev_file = Rev_File.objects.create(file=file, review=review)
+        rev_file.save()   
+
+    context = {
+        "review": review
+    }    
+
+    return render(request, 'partials/rev_files.html', context)    
+
+
 def review(request, paper_id):
     paper = Paper.objects.get(id=paper_id)
 
     paper_reviewer = Paper_Reviewer.objects.get(paper=paper_id, reviewer__user=request.user)
-    paper_reviewer.status = 'accepted'
+    paper_reviewer.status = 'Agreed'
     paper_reviewer.save()
 
     try:
@@ -631,22 +801,20 @@ def review(request, paper_id):
         review = form.save(commit=False)
         review.paper = paper
         review.reviewer = paper_reviewer.reviewer
-        if 'save_draft' in request.POST:
-            review.is_submitted = False 
-        else:
-            review.is_submitted = True       
+        review.date_submitted = datetime.now().date()
+        
         review.save()
-        return redirect('myAccount')
+    
+        if 'submit_review' in request.POST:
+            return redirect('submitted_reviews')
     else:
         form = ReviewForm(instance=review)
-
-    # questions = Question.objects.all()    
-    # formset = OptionModelFormset()
+        formset = Rev_FileModelFormset(queryset=Rev_File.objects.all())
 
     context = {
-        # 'questions': questions,
         'paper': paper,
         'form': form,
+        'formset': formset,
         'review': review
     }    
     return render(request, 'paper/review.html', context)

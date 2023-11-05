@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -22,7 +22,7 @@ urlpatterns = [
     path('<int:paper_id>/submit/step2/add_new_author', views.add_new_author, name='add_new_author'),
     path('<int:paper_id>/submit/step2/add_user_as_author/<int:user_id>', views.add_user_as_author, name='add_user_as_author'),
     path('<int:paper_id>/submit/step2/add_author_as_author/<int:author_id>', views.add_author_as_author, name='add_author_as_author'),
-
+    path('<int:paper_id>/submit/step2/add-author-from-my-previous-papers/<int:author_id>', views.add_author_from_my_previous_papers, name='add_author_from_my_previous_papers'),
 
 
     path('<int:paper_id>/delete/conference/', views.delete_paper, name='delete_paper'),
@@ -30,14 +30,22 @@ urlpatterns = [
 
     # urls for reviewer
     path('<int:paper_id>/accept_or_decline_to_review/', views.accept_or_decline_to_review, name='accept_or_decline_to_review'),
-    path('<int:paper_id>/review', views.review, name='review'),
-    path('<int:paper_id>/decline_to_review/', views.decline_to_review, name='decline_to_review'),
+    
     path('<int:paper_id>/delete_review/', views.delete_review, name='delete_review'),
 
 
     path('<int:paper_id>/merge_pdfs/', views.merge_pdfs, name='merge_pdfs'),
 
-    path('delete_attribute/<int:attribute_id>', views.delete_attribute, name='delete_attribute')
+    path('delete_attribute/<int:attribute_id>', views.delete_attribute, name='delete_attribute'),
+
+
+    path('rev_invitations/', views.rev_invitations, name='rev_invitations'),
+    path('active_reviews/', views.active_reviews, name='active_reviews'),
+    path('submitted_reviews/', views.submitted_reviews, name='submitted_reviews'),
+
+    path('<int:paper_id>/review', views.review, name='review'),
+
+    path('dropzone-image/', views.dropzone_image, name="dropzone-image"),
 ]    
 
 htmx_urlpatterns = [
@@ -61,6 +69,9 @@ htmx_urlpatterns = [
     path('<int:paper_id>/upload_cover_letter/', views.upload_cover_letter, name="upload_cover_letter"),
     path('<int:paper_id>/delete_cover_letter', views.delete_cover_letter, name="delete_cover_letter"),
     path('<int:paper_id>/show_cover_letter/', views.show_cover_letter, name="show_cover_letter"),
+
+
+    path('<int:review_id>/upload_rev_file/', views.upload_rev_file, name='upload_rev_file')
 
 ]
 

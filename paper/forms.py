@@ -1,7 +1,7 @@
 from django import forms
 from accounts.models import Role
 from conference.models import Attribute
-from paper.models import Author, Paper, Review, File, additionalAttribute
+from paper.models import Author, Paper, Rev_File, Review, File, additionalAttribute
 
 
 # class PaperForm(forms.ModelForm):
@@ -113,6 +113,7 @@ class AuthorForm(forms.ModelForm):
         model = Author
         fields = ['first_name', 'last_name', 'email']
     
+  
 class ReviewForm(forms.ModelForm):
     CHOICES_1 = [
         ('Full length technical paper', 'Full length technical paper'),
@@ -145,15 +146,37 @@ class ReviewForm(forms.ModelForm):
     ]
     paper_type = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_1, required=False)
     has_best_paper_award_potential = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2, required=False)
-    is_innovative = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2)
-    rating = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_3)
-    anything_to_be_deleted = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2)
+    is_innovative = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2, required=False)
+    rating = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_3, required=False)
+    anything_to_be_deleted = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2, required=False)
     amt_of_copy_editing = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_4, required=False)
-    interest_to_engineers = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2)
+    interest_to_engineers = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2, required=False)
     will_review_revised_version = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_2, required=False)
-    recommendation = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_5)
+    recommendation = forms.ChoiceField(widget=forms.RadioSelect, choices=CHOICES_5, required=False)
 
     class Meta:
         model = Review
         fields = ['paper_type', 'has_best_paper_award_potential', 'is_innovative', 'rating', 'anything_to_be_deleted', 'what_should_be_deleted', 'amt_of_copy_editing', 'interest_to_engineers', 'will_review_revised_version', 'recommendation', 'comments_to_editor', 'comments_to_author']
-    
+        widgets = {
+          'comments_to_editor': forms.Textarea(attrs={'rows':4, 'cols':50}),
+          'comments_to_author': forms.Textarea(attrs={'rows':4, 'cols':50}),
+          'what_should_be_deleted': forms.Textarea(attrs={'rows':4, 'cols':50}),
+        }
+
+
+class RevFileForm(forms.ModelForm):
+    view_choices = [
+        ('Editor Only', 'Editor Only'),
+        ('Author & Editor', 'Author & Editor'),
+    ]
+    view = forms.ChoiceField(widget=forms.RadioSelect, choices=view_choices, required=False)
+    class Meta:
+        model = Rev_File
+        fields = ['file', 'view']
+
+
+Rev_FileModelFormset = forms.modelformset_factory(
+    Rev_File,
+    form=RevFileForm,
+    extra=0,
+)

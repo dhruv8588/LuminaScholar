@@ -8,7 +8,7 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-          <form {% block action %}action="{% url 'add_new_reviewer' conference.id paper.id %}"{% endblock action %} method="post">
+          <form action="{% url 'add_new_reviewer' conference.id paper.id %}" method="post">
             {% csrf_token %}
             <div class="modal-body">
                 <div class="form-row">

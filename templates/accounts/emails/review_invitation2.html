@@ -1,0 +1,16 @@
+{% autoescape off %}
+    Dear {{ paper_reviewer.reviewer.first_name }},
+
+    Thank you for agreeing to review Manuscript ID {{ paper_reviewer.paper.journal_id }} entitled "{{ paper_reviewer.paper.title }}” submitted to the
+    Journal of Artificial Intelligence Research(JAIR). Please try your best to complete your review within the next 2 weeks.
+
+    In your review, please answer all questions. On the review page, there is a space for “Comments to Editor” and a space for "Comments to the Author.”
+    Please be sure to put your comments to the author in the appropriate space.
+
+    To access the manuscript, login to the LuminaScholar site:
+    http://{{domain}}{% url 'login' %}
+
+    Once you are logged in, the Main Menu will be displayed. Please click on the Reviewer Center, where you will
+    find the manuscript listed under “Awaiting Reviewer Scores.” You can click on the manuscript title from this
+    point or you can click on the “View Details” button to begin reviewing the manuscript.
+{% endautoescape %} 

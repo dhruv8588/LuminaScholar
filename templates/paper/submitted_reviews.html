@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .list-group-item {
+      background-color: transparent; /* To remove default background */
+      padding: 0px; /* Add padding to create a clickable area */
+  }
+  
+  .list-link {
+      display: block;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+      text-decoration: none; /* Remove underline */
+      color: #333; /* Default color */
+      transition: color 0.3s; /* Smooth color transition on hover */
+  }
+  
+  .list-link:hover {
+      cursor: pointer;
+      text-decoration: none;
+      background-color: #d3d3d3;
+      color: #808080; /* Change color on hover */
+  }
+  
+  .selected {
+      background-color: #d3d3d3;
+      padding: 10px 15px;
+  }
+
+  #rev {
+    background-color: #555;
+  }
+
+  select {
+    appearance: none; /* Remove default styles */
+    background-color: #f0f0f0; /* Background color */
+    border: 1px solid #ccc; /* Border color */
+    padding: 3px; /* Padding */
+    width: 150px; /* Width of the select box */
+    border-radius: 4px; /* Rounded corners */
+  }
+</style>  
+  
+
+    <h2 class="text-center">Submitted Reviews</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card" style="width: 18rem; margin-left: 50px;">
+                <div class="card-header">
+                  <h5 class="text-secondary">&nbsp;&nbsp;Reviewer Dashboard</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <a href="{% url 'rev_invitations' %}" class="list-link d-flex justify-content-between align-items-center">
+                          <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Invitations
+                          </div>
+                          <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'active_reviews' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Active Reviews
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item selected text-secondary">
+                          <div class="d-flex justify-content-between align-items-center">
+                              <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                  Submitted Reviews
+                              </div>
+                              <i class="fas fa-angle-right"></i>
+                          </div>
+                      </li>
+                </ul>
+            </div>
+        </div>
+  
+  
+      <div class="col-md-8">
+        {% if papers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Action</th>
+                        <th scope="col">Completed</th>
+                        <th scope="col">ID/Title</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in papers %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>
+                                <select onchange="javascript:location.href = this.value;">
+                                    <option selected disabled>Select...</option>
+                                    <option value="{% url 'review' paper.id %}">Agreed and Begin Review</option>
+                                    <option>Declined</option>
+                                </select>                                
+                            </td>
+                            <td>
+                                
+                            </td>    
+                            <td>
+                                {{ paper.type }}
+                            </td>
+                            <td>
+                                {{ paper.journal_id }}<br/>
+                                {{ paper.title }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+      </div>
+  </div>
+  
+
+{% endblock %}

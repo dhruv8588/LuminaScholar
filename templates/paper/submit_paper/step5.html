@@ -40,6 +40,10 @@
     .green-check {
         color: green;
     }  
+
+    #au {
+        background-color: #555;
+      }
 </style>  
     <div class="row">
       <div class="col-md-4 text-secondary">
@@ -47,39 +51,99 @@
         <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><h5><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</h5></a><br/><br/>
           <div class="card" style="width: 18rem; margin-left: 50px;">
               <div class="card-header">
-                  <h5 class="text-secondary">Submission</h5>
+                  <h5 class="text-secondary" style="margin-left: 10px;">Submission</h5>
               </div>
               <ul class="list-group list-group-flush">
-                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step1">Step 1: Type, Title, & Abstract
-                    {% if paper.type and paper.title and paper.abstract %}
-                        <i class="fas fa-check green-check"></i>
-                    {% endif %}    
-                  </a></li>
-                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step2">Step 2: Authors
-                    {% if paper.authors.all %}
-                        <i class="fas fa-check green-check"></i>
-                    {% endif %}
-                  </a></li>
-                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step3">Step 3: Attributes
-                    {% if paper.attributes.all %}
-                        <i class="fas fa-check green-check"></i>
-                    {% endif %}
-                  </a></li>
-                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step4">Step 4: File Upload
-                    {% if paper.files.all %}
-                        <i class="fas fa-check green-check"></i>
-                    {% endif %}
-                  </a></li>
-                  <li class="list-group-item selected">Step 5: Details & Comments
-                    {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
-                        {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                          {% if figures_tables_published_elsewhere_desc %}
-                            <i class="fas fa-check green-check"></i>
-                          {% endif %}  
-                        {% endif %}
-                    {% endif %}
+                <li class="list-group-item">
+                    <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step1">
+                      <div class="d-flex align-items-center">
+                        {% if paper.type and paper.title and paper.abstract %}
+                              <i class="fas fa-check green-check"></i>&nbsp;
+                          {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;    
+                          {% endif %}
+                          <span>Step 1: Type, Title, & Abstract</span>
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                    </a>
                   </li>
-                  <li class="list-group-item"><a href="#" class="list-link form-next-link" next="step6">Step 6: Review & Submit</a></li>
+    
+    
+    
+                  <li class="list-group-item">
+                    <a href="{% url 'submit_paper_step2' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step2">
+                      <div class="d-flex align-items-center">
+                          {% if paper.authors.all %}
+                              <i class="fas fa-check green-check"></i>&nbsp;
+                          {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;    
+                          {% endif %}
+                          <span>Step 2: Authors</span>
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+                  
+    
+                 
+    
+                   <li class="list-group-item">
+                    <a href="{% url 'submit_paper_step3' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step3">
+                        <div class="d-flex align-items-center">
+                            {% if paper.attributes.all and paper.additionalAttributes.all %}
+                                <i class="fas fa-check green-check"></i>&nbsp;
+                            {% else %}
+                                &nbsp;&nbsp;&nbsp;&nbsp;    
+                            {% endif %}
+                            <span>Step 3: Attributes</span>
+                        </div>    
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+    
+    
+                  <li class="list-group-item">
+                    <a href="{% url 'submit_paper_step4' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step4">
+                      <div class="d-flex align-items-center">
+                        {% if paper.files.all %}
+                          <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                          &nbsp;&nbsp;&nbsp;&nbsp;    
+                        {% endif %}
+                        <span>Step 4: File Upload</span>
+                      </div>    
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+    
+    
+                  <li class="list-group-item selected text-secondary">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center">
+                      {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+                        {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                            {% if figures_tables_published_elsewhere_desc %}
+                              <i class="fas fa-check green-check"></i>  
+                            {% endif %}  
+                        {% else %}
+                            <i class="fas fa-check green-check"></i>&nbsp; 
+                        {% endif %}
+                      {% else %}
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                      {% endif %}  
+                    <span>Step 5: Details & Comments</span>
+                  </div>    
+                  <i class="fas fa-angle-right"></i>
+                </div>
+              </li>
+    
+                
+                  <li class="list-group-item">
+                    <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step6">
+                      &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
               </ul>
           </div>
       </div>

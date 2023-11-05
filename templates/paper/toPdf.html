@@ -71,7 +71,7 @@
             <tr>
                 <th>Additional Attributes:</th>
                 <td>
-                    {% for attribute in paper.additional_attributes.all %}
+                    {% for attribute in paper.additionalAttributes.all %}
                         {{ attribute.name }} {% if not forloop.last %}, {% endif %}
                     {% endfor %} 
                 </td>

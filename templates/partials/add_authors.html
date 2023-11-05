@@ -1,0 +1,249 @@
+{% csrf_token %}
+
+<section id="authors" class="col-12">
+    {% include 'partials/authors.html' %}
+</section>
+
+<br/>
+<b>Add Author</b><br/>
+Find using Author's email address or from the list of authors previously added by you
+
+<form hx-post="{% url 'search_user1' paper.id %}" hx-target='#search_user_result1'>
+    {% csrf_token %}
+    <div class="form-row">
+        <input type="text" 
+            id="email-input"
+            name="email" 
+            class="form-control" 
+            placeholder="Enter an author's email" style="width: 350px;" />&nbsp;&nbsp;
+        <button type="submit" id="search-button" class="btn btn-success btn-sm"><i class="fas fa-search"></i>&nbsp;Search</button>
+    </div>
+</form>
+
+<section id="search_user_result1" class="col-12">
+
+</section>
+
+<br/><br/>    
+
+<div class="container">
+    <div class="form-row" style="float: right;">
+        <input class="form-control" type="search" id="search" placeholder="Global search..." aria-label="Search" style="width:400px;">
+        <button class="btn btn-secondary" id="reset" onclick="clearSearch();"><i class="fas fa-sync-alt"></i></button>
+    </div>
+    <br/><br/>
+    
+    <table class="table table-bordered" id="add-author" style="text-align: center;">
+        <thead class="table-success">
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th class="action-color"></th>
+            </tr>
+        </thead>
+        {% for author in authors %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ author.first_name }} {{ author.last_name }}</td>
+                <td><a href="mailto:{{ author.email }}">{{ author.email }}</a></td>
+                <td><a href="#" class="btn btn-success btn-sm" hx-post="{% url 'add_author_from_my_previous_papers' paper.id author.id %}" hx-target="#authors"><i class="fas fa-plus"></i> Add</a></td>
+            </tr>
+        {% endfor %}    
+    </table>            
+</div>
+
+<br/><hr/>
+
+<script>
+    
+    function initializeSortable() {
+        var sortables = document.querySelectorAll(".sortable");
+        for (var i = 0; i < sortables.length; i++) {
+            var sortable = sortables[i];
+            new Sortable(sortable, {
+                animation: 150,
+                ghostClass: 'blue-background-class'
+            });
+        }
+    }
+
+    initializeSortable();
+
+    htmx.onLoad(function(content) {
+        initializeSortable();
+    });
+</script>    
+
+<!-- Datatables script -->
+<script>
+    function clearSearch() {
+      document.getElementById("search").value = "";
+  
+      var table = $('#add-author').DataTable(); 
+      table.search('').columns().search('').draw();
+    }
+  
+    $(document).ready(function() {
+      $('#add-author thead tr')
+          .clone(true)
+          .addClass('filters')
+          .appendTo('#add-author thead');
+  
+      var table = $('#add-author').DataTable({
+          // Datatables config
+          paging: true, // Pagination
+          pageLength: 5, // Data entries per page
+          lengthChange: true, // Show entries per page
+          autoWidth: true, // Set auto width on columns
+          searching: true, // Input global search(filter)
+          bInfo: true, // entries info 
+          bSort: true, // Sort columns alphabetically and numerically in asc or desc order
+  
+          orderCellsTop: true, // Put the filter to 1st thead
+  
+          // Disable sort columns
+         "columnDefs": [{
+              "targets": 3, // 1 column
+              // "targets": [4, 5], // More than 1 column
+              "orderable": false
+          }], 
+  
+          initComplete: function() {
+              var api = this.api();
+  
+              // Set the columns you wish filtering
+              api
+                  .columns([0, 1, 2])
+                  .eq(0)
+                  .each(function(colIdx) {
+                      var cell = $('.filters th').eq(
+                          $(api.column(colIdx).header()).index()
+                      );
+                      var title = $(cell).text();
+                      $(cell).html('<input type="text" placeholder="' + title + '"/>');
+  
+                      $(
+                          'input',
+                          $('.filters th').eq($(api.column(colIdx).header()).index())
+                      )
+                      .off('keyup change')
+                      .on('keyup change', function(e) {
+                          e.stopPropagation();
+  
+                          $(this).attr('title', $(this).val());
+                          var regexr = '({search})';
+  
+                          var cursorPosition = this.selectionStart;
+  
+                          api
+                              .column(colIdx)
+                              .search(
+                                  this.value != ''
+                                      ? regexr.replace('{search}', '(((' + this.value + ')))')
+                                      : '',
+                                  this.value != '',
+                                  this.value == ''    
+                              )
+                          .draw();
+  
+                      $(this)
+                          .focus()[0]
+                          .setSelectionRange(cursorPosition, cursorPosition);
+  
+                      });
+                  });
+          },
+  
+           // Buttons 
+          dom: 'lBfrtip',
+          buttons: [
+  
+              {
+                  // COPY 
+                  extend: 'copy',
+                  text: '<i class="fas fa-clone"></i>',
+                  className: 'btn btn-secondary',
+                  titleAttr: 'Copy',
+  
+                  // Choose the columns you wish to copy
+                  exportOptions: {
+                      columns: [0, 1, 2]
+                  },
+              },
+  
+  
+              {
+                  // EXCEL
+                  extend: 'excel',
+                  text: '<i class="fas fa-file-excel"></i>',
+                  className: 'btn btn-secondary',
+                  titleAttr: 'Excel',
+  
+                  // Choose the columns you wish to export to excel
+                  exportOptions: {
+                      columns: [0, 1, 2]
+                  },
+              },
+  
+              {
+                  // PRINT
+                  extend: 'print',
+                  text: '<i class="fas fa-print"></i>',
+                  className: 'btn btn-secondary',
+                  titleAttr: 'Print',
+  
+                  // Choose the columns you wish to print
+                  exportOptions: {
+                      columns: [0, 1, 2]
+                  },
+                  // Font size (when export to print)
+                  customized: function( win ){
+                      $(win.document.body).css('font-size', '10pt')
+                      $(win.document.body).find('table')
+                          .addClass('compact')
+                          .css('font-size', 'inherit');
+                  }
+              },
+  
+              {
+                  // PDF
+                  extend: 'pdf',
+                  text: '<i class="fas fa-file-pdf"></i>',
+                  className: 'btn btn-secondary',
+                  titleAttr: 'PDF',
+  
+                  // Choose the columns you wish to export to pdf
+                  exportOptions: {
+                      columns: [0, 1, 2]
+                  },
+  
+                  // Center the table
+                  tableHeader: {
+                      alignment: 'center'
+  
+                  },
+                  // Font size and optimization
+                  customize: function (doc) {
+                      doc.styles.tableHeader.alignment = 'center'; // Header position
+                      doc.styles.tableBodyOdd.alignment = 'center'; // Body position 1 (grey color)
+                      doc.styles.tableBodyEven.alignment = 'center'; // Body position 2 (white color)
+                      doc.styles.tableHeader.fontSize = 9; // Header font-size
+                      doc.defaultStyle.fontSize = 8; // Body font-size
+                      // To get 100% width of the table
+                      doc.content[1].table.widths = Array(doc.content[1].table.body[1].length + 1).join('*').split('');
+                  }
+              },
+              
+          ]
+  
+      });
+  
+      // Enable Searchbox Outside
+      var newSearch = $("#add-author").DataTable();
+      $("#search").keyup(function() {
+          newSearch.search($(this).val()).draw();
+      }); 
+  });
+  </script>    
+

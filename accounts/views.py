@@ -8,7 +8,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied
 
-from paper.models import Author, Paper, Paper_Reviewer
+from paper.models import Author, Paper, Paper_Reviewer, Reviewer
 
 from .utils import detectUser, send_verification_email
 
@@ -38,8 +38,15 @@ def register_user(request):
             if author:
                 author.user = user 
 
-            for form in formset:
-                research_area = form.save(commit=False)
+            try:
+                reviewer = Reviewer.objects.get(email=user.email)
+            except:
+                reviewer = None
+            if reviewer:
+                reviewer.user = user     
+
+            for rform in formset:
+                research_area = rform.save(commit=False)
                 if research_area.name != '':
                     research_area.user = user
                     research_area.save()
@@ -52,13 +59,13 @@ def register_user(request):
             return redirect('login')
         else:
             print(form.errors)
+            print(formset.errors)
     else:
         form = UserForm()
         formset = additionalResearchAreaFormSet(prefix='research_areas')
     context = {
         'form': form,
         'formset': formset,
-        'non_field_errors': form.non_field_errors(),
     }
     return render(request, 'accounts/registerUser.html', context)
 
