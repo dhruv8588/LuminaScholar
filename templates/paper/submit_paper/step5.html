@@ -54,6 +54,23 @@
                   <h5 class="text-secondary" style="margin-left: 10px;">Submission</h5>
               </div>
               <ul class="list-group list-group-flush">
+
+                {% if paper.eicdecision %}
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step0' paper.id %}" class="list-link d-flex justify-content-between align-items-center" next="step0">
+                      <div class="d-flex align-items-center">
+                          {% if paper.decision_response %}
+                              <i class="fas fa-check green-check"></i>&nbsp;
+                          {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;
+                          {% endif %}
+                          <span>Step 0: View and Respond to Decision Letter</span>
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+                {% endif %}
+
                 <li class="list-group-item">
                     <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step1">
                       <div class="d-flex align-items-center">
@@ -124,6 +141,8 @@
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
                             {% if figures_tables_published_elsewhere_desc %}
                               <i class="fas fa-check green-check"></i>  
+                            {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;     
                             {% endif %}  
                         {% else %}
                             <i class="fas fa-check green-check"></i>&nbsp; 
@@ -138,9 +157,19 @@
               </li>
     
                 
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step6">
+                  <div class="d-flex align-items-center">
+                      <i class="fas fa-check green-check"></i>&nbsp;Step 6: Reviewers
+                  </div>
+                  <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+
+                
                   <li class="list-group-item">
-                    <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step6">
-                      &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
+                    <a href="{% url 'submit_paper_step7' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step7">
+                      &nbsp;&nbsp;&nbsp;&nbsp;Step 7: Review & Submit
                     <i class="fas fa-angle-right"></i>
                   </a>
                 </li>
@@ -152,11 +181,17 @@
         <div style="margin-right: 100px;">
         <br/>
         <h2>Step 5: Details & Comments</h2>
-        <p style="color: #54626F;">Enter or paste your cover letter text into the "Cover Letter" box below. If you would like to attach a file containing your cover letter, click the "Browse..." button, locate your file, and click "Attach this Cover Letter." Answer any remaining questions appropriately. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
+        <p style="color: #54626F;">Enter or paste your cover letter text into the "Cover Letter" box below. If you would like to attach a file containing your cover letter, click the "Select..." button, locate your file, and click "Upload". Answer any remaining questions appropriately. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
         <hr>
+
+        <b>Cover Letter</b><br/>
+        <label>Upload Cover Letter</label>
+        <section id="cover_letter-file" class="col-12">
+          {% include 'partials/paper/cover_letter_file.html' %}
+        </section> 
+
           <form id="submit-paper-form_step5" action="{% url 'submit_paper_step5' paper.id %}" method="post" enctype="multipart/form-data">
               {% csrf_token %}
-              <b>Cover Letter</b>
               <div class="row">
                   <div class="col-md-6">
                       <div class="form-group">
@@ -166,29 +201,24 @@
                   </div>
               </div>
 
-              <div class="row">
-                <div class="col-md-6">
+              {% comment %} <div class="row">
                     <div class="file-upload form-group">
                         <label>Upload Cover Letter</label><br/>
 
-                        <section id="cover_letter" class="col-12">
-                            {% include 'partials/cover_letter.html' %}
+                        <section id="cover_letter-file" class="col-12">
+                            {% include 'partials/paper/cover_letter_file.html' %}
                         </section> 
 
-                        <br/>
+                        
                         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-
-                        {% comment %} {% render_field form.cover_letter_file class="file-upload__input" style="display:none" %} {% endcomment %}
                         <input class="file-upload__input" type="file" name="cover_letter_file" id="cover-letter-file-input" style="display:none">
                         <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File...</button>
                         <span class="file-upload__label"></span>
                         <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button><br/><br/>
-                        <button type="button" class="btn btn-success btn-sm" id="upload-file-button" onclick="uploadFile()"><i class="fas fa-upload"></i>&nbsp;Upload File</button>
+                        <button type="button" class="btn btn-success btn-sm" id="upload-file-button" onclick="uploadFile()"><i class="fas fa-upload"></i>&nbsp;Upload File</button> 
                     </div>
-                </div>
-              </div>
+              </div> {% endcomment %}
                
-              <hr>
 
               <b>Manuscript Information</b>
 
@@ -214,73 +244,61 @@
               <hr>
 
               <b>Confirm the following:</b>
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Have you uploaded a Microsoft Word file for the main document?</label><br/>
-                        {{ form.MSWord_file }}
-                    </div>
-                </div>
-              </div>
+             <table class="table table-bordered" >
+                <tr>
+                    <td>
+                      <label><span class="red-asterisk">*</span> Have you uploaded a Microsoft Word file for the main document?</label><br/>
+                      {{ form.MSWord_file }}
+                    </td>
+                  </tr>
+                
+                  <tr>
+                    <td>
+                      <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
+                      {{ form.certification_form }}
+                    </td>
+                  </tr>
+                
+                  <tr>
+                    <td>
+                      <label><span class="red-asterisk">*</span> Do you certify that this manuscript has not been published previously and is not currently under consideration for publication elsewhere?</label><br/>
+                      {{ form.publish_elsewhere }}
+                    </td>
+                  </tr>
+                
+                  <tr>
+                    <td>
+                      <label><span class="red-asterisk">*</span> Does this research require the approval of an institutional ethical committee/institutional review board (IRB)?</label><br/>
+                      {{ form.approval }}
+                    </td>
+                  </tr>
+                
+                  <tr>
+                    <td>
+                      <label><span class="red-asterisk">*</span> Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
+                      {{ form.appropriate_statement }}
+                    </td>
+                  </tr>
+                
+                  <tr>
+                    <td>
+                      <label>Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
+                      {{ form.figures_tables_published_elsewhere }}
+                    </td>
+                  </tr>
+                
+                  <tr>
+                    <td>
+                      <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtain permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
+                      {{ form.figures_tables_published_elsewhere_desc|add_class:'form-control' }}
+                    </td>
+                  </tr>
+                </table>
 
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
-                        {{ form.certification_form }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Do you certify that this manuscript has not been published previously and is not currently under consideration for publication elsewhere?</label><br/>
-                        {{ form.publish_elsewhere }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Does this research require the approval of an institutional ethical committee/institutional review board (IRB)?</label><br/>
-                        {{ form.approval }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
-                        {{ form.appropriate_statement }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
-                        {{ form.figures_tables_published_elsewhere }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtained permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
-                        {{ form.figures_tables_published_elsewhere_desc|add_class:'form-control' }}
-                    </div>
-                </div>
-              </div>
-
-              <hr/>
+                <br/>
 
               <div style="display: inline-block; float: left;">
-                <a href="{% url 'submit_paper_step2' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
+                <a href="{% url 'submit_paper_step4' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
               </div>
               <div style="display: inline-block; float: right;">    
                   <button type="submit" name="save" class="btn btn-dark btn-sm mb-3">Save</button>
@@ -304,7 +322,9 @@
         form.submit();
       });
     }
+  </script>
 
+    {% endblock %} 
 
     {% comment %} document.querySelectorAll(".file-upload__button").forEach(
         function(button) {
@@ -354,7 +374,7 @@
        {% endcomment %}
         
 
-    document.querySelectorAll(".file-upload__button").forEach(
+    {% comment %} document.querySelectorAll(".file-upload__button").forEach(
         function(button) {
             const hiddenInput = button.parentElement.querySelector(
                 ".file-upload__input"
@@ -383,7 +403,7 @@
             });
 
             document.body.addEventListener('htmx:afterSwap', function(evt) {
-                const form = document.querySelector("#myform");
+                // const form = document.querySelector("#myform");
                 // form.reset();
                 hiddenInput.value = ""; 
                 label.textContent = defaultLabelText;
@@ -391,13 +411,12 @@
             });
         }
     );
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </script> {% endcomment %}
 
+
+  {% comment %} <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
-
-
 
   <script>
     function uploadFile() {
@@ -466,17 +485,16 @@ function fetchUpdatedContent() {
     </script>
 
     <script>
-        $(document).ready(function () {
-            $("#upload-file-button").click(function () {
-                // Create the toast element
-                var file = $("{% if paper.cover_letter_file %} <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a> <span class="badge badge-danger badge-pill" style="cursor: pointer;" hx-delete="{% url 'delete_cover_letter' paper.id %}" hx-target="#cover_letter" hx-confirm="Are you sure you wish to delete this file?">X</span> {% endif %}");
-        
-                
-                // Add the toast to the toast container and show it
-                $("#cover_letter").append(file);
-
-            });
-        });
-    </script>
+      $(document).ready(function () {
+          $("#upload-file-button").click(function () {
+              // Create the toast element
+              var file = '{% if paper.cover_letter_file %} <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a> <span class="badge badge-danger badge-pill" style="cursor: pointer;" hx-delete="{% url 'delete_cover_letter' paper.id %}" hx-target="#cover_letter" hx-confirm="Are you sure you wish to delete this file?">X</span> {% endif %}';
+      
+              // Add the toast to the toast container and show it
+              $("#cover_letter").append(file);
+          });
+      });
+  </script>
+  
     
-{% endblock %}
+{% endcomment %}

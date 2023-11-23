@@ -1,5 +1,6 @@
+<h5 class="text-secondary">Authors</h5>
 <li class="list-group-item author d-flex justify-content-between align-items-center">    
-    <span><b>ORDER AUTHOR ACTION</b></span>
+    <span><b>ORDER AUTHOR INSTITUTION ACTION</b></span>
 </li>
 <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_authors' %}" hx-target="#authors" >
     <div class="htmx-indicator">Updating...</div>
@@ -7,12 +8,16 @@
         <div>
             <input type="hidden" name="author_order" value="{{ paper_author.pk }}"/>
             <li class="list-group-item author d-flex justify-content-between align-items-center">    
-                #{{ paper_author.order }} {{ paper_author.author.first_name }} {{ paper_author.author.last_name }} <a href="mailto:{{ paper_author.author.email }}">{{ paper_author.author.email }}</a>
+                #{{ paper_author.order }} {{ paper_author.author.first_name }} {{ paper_author.author.last_name }} {% if paper_author.corresponding_author %}<i style="color: grey;">(Corresponding Author)</i>{% endif %} <a href="mailto:{{ paper_author.author.email }}">{{ paper_author.author.email }}</a>
+                {{ paper_author.author.institution }}{% if paper_author.author.city %}, {{ paper_author.author.city }}{% endif %}{% if paper_author.author.state %}, {{ paper_author.author.state }}{% endif %}, {{ paper_author.author.country }}
                 <select>
                     <option selected disabled>Select...</option>
                     {% if not paper_author.author.user %}
                         <option data-toggle="modal" data-target="#editAuthorModal{{ paper_author.author.id }}">Edit</option> 
                     {% endif %}    
+                    {% if not paper_author.corresponding_author %}
+                        <option data-toggle="modal" data-target="#correspondingAuthor{{ paper_author.author.id }}">Assign as Corresponding Author</option>
+                    {% endif %}
                     <option hx-delete="{% url 'delete_author' paper_author.paper.id paper_author.author.pk %}" hx-target="#add_authors" hx-confirm="Are you sure you wish to delete this Author?">Delete</option>
                 </select>  
             </li>
@@ -33,7 +38,7 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form id="edit-author-form{{ paper_author.author.id }}" class="modal-form">
+                    <form id="edit-author-form{{ paper_author.author.id }}" class="modal-form" hx-post="{% url 'edit_author' paper_author.paper.id paper_author.author.id %}" hx-target='#authors'>
                         {% csrf_token %}
                         <div class="modal-body">
                             <div class="form-row">
@@ -52,8 +57,12 @@
                         <div class="modal-footer justify-content-between">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
 
-                            <a href="#" id="edit-author-button-hidden{{ paper_author.author.id }}" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'edit_author' paper_author.paper.id paper_author.author.id %}" hx-target='#authors' hx-trigger="click" style="display: none;"></a>
-                            <a href="#" id="edit-author-button{{ paper_author.author.id }}" type="button" class="btn btn-primary"><i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author
+                            </button>
+
+                            {% comment %} <a href="#" id="edit-author-button-hidden{{ paper_author.author.id }}" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'edit_author' paper_author.paper.id paper_author.author.id %}" hx-target='#authors' hx-trigger="click" style="display: none;"></a>
+                            <a href="#" id="edit-author-button{{ paper_author.author.id }}" type="button" class="btn btn-primary"><i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Author</a> {% endcomment %}
                         </div>
                     </form>      
                 </div>
@@ -62,18 +71,17 @@
         <!-- Modal end -->
 
         <script>
-            {% comment %} document.getElementById('edit-author-form{{ paper_author.author.id }}').addEventListener('submit', function(event) {
+            document.getElementById('edit-author-form{{ paper_author.author.id }}').addEventListener('submit', function(event) {
                 event.preventDefault();
         
                 $('#editAuthorModal{{ paper_author.author.id }}').modal('hide');
-            }); {% endcomment %}
+            });
         
-            hiddenButton2 = document.getElementById('edit-author-button-hidden{{ paper_author.author.id }}'); 
+            {% comment %} hiddenButton2 = document.getElementById('edit-author-button-hidden{{ paper_author.author.id }}'); 
             button2 = document.getElementById('edit-author-button{{ paper_author.author.id }}');
             //console.log(button2);
             button2.addEventListener("click", function() {
-            console.log("liliyyyyy");
-            console.log(button2);
+            
             firstName2 = document.getElementById('first-name-edit{{ paper_author.author.id }}');
             lastName2 = document.getElementById('last-name-edit{{ paper_author.author.id }}');
         
@@ -91,15 +99,47 @@
                 lastNameError2.innerHTML = '';
             
             if (firstName2.value && lastName2.value) {
-                console.log("Rosyyy");
+                
                 hiddenButton2.click();
             }
             
-        });
+        }); {% endcomment %}
         
         </script>
 
         
-    {% endif %}        
+    {% endif %}    
+{% endfor %}
+
+{% for paper_author in paper_authors %}
+    {% if not paper_author.corresponding_author %}    
+        <!-- Modal -->
+        <div class="modal fade" id="correspondingAuthor{{ paper_author.author.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-edit"></i>&nbsp;&nbsp;Assign as Corresponding Author</h5>
+                    
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to assign the author, {{ paper_author.author.first_name }} {{ paper_author.author.last_name }} as corresponding?<br/><br/>
+
+                        This is the person who is listed as the author to be contacted in the printed publication.<br/><br/>
+
+                        The person whose contact details are included in the published article. Depending on the site configuration, this also might be the person who is contacted regarding the submission during the peer review process or signs the publishing agreement on behalf of all of the authors.
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No, Close</button>
+
+                        <a href="#" id="correspondingAuthor{{ paper_author.author.id }}" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'assign_corresponding_author' paper_author.id %}" hx-target='#authors' hx-trigger="click">Yes&nbsp;<i class="fas fa-angle-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal end -->
+    {% endif %}
 {% endfor %}
 

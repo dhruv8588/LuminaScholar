@@ -1,0 +1,51 @@
+{% if page_obj.has_other_pages %}
+<ul class="pagination" style="float: right; margin-right: 115px;">
+    {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a href="?page=1" class="page-link">First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+    {% else %}
+        <li class="page-item disabled"></li>
+    {% endif %}
+
+
+    {% if pages_obj.number|add:'-2' > 1 %}
+        <li><a class='page-link' href="?page={{ page_obj.number|add:'-2' }}">&hellip;</a></li>
+    {% endif %}
+
+
+    {% for i in page_obj.paginator.page_range %}
+        {% if page_obj.number == i %}
+            <li class="page-item active">
+                <span class="page-link">{{ i }}<span class="sr-only">(current)</span></span>
+            </li>
+        {% elif i > page_obj.number|add:'-2' and i < page_obj.number|add:'2' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+        {% endif %}
+    {% endfor %}
+
+
+    {% if page_obj.paginator.num_pages > page_obj.number|add:'2' %}
+        <li><a class="page-link" href="?page={{ page_obj.number|add:'-2' }}">&hellip;</a></li>
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+        <li><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a></li>
+    {% endif %}
+    
+
+    {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        </li>
+    {% else %}
+        <li class="page-item disabled"></li>
+    {% endif %}
+</ul>
+{% endif %}

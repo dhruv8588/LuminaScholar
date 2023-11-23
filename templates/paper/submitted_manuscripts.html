@@ -69,6 +69,22 @@
                         </a>  
                     </li>
                     <li class="list-group-item">
+                        <a href="{% url 'manuscripts_with_decision' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Manuscripts with Decision
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'revised_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Revised Manuscripts in Draft
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                    <li class="list-group-item">
                         <a href="{% url 'start_new_submission' %}" class="list-link d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center" style="margin-left: 15px;">
                             Start New Submission
@@ -82,24 +98,27 @@
   
       <div class="col-md-8">
         {% if papers %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="thead-light">
+            <table class="table table-bordered table-striped" style="width: 900px;">
+                <thead class="table-secondary">
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Status</th>
+                        <th scope="col">STATUS</th>
                         <th scope="col">ID</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Created</th>
-                        <th scope="col">Submitted</th>
+                        <th scope="col">TITLE</th>
+                        <th scope="col">CREATED</th>
+                        <th scope="col">SUBMITTED</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for paper in papers %}
                         <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
                             <td>
-                                  
+                                {% if not paper.associate_editor %}
+                                    Awaiting AE Selection
+                                {% elif not paper.aerecommendation.date_submitted %}
+                                    Under Review, Awaiting AE recommendation
+                                {% elif paper.aerecommendation.date_submitted and not paper.eicdecision.date_submitted %}
+                                    Awaiting EIC decision
+                                {% endif %}   
                             </td>
                             <td>
                                 {{ paper.journal_id }}
@@ -113,13 +132,12 @@
                                 {{ paper.created_at|date }}
                             </td>
                             <td>
-                                {{ paper.updated_at|date }}
+                                {{ paper.date_submitted|date }}
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
         {% endif %}
       </div>
   </div>

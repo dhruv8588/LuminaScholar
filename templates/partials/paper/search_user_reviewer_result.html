@@ -1,0 +1,284 @@
+{% if user %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="addUserAsReviewer" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Did you mean this Reviewer?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form class="modal-form">
+          {% csrf_token %}
+          <div class="modal-body">
+            <table class="table table-hover">
+              <thead class="thead-light">
+                  <tr>
+                      <th scope="col">Reviewer</th>
+                      <th scope="col">Institution</th>
+                  </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ user.first_name }} {{ user.last_name }}<br/><a href="mailto{{ user.email }}">{{ user.email }}</a></td>
+                  <td>{{ user.institution }}</td>
+                </tr>
+              </tbody>
+            </table>
+              <div class="form-row">
+                  <div class="form-group col-md-6">
+                      <label><span style="color: red">*</span> Preference</label><br/>
+                      <label>
+                          &nbsp;&nbsp;<input type="radio" name="preference1" class="preference1" value="Recommended">&nbsp;I recommend this Reviewer
+                      </label>
+                      <label>
+                          &nbsp;&nbsp;<input type="radio" name="preference1" class="preference1" value="Opposed">&nbsp;I oppose this Reviewer
+                      </label>
+                      <div id="preference-error1" style="color:red;"></div>
+                  </div>
+              </div>
+              <div class="form-row" style="display: none;" id="reason-div1">
+                  <div class="form-group col-md-12">
+                      <label>Reason for <span id="preference-text1"></span></label>
+                      <span class="badge badge-info" id="result1" style="float: right;"></span>
+                      <input type="text" class="form-control" id="reason1" name="reason1">
+                  </div>
+              </div>  
+
+          </div>    
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No</button>
+            <a href="#" id="add-reviewer-button-hidden2" type="button" data-dismiss="modal" hx-post="{% url 'add_user_as_reviewer_preference' paper_id user.id %}" hx-target="#reviewers" style="display: none;"></a>
+            <a href="#" id="add-reviewer-button2" type="button" class="btn btn-primary">&nbsp;Yes&nbsp;<i class="fas fa-angle-right"></i></a>
+          </div>
+        </form>   
+      </div>
+    </div>
+  </div>
+
+  <script> 
+    $(document).ready(function() {
+        var yesButtonClicked = false; 
+  
+        $('#addUserAsReviewer').modal('show');
+        $('#AddNewReviewer').modal('hide');
+  
+        $('#addUserAsReviewer').on('hidden.bs.modal', function () {
+            if (!yesButtonClicked) { 
+                $('#email').val("");
+
+                var message = "We removed the e-mail address you entered {{ reviewer.email }} because it is associated with an existing account you chose not to use. Use a different e-mail address or, if you have changed your mind, you may enter the e-mail address again and link to the existing account.";
+                $('#message').text(message);
+                $('.error-message').text("");
+
+                document.getElementById("rev-error-box").style.display = 'none';
+                $('#AddNewReviewer').modal('show');
+            } else {
+                yesButtonClicked = false;
+            }
+          });
+
+        $('#addUserAsReviewer .btn-primary').click(function () {
+          yesButtonClicked = true;
+        }); 
+    }); 
+  </script>
+
+
+{% elif reviewer %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="addReviewerAsReviewer" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Did you mean this Reviewer?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form class="modal-form">
+          {% csrf_token %}
+          <div class="modal-body">
+            <table class="table table-hover">
+              <thead class="thead-light">
+                  <tr>
+                      <th scope="col">Reviewer</th>
+                      <th scope="col">Institution</th>
+                  </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ reviewer.first_name }} {{ reviewer.last_name }}<br/><a href="mailto{{ reviewer.email }}">{{ reviewer.email }}</a></td>
+                  <td>-</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="color: red;"><b>Note:</b> You may edit the details of this author by first adding him/her as author to this manuscript.</p>
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                  <label><span style="color: red">*</span> Preference</label><br/>
+                  <label>
+                      &nbsp;&nbsp;<input type="radio" name="preference1" class="preference1" value="Recommended">&nbsp;I recommend this Reviewer
+                  </label>
+                  <label>
+                      &nbsp;&nbsp;<input type="radio" name="preference1" class="preference1" value="Opposed">&nbsp;I oppose this Reviewer
+                  </label>
+                  <div id="preference-error1" style="color:red;"></div>
+              </div>
+          </div>
+
+        <div class="form-row" style="display: none;" id="reason-div1">
+            <div class="form-group col-md-12">
+                <label>Reason for <span id="preference-text1"></span></label>
+                <span class="badge badge-info" id="result1" style="float: right;"></span>
+                <input type="text" class="form-control" id="reason1" name="reason1">
+            </div>
+        </div>  
+
+        </div>    
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No</button>
+        
+          <a href="#" id="add-reviewer-button-hidden2" type="button" data-dismiss="modal" hx-post="{% url 'add_reviewer_as_reviewer_preference' paper_id reviewer.id %}" hx-target="#reviewers" style="display: none;"></a>
+          <a href="#" id="add-reviewer-button2" type="button" class="btn btn-primary">&nbsp;Yes&nbsp;<i class="fas fa-angle-right"></i></a>
+        </div>
+      </form>  
+      </div>
+    </div>
+  </div>
+
+  
+  <script> 
+    $(document).ready(function() {
+        var yesButtonClicked = false; 
+  
+        $('#AddNewReviewer').modal('hide');
+        $('#addReviewerAsReviewer').modal('show');
+  
+        $('#addReviewerAsReviewer').on('hidden.bs.modal', function () {
+            if (!yesButtonClicked) { 
+                $('#email').val("");
+
+                var message = "We removed the e-mail address you entered {{ user.email }} because it is associated with an existing account you chose not to use. Use a different e-mail address or, if you have changed your mind, you may enter the e-mail address again and link to the existing account.";
+                $('#message').text(message);
+                $('.error-message').text("");
+
+                document.getElementById("rev-error-box").style.display = 'none'; 
+                $('#AddNewReviewer').modal('show');
+            } else {
+                yesButtonClicked = false;
+            }
+          });
+
+        $('#addReviewerAsReviewer .btn-primary').click(function () {
+          yesButtonClicked = true;
+        }); 
+    }); 
+  </script>
+
+
+{% elif author %}
+<script>
+var rev_error_box = document.getElementById("rev-error-box");  
+var rev_error = document.getElementById("rev-error");
+rev_error.innerHTML = "There is already an author with {{ author.email }} added to this manuscript.";
+rev_error_box.style.display = 'block';
+
+document.getElementById("add-reviewer-button").style.pointerEvents="none";
+document.getElementById("add-reviewer-button").style.cursor="default";
+document.getElementById("add-reviewer-button").style.opacity=0.5;
+</script>
+
+{% else %}
+<script>
+  var rev_error = document.getElementById("rev-error");
+  rev_error.innerHTML = "";
+  rev_error_box.style.display = 'none';
+  document.getElementById("add-reviewer-button").style.pointerEvents="auto";
+  document.getElementById("add-reviewer-button").style.cursor="pointer";
+  document.getElementById("add-reviewer-button").style.opacity=1;
+</script>
+
+{% endif %}
+
+{% if user or reviewer %}
+<script>
+    function getSelectedRadioButtonValue(radioButtonClass) {
+        var radioButtons = document.getElementsByClassName(radioButtonClass);
+
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                return radioButtons[i].value;
+            }
+        }
+
+        return null;
+    } 
+
+    var preferenceRadios1 = document.getElementsByClassName('preference1');
+
+    var reason1 = document.getElementById("reason1");
+
+    var result1 = document.getElementById("result1");
+    var limit = 100;
+    result1.textContent = 0 + ' OUT OF ' + limit + ' CHARACTERS';
+
+    for (var i = 0; i < preferenceRadios1.length; i++) {
+      preferenceRadios1[i].addEventListener('change', function() {
+          document.getElementById('reason-div1').style.display = 'block';
+          var preferenceValue1 = getSelectedRadioButtonValue('preference1');
+          
+          preferenceText1 = document.getElementById("preference-text1");
+          if (preferenceValue1 === 'Recommended') {
+            preferenceText1.innerHTML = 'Recommendation';
+          } else if (preferenceValue1 === 'Opposed') {
+            preferenceText1.innerHTML = 'Opposition';
+          } 
+
+          reason1.value = '';
+          result1.textContent = 0 + ' OUT OF ' + limit + ' CHARACTERS';
+      });
+    }
+
+    reason1.addEventListener("input",function(){
+        var textLength = reason1.value.length;
+
+        if(textLength >= limit){
+          reason1.value = reason1.value.substring(0, limit);
+          textLength -= 1;
+        }
+
+        result1.textContent = textLength + ' OUT OF ' + limit + ' CHARACTERS';
+        
+    });
+
+
+      hiddenButton1 = document.getElementById('add-reviewer-button-hidden2');
+      button1 = document.getElementById('add-reviewer-button2');
+      button1.addEventListener("click", function() {
+        
+        preferenceRadios1 = document.getElementsByClassName('preference1');
+
+        preferenceError1 = document.getElementById('preference-error1');
+
+        var isAnyPreferenceRadioSelected1 = Array.from(preferenceRadios1).some(preferenceRadio1 => preferenceRadio1.checked);
+        if (!isAnyPreferenceRadioSelected1) 
+          preferenceError1.innerHTML = 'Preference is required';
+        else  
+          preferenceError1.innerHTML = '';
+      
+        if (isAnyPreferenceRadioSelected1) {
+          hiddenButton1.click();
+        }
+      
+    });
+
+    document.getElementById("add-reviewer-button").style.pointerEvents="auto";
+    document.getElementById("add-reviewer-button").style.cursor="pointer";
+    document.getElementById("add-reviewer-button").style.opacity=1;
+{% endif %}
+  
+</script>

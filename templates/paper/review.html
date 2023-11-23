@@ -15,9 +15,44 @@
   #my-great-dropzone .dz-preview .dz-progress {
     opacity: 0;
   }
+
+  .error-box {
+    border: 2px solid red;
+    background-color: lightcoral;
+    color: darkred;
+    padding: 10px;
+    width: 650px;
+}
+
+  .hidden {
+    display: none;
+  }
+
+  #rev {
+    background-color: #555;
+  }
+
+  ul li a {
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  ul li a:hover {
+    background-color: Thistle;
+  }
+
+  .selected {
+    background-color: Thistle;
+    color: DarkMagenta;
+  }
+
+  ul li {
+    margin-right: 20px;
+  }
+
 </style>
-
-
 
 
 <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
@@ -26,119 +61,216 @@
 <h2 class="text-secondary" style="margin-left: 75px;">Review {{ paper.journal_id }}</h2>
 <div class="row">
   <div class="col-md-6">
-      <div class="card text-center" style="margin-left: 75px;">
-        <div class="card-header">
-          <ul class="nav nav-pills card-header-pills">
-            <li class="nav-item">
-              <a class="nav-link active" href="#">Proof</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Files</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Instructions</a>
-            </li>
-          </ul>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Title</h5>
-          <p class="card-text">
-            Text
-          </p>
-        </div>
+      <div class="card text-center" id="info" style="margin-left: 75px; height: 910px">
+        {% include 'partials/paper/view_proof.html' %}
       </div>
   </div>
   
   <div class="col-md-6">
     <div style="margin-right: 100px;">
         <div class="alert alert-primary" role="alert" style="height: 50px;">
-          <div style="float: left"><i class="fa-regular fa-calendar"></i> Due 1 Jan 2024</div>
+          <div style="float: left"><i class="fa-regular fa-calendar"></i> Due {{ review.due_date|date }}</div>
           <div style="float: right"><i class="fa-regular fa-envelope"></i> <a href="mailto:{{ paper.associate_editor.email }}">Contact Journal</a></div>
         </div>
-        <form action="{% url 'review' paper.id %}" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <b>Reviewer recommendation for paper type</b>
-            {{ form.paper_type }}<br/>
-            <b>Should this paper be considered for a best paper award?</b>
-            {{ form.has_best_paper_award_potential }}<br/>
-            <b><span style="color: red;">*</span> Does the paper present innovative ideas or material?</b>
-            {{ form.is_innovative }}<br/>
-            <b><span style="color: red;">*</span> Rate the paper on its contribution to the body of knowledge to this field(none=1, very important=5)</b><br/>
-            {% for choice in form.rating %}
-              <span style="margin-right: 50px;">{{ choice }}</span>
-            {% endfor %}<br/><br/>
-            <b><span style="color: red;">*</span> Should anything be deleted from or condensed in the paper?</b>
-            {{ form.anything_to_be_deleted }}
-            <b>If so, please explain</b>
-            {{ form.what_should_be_deleted|add_class:'form-control' }}<br/><br/> 
-            <b>What amount of copy editing do you think the paper needs?</b>
-            {{ form.amt_of_copy_editing }}<br/>
-            <b><span style="color: red;">*</span> Is this paper of potential interest to developers and engineers?</b>
-            {{ form.interest_to_engineers }}<br/> 
-            <b>Would you be willing to review a revision of this manuscript?</b>
-            {{ form.will_review_revised_version }}<br/> 
-            <b><span style="color: red;">*</span> Recommendation</b>
-            {{ form.recommendation }}<br/>
-            <b>Confidential Comments to Editor</b>
-            {{ form.comments_to_editor|add_class:'form-control' }}<br/><br/> 
-            <b>Comments to Author</b>
-            {{ form.comments_to_author|add_class:'form-control' }}<br/><br/>
 
-            <hr/>
+        <div id="success" class="alert alert-warning alert-dismissible fade show hidden" role="alert" style="border: 1px solid red;">
+          <i class="fas fa-star"></i> <strong>Success!</strong> Your work has been saved!
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+          </button>
+      </div>
+
+        <div id="review-form">
+          {% include 'partials/review_form.html' %}
+        </div>
+        
+          <b>Attach Files</b>
+
+          <div id="review-files">
+            {% include "partials/review_files.html" %}
+          </div>
+
+          <br/><br/>
+          <hr/>
 
             <div style="display: inline-block; float: left;">
               <a href="{% url 'active_reviews' %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
             </div>
             <div style="display: inline-block; float: right;">    
-                <button type="submit" name="save_draft" class="btn btn-dark btn-sm mb-3"><i class="fa-solid fa-floppy-disk"></i> Save Draft</button>
-                <button type="submit" name="submit_review" class="btn btn-dark btn-sm mb-3">Submit Review&nbsp;<i class="fas fa-angle-right"></i></button>
+                <button class="showElementButton save-review btn btn-dark btn-sm mb-3"><i class="fa-solid fa-floppy-disk"></i> Save Draft</button>
+                <button id='show_submit_review_modal' class="showElementButton save-review btn btn-dark btn-sm mb-3" data-dismiss="modal">Submit Review&nbsp;<i class="fas fa-angle-right"></i></button>
             </div>
-          </form>  
-
-          {% comment %} <form action="{% url 'upload_rev_file' %}" style="display:none;">
-            <input type='file' name="rev_file" id='file-input' />
-            <button type='submit' id='file-input-btn'></button>
-          </form> {% endcomment %}
-
- 
-
-          <br/><br/><br/><br/>
-          <b>Attach Files</b>
-
-          <form action="/target" class="dropzone" id="my-great-dropzone"> {% csrf_token %}</form>
-
-          <form hx-post="{% url 'upload_rev_file' review.id %}" hx-target="#rev_files" hx-encoding="multipart/form-data" style="display: none;">
-            {% csrf_token %}
-            <input type="file" name="rev_file" id="file-input" />
-            <button type='submit' id='file-input-btn'></button>
-          </form>
-        <br/>
-          <div id="rev_files">
-            {% include "partials/rev_files.html" %}
-          </div>
-
         </div>
       </div>
+  </div>
 
-          <script>
-            var dropzone = new Dropzone('#my-great-dropzone', {
-              autoProcessQueue: false,
+
+  <!-- Modal -->
+  <div class="modal fade" id="SubmitReview" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation" style="color: red;"></i>&nbsp;Submit Review?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Are you ready to submit this Review?
+        </div>  
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No, Go Back</button>
+          <a href="{% url 'submit_review' paper.id %}" type="button" class="btn btn-primary">Yes, Submit Review&nbsp;<i class="fas fa-angle-right"></i></a>
+        </div>   
+      </div>
+    </div>
+  </div>
+
+      <script>
+        /*
+        var form = document.getElementById('myForm');
+
+        // Get a unique identifier for the current object (you can replace this with your actual object identifier logic)
+        var objectId = {{ review.id }}; // Replace this with the unique identifier for the current object
+        var buttons = document.querySelectorAll('.showElementButton');
+        buttons.forEach(function(button) {
+          // Check if the element should be displayed permanently for this object from localStorage
+          if (localStorage.getItem('elementVisible-' + objectId) === 'true') {
+            document.getElementById('permanentElement').classList.remove('hidden');
+          }
+      
+          // Add click event listener to the button
+          button.addEventListener('click', function() {
+            // Show the element
+            document.getElementById('permanentElement').classList.remove('hidden');
+      
+            // Save the state to localStorage for this specific object
+            localStorage.setItem('elementVisible-' + objectId, 'true');
+          });
+        });
+        */
+
+        // Scroll to the top of the page
+        function scrollToTop() {
+          window.scrollTo({
+              top: 0,
+              behavior: 'smooth' // for smooth scrolling, use 'auto' for instant scrolling
+          });
+        }
+
+        var saveBtns = document.getElementsByClassName("save-review");
+        var showSubmitReviewModalButton = document.getElementById("show_submit_review_modal");
+        for (var i = 0; i < saveBtns.length; i++) {
+            saveBtns[i].addEventListener('click', function() {
+                document.getElementById("submit-review-hidden").click();
+                document.getElementById('success').classList.remove('hidden');
+                scrollToTop();
             });
+        }
 
-
-            dropzone.on("addedfile", file => {
-              var inputFile = document.getElementById("file-input");
-              
-              const dataTransfer = new DataTransfer();
-              dataTransfer.items.add(file);
-              inputFile.files = dataTransfer.files;
-              
-              var inputFileButton = document.getElementById("file-input-btn");
-              inputFileButton.click();  
+        {% comment %} showSubmitReviewModalButton.addEventListener('click', function() {
+            document.addEventListener('htmx:afterSwap', function (event) {
+                if ($('.error-box').is(':visible') || document.getElementById('permanentElement').classList.contains('hidden')) {
+                  // Error box is visible, do nothing
+                } else {
+                    // Error box is not visible, execute your JavaScript code
+                    $('#SubmitReview').modal('show');
+                }
             });
+        });  {% endcomment %}
               
-          </script>
+
+        var showSubmitReviewModalButton = document.getElementById("show_submit_review_modal");
+
+        function showReviewModal() {
+          if ($('.error-box').is(':visible') || document.getElementById('permanentElement').classList.contains('hidden')) {
+            // Error box is visible, do nothing
+          } else {
+              // Error box is not visible, execute your JavaScript code
+              $('#SubmitReview').modal('show');
+          }
+          //document.removeEventListener('htmx:afterSwap', afterSwapHandler);
+        }
+
+        function afterSwapHandler(event) {
+            // Handle htmx:afterSwap event here
+            showReviewModal();
+        }
+
+        showSubmitReviewModalButton.addEventListener('click', function() {
+            // Add the htmx:afterSwap event listener
+            document.addEventListener('htmx:afterSwap', afterSwapHandler);
+        });
+
+        // Optionally, you can also remove the htmx:afterSwap event listener when the modal is closed
+        $('#SubmitReview').on('hidden.bs.modal', function () {
+          document.removeEventListener('htmx:afterSwap', afterSwapHandler);
+        });
+              
+
+</script>
 
 
-          {% endblock %}
+
+{% comment %} 
+<script>
+   // Function to get the value of a selected radio button
+    function getSelectedRadioButtonValue(radioButtonName) {
+        var radioButtons = document.getElementsByName(radioButtonName);
+
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                return radioButtons[i].value;
+            }
+        }
+
+        return null;
+    }
+
+    var anythingToBeDeletedRadios = document.getElementsByName('anything_to_be_deleted');
+
+    for (var i = 0; i < anythingToBeDeletedRadios.length; i++) {
+      anythingToBeDeletedRadios[i].addEventListener('change', function() {
+          var anythingToBeDeletedValue = getSelectedRadioButtonValue('anything_to_be_deleted');
+          
+          if (anythingToBeDeletedValue === 'Yes') {
+            asterisk = document.getElementById("asterisk");
+            asterisk.style.visibility = "visible";
+          } else if (anythingToBeDeletedValue === 'No') {
+            asterisk = document.getElementById("asterisk");
+            asterisk.style.visibility = "hidden";
+          } 
+      });
+    }
+  
+    var btn = document.getElementById("show_submit_review_modal");
+    btn.addEventListener('click', function() {
+        // Function to check if a radio button is selected
+        function isRadioButtonSelected(radioButtonName) {
+            var radioButtons = document.getElementsByName(radioButtonName);
+    
+            for (var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked) {
+                    return true;
+                }
+            }
+    
+            return false;
+        }
+
+     
+      
+      // Check if the following fields have an option selected
+      var isInnovativeSelected = isRadioButtonSelected('is_innovative');
+      var ratingSelected = isRadioButtonSelected('rating');
+      var anythingToBeDeletedSelected = isRadioButtonSelected('anything_to_be_deleted');
+      var interestToEngineersSelected = isRadioButtonSelected('interest_to_engineers');
+      var recommendation = isRadioButtonSelected('recommendation');
+
+      if (!isInnovativeSelected && !ratingSelected && !anythingToBeDeletedSelected && !interestToEngineersSelected && !recommendation ) {
+          alert('Please select an option for "Will you review a revised version?"');
+      }
+  });
+  </script> {% endcomment %}
+  
+    {% endblock %}

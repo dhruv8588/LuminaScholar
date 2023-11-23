@@ -1,0 +1,101 @@
+{% load custom_filters %}    
+
+{% if duplicate_files %}
+    <div class="error-box" style="width: 600px;"> 
+        <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+        <ul>
+            {% for file in duplicate_files %}
+                <li>A file named {{ file }} is already uploaded for this manuscript. If you want to upload this file (e.g. this is a replacement for an existing file) you must rename the new file and then upload it</li>
+            {% endfor %}
+        </ul> 
+    </div><br/>
+{% endif %}
+
+<table class="table table-bordered" style="width: 600px;">
+    <thead class="table-success">
+      <tr style="color: green;">
+        <th scope="col">Files Attached</th>
+        <th scope="col">Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for eic_file in decision.decision_files.all %}
+            <tr>
+                <td><a href="{{ eic_file.file.url }}">{{ eic_file.file|basename }}</a></td>
+                <td>
+                    <span class="badge badge-danger badge-pill" id="badge"
+                                style="cursor: pointer;"
+                                hx-delete="{% url 'delete_eic_file' decision.id eic_file.id %}"
+                                hx-target="#eic-files" hx-confirm="Are you sure you wish to delete this file?">X</span>
+                </td>  
+            </tr>   
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<form hx-post="{% url 'save_eic_files' decision.id %}" hx-target="#eic-files" hx-encoding="multipart/form-data">
+    {% csrf_token %}
+    <input class="file-upload__input" type="file" name="eic_files[]" style="display:none" multiple>
+    <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File(s)...</button>
+    <span class="file-upload__label"></span>
+    <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button><br/><br/>
+    <button type="submit" class="btn btn-success btn-sm" id="upload-files"><i class="fas fa-upload"></i>&nbsp;Upload File(s)</button>
+</form>
+<br/>
+
+                
+<script>
+    document.querySelectorAll(".file-upload__button").forEach(
+        function(button) {
+            const hiddenInput = button.parentElement.querySelector(
+                ".file-upload__input"
+            );
+            const label = button.parentElement.querySelector(".file-upload__label");
+            const defaultLabelText = "No file selected";
+
+            label.textContent = defaultLabelText;
+            label.title = defaultLabelText;
+
+            button.addEventListener("click", function() {
+                hiddenInput.click();
+            });
+
+
+            /*hiddenInput.addEventListener("change", function() {
+                const filename = hiddenInput.files[0].name;
+                label.textContent = filename || defaultLabelText;
+                label.title = label.textContent;
+            });*/
+
+
+            hiddenInput.addEventListener("change", function() {
+                const filenameList = Array.prototype.map.call(hiddenInput.files, function(
+                  file
+                ) {
+                  return file.name;
+                });
+          
+                label.textContent = filenameList.join(", ") || defaultLabelText;
+                label.title = label.textContent;
+              });
+
+            const resetButton = button.parentElement.querySelector(".file-upload__reset"); 
+            resetButton.addEventListener("click", function() {
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                // const form = document.querySelector("#myform");
+                // form.reset();
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+        }
+    );
+  </script>                
+
+  

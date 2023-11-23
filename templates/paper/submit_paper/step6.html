@@ -35,7 +35,7 @@
     background-color: lightcoral;
     color: darkred;
     padding: 10px;
-    width: 800px;
+    width: 470px;
 }
 
 .green-check {
@@ -49,6 +49,15 @@
 #au {
   background-color: #555;
 }
+
+select {
+  appearance: none; /* Remove default styles */
+  background-color: #f0f0f0; /* Background color */
+  border: 1px solid #ccc; /* Border color */
+  padding: 3px; /* Padding */
+  width: 150px; /* Width of the select box */
+  border-radius: 4px; /* Rounded corners */
+}
 </style>  
 
 <div class="row">
@@ -61,6 +70,23 @@
               <h5 class="text-secondary">&nbsp;&nbsp;Submission</h5>
             </div>
             <ul class="list-group list-group-flush">
+
+              {% if paper.eicdecision %}
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step0' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if paper.decision_response %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        {% endif %}
+                        <span>Step 0: View and Respond to Decision Letter</span>
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+              {% endif %}
+
               <li class="list-group-item">
                 <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
@@ -127,6 +153,8 @@
                     {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
                         {% if figures_tables_published_elsewhere_desc %}
                           <i class="fas fa-check green-check"></i>  
+                        {% else %}
+                          &nbsp;&nbsp;&nbsp;&nbsp;     
                         {% endif %}  
                     {% else %}
                         <i class="fas fa-check green-check"></i>&nbsp; 
@@ -140,13 +168,23 @@
             </a>
           </li>
 
-            
-              <li class="list-group-item selected text-secondary">
-                <div class="d-flex justify-content-between align-items-center">
-                  &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
-                <i class="fas fa-angle-right"></i>
+          <li class="list-group-item selected text-secondary">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                  <i class="fas fa-check green-check"></i>&nbsp;Step 6: Reviewers
                 </div>
-            </li>
+              <i class="fas fa-angle-right"></i>
+            </div>
+          </li>
+
+
+            
+          <li class="list-group-item">
+            <a href="{% url 'submit_paper_step7' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+              &nbsp;&nbsp;&nbsp;&nbsp;Step 7: Review & Submit
+            <i class="fas fa-angle-right"></i>
+          </a>
+        </li>
 
             </ul>
         </div>
@@ -155,325 +193,218 @@
     <div class="col-md-8">
       <div style="margin-right: 100px;">
         <br/>
-      <h2>Step 6: Review & Submit</h2>
-      <p style="color: #54626F;">Review the information below for correctness and make changes as needed. <b>After reviewing the manuscript proofs at the foot of this page, you MUST CLICK 'SUBMIT' to complete your submission.</b><br/><span class="red-asterisk">*</span> = Required Fields</p>
+      <h2>Step 6: Reviewers</h2>
+      <p style="color: #54626F;">Add your preferred and non-preferred reviewers by entering the reviewer's information into the Add Reviewer form. When you are finished, click "Continue". </b><br/><span class="red-asterisk">*</span> = Required Fields</p>
       <hr/>
-      {% comment %} step1 {% endcomment %}
-        <h5 style="display: inline-block; margin-right: 10px;">
-          {% if not paper.title or not paper.abstract or not paper.type %}
-            <i class="fas fa-x fa-xs" style="color: red;"></i> 
-          {% else %}
-            <i class="fas fa-check fa-xs" style="color: green;"></i> 
-          {% endif %}  
-          Step 1: Type, Title, & Abstract
-        </h5>
-        <a href="{% url 'submit_paper_step1' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% include 'partials/step1_errors.html' %}<br/>
-        <table class="table table-bordered table-striped" style="width: 800px;">
-            <thead class="thead-dark">
-              <tr>
-                <th scope="col">FIELD</th>
-                <th scope="col">RESPONSE</th>
-              </tr>
-            </thead>
-            <tbody>
-                <tr>
-                  <th>Type</th>
-                  {% if paper.type %}
-                    <td>{{ paper.type }}</td>
-                  {% else %}
-                    <td><span class="badge badge-danger">Incomplete</span></td>
-                  {% endif %}
-                </tr>
-                <tr>
-                  <th>Title</th>  
-                  {% if paper.title %}
-                    <td>{{ paper.title }}</td>
-                  {% else %}
-                    <td><span class="badge badge-danger">Incomplete</span></td>
-                  {% endif %}
-                </tr>
-                <tr>
-                  <th>Abstract</th>  
-                  {% if paper.abstract %}
-                    <td>{{ paper.abstract }}</td>
-                  {% else %}
-                    <td><span class="badge badge-danger">Incomplete</span></td>
-                  {% endif %}
-                </tr>  
-              </tbody>    
-            </table>
-    
 
-        <br/>    
-        {% comment %} step2 {% endcomment %}
-        
-        <h5 style="display: inline-block; margin-right: 10px;">
-          {% if not paper.authors.all %}
-            <i class="fas fa-x fa-xs" style="color: red;"></i> 
-          {% else %}
-            <i class="fas fa-check fa-xs" style="color: green;"></i> 
-          {% endif %}  
-          Step 2: Authors 
-        </h5>
-        <a href="{% url 'submit_paper_step2' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% include 'partials/step2_errors.html' %}<br/>
-        <table class="table table-bordered table-striped" style="width: 800px;">
-            <thead class="thead-dark">
-              <tr>
-                <th scope="col">FIELD</th>
-                <th scope="col">RESPONSE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for paper_author in paper_authors %}
-              <tr>
-                <th>Author {{ forloop.counter }}</th>
-                <td>{{ paper_author.author.first_name }} {{ paper_author.author.last_name }}<br/><a href="mailto:{{ paper_author.author.email }}">{{ paper_author.author.email }}</a></td>
-              </tr>  
-              {% endfor %}
-            </tbody>    
-        </table> 
+      <div id='reviewers'>
+         {% include "partials/paper/reviewers.html" %} 
+      </div>
+
+     
+      <a href="#" type="button" class="btn btn-secondary btn-sm" id="add-rev" data-toggle="modal" data-target="#AddNewReviewer"><i class="fas fa-plus"></i>&nbsp;Add Reviewer</a>
 
 
-        <br/>    
-        {% comment %} step3 {% endcomment %}
 
-        <h5 style="display: inline-block; margin-right: 10px;">
-          {% if not paper.attributes.all %}
-            <i class="fas fa-x fa-xs" style="color: red;"></i> 
-          {% else %}
-            <i class="fas fa-check fa-xs" style="color: green;"></i> 
-          {% endif %}  
-          Step 3: Attributes
-        </h5>
-        <a href="{% url 'submit_paper_step3' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% include 'partials/step3_errors.html' %}<br/>
-        <table class="table table-bordered table-striped" style="width: 800px;">
-            <thead class="thead-dark">
-              <tr>
-                <th scope="col">FIELD</th>
-                <th scope="col">RESPONSE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for attribute in paper.attributes.all %}
-                <tr>
-                  <th>Attribute {{ forloop.counter }}</th>
-                  <td>{{ attribute.name }}</td>
-                </tr>  
-              {% endfor %}
-              {% for attribute in paper.additionalAttributes.all %}
-                <tr>
-                  <th>Additional Attribute {{ forloop.counter }}</th>
-                  <td>{{ attribute.name }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>    
-        </table>
-  
-        <br/>    
-        {% comment %} step4 {% endcomment %}
-
-        <h5 style="display: inline-block; margin-right: 10px;">
-          {% if not paper.files.all %}
-            <i class="fas fa-x fa-xs" style="color: red;"></i> 
-          {% else %}
-            <i class="fas fa-check fa-xs" style="color: green;"></i> 
-          {% endif %}  
-          Step 4: File Upload
-        </h5>
-        <a href="{% url 'submit_paper_step4' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% include 'partials/step4_errors.html' %}<br/>
-        <table class="table table-bordered table-striped" style="width: 800px;">
-            <thead class="thead-dark">
-              <tr>
-                <th scope="col">FIELD</th>
-                <th scope="col">RESPONSE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for file in paper.files.all %}
-              <tr>
-                <th>File {{ forloop.counter }}</th>
-                <td><a href="{{ file.file.url }}">{{ file|basename }}</a></td>
-              </tr>  
-              {% endfor %}
-            </tbody>    
-          </table>
-
-
-        <br/>    
-        {% comment %} step5 {% endcomment %}
-
-        <h5 style="display: inline-block; margin-right: 10px;">
-          {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
-              {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                  {% if figures_tables_published_elsewhere_desc %}
-                      <i class="fas fa-check green-check"></i>  
-                  {% endif %}  
-              {% else %}
-                  <i class="fas fa-check green-check"></i>&nbsp; 
-              {% endif %}
-          {% else %}
-              <i class="fas fa-x fa-xs" style="color: red;"></i> 
-          {% endif %}  
-          Step 5: Details & Comments
-        </h5>
-        <a href="{% url 'submit_paper_step5' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
-        {% include 'partials/step5_errors.html' %}<br/>
-          <b>Cover Letter</b>
-              <div class="row">
-                  <div class="col-md-6">
-                      <div class="form-group">
-                          <label>Write Cover Letter</label>
-                          {{ form.cover_letter|add_class:'form-control' }}
-                      </div>
-                  </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                    <div class="file-upload form-group">
-                        <label>Upload Cover Letter</label><br/>
-                        {% if paper.cover_letter_file %}
-                          <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a>
-                        {% endif %}
-                        
-                    </div>
-                </div>
-              </div>
-
-              <hr>
-
-              <b>Manuscript Information</b>
-              <table class="table table-bordered table-striped" style="width: 800px;">
-                <tbody>
-                    <tr>
-                        <td><span class="red-asterisk">*</span> Number of figures (total)</td>
-                        <td>{% render_field form.number_of_figures class="form-control" style="width: 250px" %}</td>
-                    </tr>
-                    
-                    <tr>
-                        <td><span class="red-asterisk">*</span> Number of tables</td>
-                        <td>{% render_field form.number_of_tables class="form-control" style="width: 250px" %}</td>
-                    </tr>
-
-                    <tr>
-                        <td><span class="red-asterisk">*</span> Word count</td>
-                        <td>{% render_field form.word_count class="form-control" style="width: 250px" %}</td>
-                    </tr>
-                </tbody>    
-              </table>
-              
-              <hr>
-
-              <b>Confirm the following:</b>
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Have you uploaded a Microsoft Word file for the main document?</label><br/>
-                        {{ form.MSWord_file }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
-                        {{ form.certification_form }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Do you certify that this manuscript has not been published previously and is not currently under consideration for publication elsewhere?</label><br/>
-                        {{ form.publish_elsewhere }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Does this research require the approval of an institutional ethical committee/institutional review board (IRB)?</label><br/>
-                        {{ form.approval }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label><span class="red-asterisk">*</span> Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
-                        {{ form.appropriate_statement }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
-                        {{ form.figures_tables_published_elsewhere }}
-                    </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtained permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
-                        {{ form.figures_tables_published_elsewhere_desc|add_class:'form-control' }}
-                    </div>
-                </div>
-              </div>
-    <hr/>
-
-    <h5><span class="red-asterisk">*</span> View Submission</h5>
-      You must view the Submission before you can submit<br/><br/>
-      <a href="{% url 'merge_pdfs' paper.id %}" target="_blank" class="btn btn-secondary" id="viewSubmissionBtn">View Submission</a> 
+      
+       
     <br/><br/><hr/>
+
     <div style="display: inline-block; float: left;">
       <a href="{% url 'submit_paper_step5' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
     </div>
-    <div style="display: inline-block; float: right;">    
-        {% comment %} <button type="button" class="btn btn-dark mb-3 btn-sm" disabled id="submitButton">Submit&nbsp;<i class="fas fa-angle-right"></i></button>   {% endcomment %}
-
-        <a href="{% url 'submit_paper' paper.id %}" class="btn btn-dark btn-sm disabled" id="submitBtn">Submit&nbsp;<i class="fas fa-angle-right"></i></a>
-    </div>    
+    <div style="display: inline-block; float: right;">
+      <a href="{% url 'submit_paper_step7' paper.id %}" class="btn btn-dark btn-sm">Continue&nbsp;<i class="fas fa-angle-right"></i></a>
+    </div>
+  
   </div> 
 </div>
 
 </div> 
 
 
-  <script>
-    $(':radio:not(:checked)').attr('disabled', true);
-  </script>  
+<!-- Modal -->
+<div class="modal fade" id="AddNewReviewer" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus"></i>&nbsp;Add Reviewer</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+        <form id="add-reviewer-form" class="modal-form">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="form-row" id="rev-error-box" style="display: none;">
+                <div class="error-box"> 
+                  <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+                  <ul>
+                      <span id="rev-error"></span>
+                  </ul> 
+                </div>
+                <br/>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label><span style="color: red">*</span> First name</label>
+                <input type="text" class="form-control" id="first-name" name="first_name">
+                <div id="first-name-error" class="error-message" style="color:red;"></div>
+              </div>
+              <div class="form-group col-md-6">
+                <label><span style="color: red">*</span> Last name</label>
+                <input type="text" class="form-control" id="last-name" name="last_name">
+                <div id="last-name-error" class="error-message" style="color:red;"></div>
+              </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-7">
+                  <label><span style="color: red">*</span> Email</label>
+                  <input type="text" class="form-control" id="email" name="email" value="" hx-post="{% url 'search_user_reviewer_preference' paper.id %}" hx-trigger="blur" hx-target='#search_user_reviewer_result'>
+                  <div id="email-error" class="error-message" style="color:red;"></div>
+                </div>
+                <div id="message" style="color:red;"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label><span style="color: red">*</span> Preference</label><br/>
+                <label>
+                  &nbsp;&nbsp;<input type="radio" name="preference" class="preference" value="Recommended">&nbsp;I recommend this Reviewer
+                </label>
+                <label>
+                  &nbsp;&nbsp;<input type="radio" name="preference" class="preference" value="Opposed">&nbsp;I oppose this Reviewer
+                </label>
+                <div id="preference-error" class="error-message" style="color:red;"></div>
+              </div>
+            </div>
+            <div class="form-row" style="display: none;" id="reason-div">
+              <div class="form-group col-md-12">
+                <label>Reason for <span id="preference-text"></span></label>
+                <span class="badge badge-info" id="result" style="float: right;"></span>
+                <input type="text" class="form-control" id="reason" name="reason">
+              </div>
+            </div>
+          </div>  
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Cancel</button>
+
+            <a href="#" id="add-reviewer-button-hidden" type="button" data-dismiss="modal" hx-post="{% url 'add_new_reviewer_preference' paper.id %}" hx-target="#reviewers" style="display: none;"></a>
+            <a href="#" id="add-reviewer-button" type="button" class="btn btn-primary"><i class="fas fa-plus"></i>&nbsp;Add New Reviewer</a>
+          </div>
+      </form>      
+    </div>
+  </div>
+</div>
+
+<section id="search_user_reviewer_result" class="col-12">
+
+</section>
 
   <script>
-    $(document).ready(function() {
-      var viewSubmissionBtn = $("#viewSubmissionBtn");
-      var submitBtn = $("#submitBtn");
-      var errorBox = $(".error-box");
-    
-      // Disable the submit link initially
-      submitBtn.addClass("disabled");
-    
-      // Check if the view submission button is clicked
-      viewSubmissionBtn.click(function() {
-        // Check if there is an error box visible
-        if (errorBox.is(":visible")) {
-          submitBtn.addClass("disabled");
-        } else {
-          submitBtn.removeClass("disabled");
+
+    // Function to get the value of a selected radio button
+    function getSelectedRadioButtonValue(radioButtonClass) {
+        var radioButtons = document.getElementsByClassName(radioButtonClass);
+
+        for (var i = 0; i < radioButtons.length; i++) {
+            if (radioButtons[i].checked) {
+                return radioButtons[i].value;
+            }
         }
+
+        return null;
+    } 
+
+    var preferenceRadios = document.getElementsByClassName('preference');
+
+    var reason = document.getElementById("reason");
+
+    var result = document.getElementById("result");
+    var limit = 100;
+    result.textContent = 0 + ' OUT OF ' + limit + ' CHARACTERS';
+
+    for (var i = 0; i < preferenceRadios.length; i++) {
+      preferenceRadios[i].addEventListener('change', function() {
+          document.getElementById('reason-div').style.display = 'block';
+          var preferenceValue = getSelectedRadioButtonValue('preference');
+          preferenceText = document.getElementById("preference-text");
+          if (preferenceValue === 'Recommended') {
+            preferenceText.innerHTML = 'Recommendation';
+          } else if (preferenceValue === 'Opposed') {
+            preferenceText.innerHTML = 'Opposition';
+          } 
+          reason.value = '';
+          
+          result.textContent = 0 + ' OUT OF ' + limit + ' CHARACTERS';
       });
+    }
+
+
+    reason.addEventListener("input",function(){
+        var textLength = reason.value.length;
+
+        if(textLength >= limit){
+          reason.value = reason.value.substring(0, limit);
+          textLength -= 1;
+        }
+
+        result.textContent = textLength + ' OUT OF ' + limit + ' CHARACTERS';
+        
     });
+
+
+      hiddenButton = document.getElementById('add-reviewer-button-hidden');
+      button = document.getElementById('add-reviewer-button');
+      button.addEventListener("click", function() {
+        email = document.getElementById('email');
+        firstName = document.getElementById('first-name');
+        lastName = document.getElementById('last-name');
+        preferenceRadios = document.getElementsByName('preference');
+
+        emailError = document.getElementById('email-error');
+        firstNameError = document.getElementById('first-name-error');
+        lastNameError = document.getElementById('last-name-error');
+        preferenceError = document.getElementById('preference-error');
+
+        if (email.value == '') 
+          emailError.innerHTML = 'Email is required';
+        else
+          emailError.innerHTML = '';
+
+        if (firstName.value == '')
+          firstNameError.innerHTML = 'First Name is required';
+        else
+          firstNameError.innerHTML = '';
+      
+        if (lastName.value == '')
+          lastNameError.innerHTML = 'Last Name is required';
+        else
+          lastNameError.innerHTML = '';
+
+
+        var isAnyPreferenceRadioSelected = Array.from(preferenceRadios).some(preferenceRadio => preferenceRadio.checked);
+        if (!isAnyPreferenceRadioSelected) 
+          preferenceError.innerHTML = 'Preference is required';
+        else  
+          preferenceError.innerHTML = '';
+
+      
+        if (email.value && firstName.value && lastName.value && isAnyPreferenceRadioSelected) {
+          hiddenButton.click();}
+      
+    });
+
+    $('#add-rev').click(function() {
+      $('#message').text('');
+      $('.error-message').text('');
+      $('.form-control').val('');
+      document.getElementById("rev-error-box").style.display = 'none';
+      document.getElementById("add-reviewer-button").style.pointerEvents="auto";
+      document.getElementById("add-reviewer-button").style.cursor="pointer";
+      document.getElementById("add-reviewer-button").style.opacity=1;
+    }); 
+
+  
     </script>
     
 {% endblock %}

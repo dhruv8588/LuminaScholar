@@ -58,6 +58,23 @@
               </div>
               <ul class="list-group list-group-flush">
 
+                {% if paper.eicdecision %}
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step0' paper.id %}" class="list-link d-flex justify-content-between align-items-center" next="step0">
+                      <div class="d-flex align-items-center">
+                          {% if paper.decision_response %}
+                              <i class="fas fa-check green-check"></i>&nbsp;
+                          {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;
+                          {% endif %}
+                          <span>Step 0: View and Respond to Decision Letter</span>
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+                {% endif %}
+
+
                   <li class="list-group-item">
                     <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step1">
                       <div class="d-flex align-items-center">
@@ -128,6 +145,8 @@
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
                             {% if figures_tables_published_elsewhere_desc %}
                               <i class="fas fa-check green-check"></i>  
+                            {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;   
                             {% endif %}  
                         {% else %}
                             <i class="fas fa-check green-check"></i>&nbsp; 
@@ -142,9 +161,19 @@
               </li>
 
                 
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step6">
+                  <div class="d-flex align-items-center">
+                      <i class="fas fa-check green-check"></i>&nbsp;Step 6: Reviewers
+                  </div>
+                  <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+
+                
                   <li class="list-group-item">
-                    <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step6">
-                      &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
+                    <a href="{% url 'submit_paper_step7' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center" next="step7">
+                      &nbsp;&nbsp;&nbsp;&nbsp;Step 7: Review & Submit
                     <i class="fas fa-angle-right"></i>
                   </a>
                 </li>

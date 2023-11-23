@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block content %}
   
 {% block css %}
@@ -10,14 +10,15 @@
     }
     
     .login-box {
-      margin-top: 20px;
-      height: auto;
+      margin-top: 80px;
+      height: 550px;
       background: #1A2226;
       text-align: center;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     }
     
     .login-key {
+      margin-top: 20px;
       height: 100px;
       font-size: 80px;
       line-height: 100px;
@@ -155,16 +156,14 @@
   {% block navbar %}
   {% endblock %}
 
-  <h1>LuminaScholar</h1>
-  <h3>Simplify journal management with a flexible, trusted solution.</h3>
-  <p>
-    As the world of scholarly publishing continually evolves, you need a reliable solution that can adapt with your changing needs.
-    With LuminaScholar, you can easily align your journal management with your strategy—whether you need to establish more efficient workflows, attract and retain a broader pool of reviewers and authors, or adopt increasingly open models. Maintain and build your prestige in the publishing landscape with a solution that protects your data and reputation.
-  <p>  
 
   <div class="container">
+
     <div class="row">
-        <div class="col-lg-3 col-md-2"></div>
+      
+        <div class="col-lg-3 col-md-2">
+        </div>
+        
         <div class="col-lg-6 col-md-8 login-box">
             <div class="col-lg-12 login-key">
                 <i class="fa fa-key" aria-hidden="true"></i>

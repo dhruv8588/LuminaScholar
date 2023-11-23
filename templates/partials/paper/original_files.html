@@ -1,0 +1,40 @@
+{% load custom_filters %} 
+
+
+    <div class="card-header">
+      <ul class="nav nav-pills card-header-pills">
+        <li class="nav-item">
+          <a class="nav-link" href="#" hx-post="{% url 'view_proof' paper.id %}" hx-target='#info' hx-trigger='click'>Proof</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link selected" href="#">Original Files</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Instructions</a>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body">
+        {% comment %} <ol>
+            {% for file in paper.files.all %}
+                <li><a href="{{ file.file.url }}">{{ file|basename }}</a><br/></li>
+            {% endfor %}
+        </ol>         {% endcomment %}
+
+        <table class="table table-bordered" style="width: 500px; margin: auto">
+          <thead>
+            <tr class="table-info">
+              <th scope="col"></th>
+              <th scope="col" style="color: DarkMagenta;">File</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file in paper.files.all %}
+              <tr><th scope="row" style="color: DarkMagenta;">{{ forloop.counter }}</th>
+              <td><a href="{{ file.file.url }}">{{ file|basename }}</a></td></tr>
+            {% endfor %}
+          </tbody>  
+        </table>  
+          
+    </div>
+  

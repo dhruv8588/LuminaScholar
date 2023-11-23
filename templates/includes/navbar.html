@@ -88,16 +88,16 @@
         {% if user.is_authenticated %} 
           <ul class="nav-links">
               <li>
-                <a href="{% url 'home' %}" id="home">Home</a>
+                {% comment %} <a href="{% url 'home' %}" id="home">Home</a> {% endcomment %}
               </li>  
               {% if user|has_role:"AE" %}
                 <li>
-                  <a href="{% url 'ae_dashboard' %}" id="ae">Associate Editor</a>
+                  <a href="{% url 'awaiting_reviewer_selection' %}" id="ae">Associate Editor</a>
                 </li> 
               {% endif %}
-              {% if user|has_role:"EC" %}
+              {% if user|has_role:"EIC" %}
                 <li>
-                  <a href="{% url 'eic_dashboard' %}" id="ec">Editor-in-Chief</a>
+                  <a href="{% url 'awaiting_ae_selection' %}" id="eic">Editor-in-Chief</a>
                 </li> 
               {% endif %}
               <li>

@@ -1,0 +1,20 @@
+<style>
+    .error-box {
+        border: 2px solid red;
+        background-color: lightcoral;
+        color: darkred;
+        padding: 10px;
+        width: 800px;
+    }
+</style>    
+
+{% if not paper.decision_response %}
+    <div class="error-box"> 
+        <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+        <ul>
+            {% if not paper.decision_response %}
+                <li>Response to Decision Letter is a required field.</li>
+            {% endif %}    
+        </ul> 
+    </div>
+{% endif %}

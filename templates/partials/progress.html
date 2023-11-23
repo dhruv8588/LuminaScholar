@@ -21,20 +21,24 @@
                   </tr>
                   <tr>
                       <th class="text-secondary"># active selections</th>
-                      <td>{{ paper.reviewers.count }}</td>
-                  </tr>
-                  <tr>
-                      <th class="text-secondary"># invited</th>
                       <td>{{ status_count.0 }}</td>
                   </tr>
                   <tr>
-                      <th class="text-secondary"># agreed</th>
+                      <th class="text-secondary"># invited</th>
                       <td>{{ status_count.1 }}</td>
                   </tr>
                   <tr>
-                      <th class="text-secondary"># declined</th>
+                      <th class="text-secondary"># agreed</th>
                       <td>{{ status_count.2 }}</td>
                   </tr>
+                  <tr>
+                      <th class="text-secondary"># declined</th>
+                      <td>{{ status_count.3 }}</td>
+                  </tr>
+                  <tr>
+                    <th class="text-secondary"># submitted</th>
+                    <td>{{ status_count.4 }}</td>
+                </tr>
               </tbody>    
           </table> 
           <div style="display: inline-block; float: right;">  
@@ -50,6 +54,27 @@
     <a href="#" type="button" class="btn btn-secondary btn-sm" id="add-rev" data-toggle="modal" data-target="#AddNewReviewer"><i class="fas fa-plus"></i>&nbsp; Add New Reviewer</a>
   </div>
 </div>
+
+<div class="card border-secondary mb-3" style="max-width: 18rem;">
+  <h5 class="card-header text-secondary">Reviews</h5>
+  <div class="card-body">
+    <table class="table table-bordered">
+      <tbody>
+        {% for paper_reviewer in paper_reviewers %}
+            {% comment %} {% if paper_reviewer.status == 'Submitted' %} {% endcomment %}
+            {% if paper_reviewer.review.date_submitted %}
+                <tr>
+                    <th class="text-secondary">{{paper_reviewer.reviewer.first_name}} {{paper_reviewer.reviewer.last_name}} </th>
+                    <td>{{ paper_reviewer.review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' paper_reviewer.id %}')">View</a></td>
+                </tr>
+              {% endif %}
+        {% endfor %}  
+      </tbody>    
+  </table> 
+  </div>
+</div>
+
+
 
 
 <!-- Modal -->
@@ -141,5 +166,9 @@ $('#add-rev').click(function() {
   $('.form-control').val('');
 }); 
 
+
+  function openNewWindow(url) {
+      window.open(url, '_blank', 'width=700,height=700'); // Adjust width and height as needed
+  }
 
 </script>

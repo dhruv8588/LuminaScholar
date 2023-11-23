@@ -1,0 +1,53 @@
+{% load custom_filters %}
+{% load widget_tweaks %}
+
+<div id="permanentElement" class="hidden">
+    {% if not recommendation.recommendation %}
+        <div class="error-box">
+            <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+            <ul>
+                <li>AE Recommendation is a required field.</li>
+            </ul>
+        </div><br/>
+    {% endif %}
+</div>
+
+
+<form hx-post="{% url 'save_recommendation' paper.id %}" hx-target="#ae-form">
+    {% csrf_token %}
+    <table class="table table-bordered" >
+      <tr>
+        <td>
+          <b><span style="color: red;">*</span> AE Recommends</b>
+          {{ form.recommendation }}
+        </td>
+      </tr>
+
+      <tr>
+        <td>  
+          <b>Confidential Comments to the EIC</b>
+          {{ form.comments_to_eic|add_class:'form-control' }}
+        </td>
+      </tr>
+      
+      <tr>
+        <td>  
+          <b>Comments to the Author</b>
+          {{ form.comments_to_author|add_class:'form-control' }}
+        </td>
+      </tr>  
+    </table>
+
+    <button id="submit-recommendation-hidden" type="submit" style="visibility: hidden;"></button>
+  </form>  
+
+  <script>
+    // Check if the element should be displayed permanently from localStorage
+    var objectId = {{ recommendation.id }};
+    if (localStorage.getItem('element_visible-' + objectId) === 'true') {
+        document.getElementById('permanentElement').classList.remove('hidden');
+    } else {
+      // If the element is not displayed, set the localStorage value to 'true' for future visits
+      localStorage.setItem('element_visible-' + objectId, 'true');
+    }
+  </script>

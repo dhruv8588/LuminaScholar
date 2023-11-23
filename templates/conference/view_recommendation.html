@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% load custom_filters %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+
+        
+<table class="table table-bordered" style="margin: 20px; width: 650px;">
+    <tr>
+    <td>
+        <b><span style="color: red;">*</span> AE Recommends</b>
+        {{ form.recommendation }}
+    </td>
+    </tr>
+
+    <tr>
+    <td>  
+        <b>Confidential Comments to the EIC</b>
+        {{ form.comments_to_eic|add_class:'form-control' }}
+    </td>
+    </tr>
+    
+    <tr>
+    <td>  
+        <b>Comments to the Author</b>
+        {{ form.comments_to_author|add_class:'form-control' }}
+    </td>
+    </tr>  
+</table>
+
+    <script>
+      $(':radio:not(:checked)').attr('disabled', true);
+    </script>  
+
+
+    
+
+            
+    {% endblock %}

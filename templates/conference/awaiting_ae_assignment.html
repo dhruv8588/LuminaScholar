@@ -1,103 +1,153 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h3>View Manuscripts</h3>
 
-<p>To take action on a manuscript or view the full manuscript record, click the "Take Action" button. To read the manuscript, click the "View Manuscript" link.</p> 
+<style>
+    .list-group-item {
+      background-color: transparent; /* To remove default background */
+      padding: 0px; /* Add padding to create a clickable area */
+  }
+  
+  .list-link {
+      display: block;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+      text-decoration: none; /* Remove underline */
+      color: #333; /* Default color */
+      transition: color 0.3s; /* Smooth color transition on hover */
+  }
+  
+  .list-link:hover {
+      cursor: pointer;
+      text-decoration: none;
+      background-color: #d3d3d3;
+      color: #808080; /* Change color on hover */
+  }
+  
+  .selected {
+      background-color: #d3d3d3;
+      padding: 10px 15px;
+  }
 
-<span class="badge badge-info">Awaiting AE Assignment</span>
+    #eic {
+        background-color: #555;
+    }
 
-<table class="table table-bordered">
-    <thead class="table-info">
-        <tr>
-            <th scope="col" rowspan="2">#</th>
-            <th scope="col">ID</th>
-            <th scope="col">Title</th>
-            <th scope="col" rowspan="2">Date Submitted</th>
-            <th scope="col" rowspan="2">Status</th>
-            <th scope="col" rowspan="2">Take Action</th>
-         </tr>
-        <tr>
-            <th scope="col">
-                Type   
-            </th>
-            <th scope="col">Submitting Author</th>
-        </tr>    
-    </thead>
-    <tbody>
-        {% for paper in page_obj %}
-            <tr>
-                <th scope="row" rowspan="2">{{ forloop.counter }}</th>
-                <td>
-                    {{ paper.journal_id }}
-                </td>
-                <td>
-                    {{ paper.title }} [ <a href="{% url 'merge_pdfs' paper.id %}" target="_blank">View Submission</a> ]
-                </td>
-                <td rowspan="2">
-                    {{ paper.date_submitted }}
-                </td>            
-                <td rowspan="2">
-                    {% if paper.associate_editor %}
-                        AE: {{paper.associate_editor.first_name }} {{paper.associate_editor.last_name }}
-                    {% else %}
-                        Assign AE (Due 1-Jan-2023)
-                    {% endif %}
-                    <br/>Make Decision (Due 1-Jan-2023)
-                </td>  
-                <td scope="row" rowspan="2">
-                    <a href="{% url 'select_ae' forloop.counter %}"><i class="fas fa-tasks"></i></a>
-                </td>     
-            </tr>
+    a{
+        text-decoration: none;
+    }
 
-            <tr>
-                <td>{{ paper.type }}</td>
-                <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
-            </tr>
-        {% endfor %}    
-    </tbody>
-  </table>
+  .pagination > li > a {
+        background-color: #fff;
+        color: #6c757d;
+    }
 
-{% if page_obj.has_other_pages %}
-  <ul class="pagination">
-      {% if page_obj.has_previous %}
-          <li class="page-item">
-              <a href="?page=1" class="btn btn-outline-secondary">First</a>
-          </li>
-          <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                  <i class="fas fa-angle-double-left"></i>
-              </a>
-          </li>
-      {% else %}
-          <li class="page-item disabled"></li>
-      {% endif %}
+    .pagination > li > a:focus,
+    .pagination > li > a:hover,
+    .pagination > span > a:focus,
+    .pagination > span > a:hover {
+        color: #111;
+        background-color: #d3d3d3;
+        border: 1px solid #6c757d;
+        box-shadow: none;
+    }
 
-      {% for i in page_obj.paginator.page_range %}
-          {% if page_obj.number == i %}
-              <li class="page-item active">
-                  <span class="page-link">{{ i }}<span class="sr-only">(current)</span></span>
-              </li>
-          {% else %}
-              <li class="page-item">
-                  <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-              </li>
-          {% endif %}
-      {% endfor %}
+    .page-item.active .page-link {
+        columns: #fff;
+        background-color: #6c757d;
+        border: 1px solid #6c757d;
+    }
+  
+</style>  
 
-      {% if page_obj.has_next %}
-          <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.next_page_number }}">
-                  <i class="fas fa-angle-double-right"></i>
-              </a>
-          </li>
-          <li class="page-item">
-              <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-secondary">Last</a>
-          </li>
-      {% else %}
-          <li class="page-item disabled"></li>
-      {% endif %}
-  </ul>
-{% endif %}
+    <h2 class="text-center">Papers Awaiting AE Assignment</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card" style="width: 18rem; margin-left: 50px;">
+                <div class="card-header">
+                  <h5 class="text-secondary">&nbsp;&nbsp;EIC Dashboard</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                     <li class="list-group-item">
+                        <a href="{% url 'awaiting_ae_selection' %}" class="list-link d-flex justify-content-between align-items-center">
+                          <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Awaiting AE Selection
+                          </div>
+                          <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item selected text-secondary">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Awaiting AE Assignment
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'awaiting_eic_decision' %}" class="list-link d-flex justify-content-between align-items-center">
+                          <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Awaiting EIC Decision
+                          </div>
+                          <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'submitted_eic_decisions' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Submitted EIC Decisions
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                </ul>
+            </div>
+        </div>
+  
+  
+        <div class="col-md-8">
+            <table class="table table-bordered table-striped" style="width: 900px;">
+                <thead class="table-secondary">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Date Submitted</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Take Action</th>
+                    </tr>   
+                </thead>
+                <tbody>
+                    {% for paper in page_obj %}
+                        <tr>
+                            <td>
+                                {{ paper.journal_id }}
+                            </td>
+                            <td>
+                                {{ paper.title }}<br/>[ <a href="{{ paper.file.url }}" target="_blank">View Submission</a> ]
+                            </td>
+                            <td>
+                                {{ paper.date_submitted|date }}
+                            </td>            
+                            <td>
+                                {% if paper.associate_editor %}
+                                    AE: {{paper.associate_editor.first_name }} {{paper.associate_editor.last_name }}
+                                {% else %}
+                                    Assign AE (Due 1-Jan-2023)
+                                {% endif %}
+                            </td>  
+                            <td>
+                                <a href="{% url 'ae_affairs' type %}?page={{ forloop.counter }}"><i class="fa-solid fa-angles-right"></i></a>
+                            </td>     
+                        </tr>
+                    {% endfor %}    
+                </tbody>
+            </table>
+        </div>
+  </div>
+
+
+
+{% include "includes/pagination.html" %} 
+  
 
 {% endblock %}

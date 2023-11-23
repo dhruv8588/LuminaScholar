@@ -1,0 +1,49 @@
+{% load custom_filters %}
+{% load widget_tweaks %}
+
+<div id="permanentElement" class="hidden">
+    {% if not decision.decision %}
+        <div class="error-box">
+            <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+            <ul>
+                <li>EIC Decision is a required field.</li>
+            </ul>
+        </div><br/>
+    {% endif %}
+</div>
+
+
+<form hx-post="{% url 'save_decision' paper.id %}" hx-target="#eic-form">
+    {% csrf_token %}
+    <table class="table table-bordered" >
+      <tr>
+        <td>
+          <b><span style="color: red;">*</span> Make a Decision</b>
+          {{ form.decision }}
+        </td>
+      </tr>
+
+      <tr>
+        <td>  
+          <b>Decision Comments</b>
+          {{ form.comments|add_class:'form-control' }}
+        </td>
+      </tr> 
+    </table>
+
+    <button id="submit-decision-hidden" type="submit" style="visibility: hidden;"></button>
+
+  </form>  
+
+  <script> 
+    // Check if the element should be displayed permanently from localStorage
+    var objectId = {{ decision.id }};
+    if (localStorage.getItem('element_visible-' + objectId) === 'true') {
+        document.getElementById('permanentElement').classList.remove('hidden');
+    } else {
+      // If the element is not displayed, set the localStorage value to 'true' for future visits
+      localStorage.setItem('element_visible-' + objectId, 'true');
+    }
+  </script>
+
+  

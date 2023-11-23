@@ -68,6 +68,22 @@
                       </a>  
                   </li>
                   <li class="list-group-item">
+                    <a href="{% url 'manuscripts_with_decision' %}" class="list-link d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Manuscripts with Decision
+                        </div>
+                        <i class="fas fa-angle-right"></i>
+                    </a>  
+                  </li>
+                  <li class="list-group-item">
+                    <a href="{% url 'revised_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Revised Manuscripts in Draft
+                        </div>
+                        <i class="fas fa-angle-right"></i>
+                    </a>  
+                  </li>
+                  <li class="list-group-item">
                     <a href="{% url 'start_new_submission' %}" class="list-link d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center" style="margin-left: 15px;">
                             Start New Submission
@@ -81,22 +97,19 @@
   
       <div class="col-md-8">
         {% if papers %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead class="thead-light">
+            <table class="table table-bordered table-striped" style="width: 900px;">
+                <thead class="table-secondary">
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Continue</th>
+                        <th scope="col">CONTINUE</th>
                         <th scope="col">ID</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Created</th>
-                        <th scope="col">Delete</th>
+                        <th scope="col">TITLE</th>
+                        <th scope="col">CREATED</th>
+                        <th scope="col">DELETE</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for paper in papers %}
                         <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
                             <td>
                                 <a href="{% url 'submit_paper_step1' paper.id %}">
                                     Continue
@@ -118,13 +131,12 @@
                                 {{ paper.created_at|date }}
                             </td>
                             <td>
-                                <a href="{% url 'delete_paper' paper.id %}" onclick="return confirm('Are you sure you want to delete this paper?')" class="btn btn-danger"><i class="fa fa-trash"></i></a>
+                                <a href="{% url 'delete_paper' paper.id %}" onclick="return confirm('Are you sure you want to delete this paper?')"><i class="fa-solid fa-trash-can fa-lg" style="color: red; cursor: pointer;"></i></a>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
         {% endif %}
       </div>
   </div>

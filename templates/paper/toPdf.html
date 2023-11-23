@@ -64,7 +64,7 @@
                 <th>Attributes:</th>
                 <td>
                     {% for attribute in paper.attributes.all %}
-                        {{ attribute.name }} {% if not forloop.last %}, {% endif %}
+                        {{ attribute.name }}{% if not forloop.last %}, {% endif %}
                     {% endfor %} 
                 </td>
             </tr>
@@ -72,7 +72,7 @@
                 <th>Additional Attributes:</th>
                 <td>
                     {% for attribute in paper.additionalAttributes.all %}
-                        {{ attribute.name }} {% if not forloop.last %}, {% endif %}
+                        {{ attribute.name }}{% if not forloop.last %}, {% endif %}
                     {% endfor %} 
                 </td>
             </tr>
@@ -85,9 +85,7 @@
             <tr>
                 <th>Date Submitted by the Author:</th>
                 <td>
-                    {% if paper.is_submitted %}
-                        {{ paper.updated_at|date }}
-                    {% endif %}    
+                    {{ paper.date_submitted|date }}
                 </td>
             </tr>
         </tbody>

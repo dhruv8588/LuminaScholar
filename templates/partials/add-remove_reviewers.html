@@ -7,13 +7,42 @@
     </section>
 </section>
 
+<div style="padding-top: 1100px; padding-left: 210px;">
+<div class="card border-secondary mb-3" style="max-width: 660px;">
+    <h5 class="card-header text-secondary">Author's Recommended/Opposed Reviewers</h5>
+    <div class="card-body">
+        <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">REVIEWER</th>
+                <th scope="col">PREFERENCE</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+                {% for paper_reviewer in preferencepaper_reviewers %}
+                    <tr>
+                        <td>{{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }}<br/> 
+                            <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
+                        </td>
+                        <td>
+                            {{ paper_reviewer.preference }} 
+                            {% if paper_reviewer.reason %}
+                                <br/>Reason: {{ paper_reviewer.reason }}
+                            {% endif %}    
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-success btn-sm" hx-post="{% url 'add_preference_reviewer' paper_reviewer.id %}" hx-target="#add-remove_reviewers"><i class="fas fa-plus"></i> Add</a>
+                        </td>
+                    </tr>
+                {% endfor %}    
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
 
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
-
-
-<div class="container">
+<div class="container" style="padding-top: 50px;">
   <h4>Potential Reviewers</h4>
   <div class="form-row" style="float: right;">
     <input class="form-control" type="search" id="search" placeholder="Global search..." aria-label="Search" style="width:400px;">

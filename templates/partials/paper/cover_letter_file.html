@@ -1,0 +1,68 @@
+{% load custom_filters %}     
+
+{% if paper.cover_letter_file %}
+    <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a>
+
+    <span class="badge badge-danger badge-pill" 
+                        style="cursor: pointer;"
+                        hx-delete="{% url 'delete_cover_letter_file' paper.id %}"
+                        hx-target="#cover_letter-file"
+                        hx-confirm="Are you sure you wish to delete this file?">X</span>
+{% endif %}
+<br/>
+
+<form hx-post="{% url 'save_cover_letter_file' paper.id %}" hx-target="#cover_letter-file" hx-encoding="multipart/form-data">
+    {% csrf_token %}
+    <input class="file-upload__input" type="file" name="cover_letter_file" style="display:none">
+    <button class="btn btn-sm btn-info file-upload__button" type="button"><i class="fas fa-paperclip"></i>&nbsp;Select File...</button>
+    <span class="file-upload__label"></span>
+    <button class="btn btn-sm btn-danger file-upload__reset" type="button">Reset</button><br/><br/>
+    <button type="submit" class="btn btn-success btn-sm" id="upload-files"><i class="fas fa-upload"></i>&nbsp;Upload File</button>
+</form>
+
+
+<br/>
+
+                
+<script>
+    document.querySelectorAll(".file-upload__button").forEach(
+        function(button) {
+            const hiddenInput = button.parentElement.querySelector(
+                ".file-upload__input"
+            );
+            const label = button.parentElement.querySelector(".file-upload__label");
+            const defaultLabelText = "No file selected";
+
+            label.textContent = defaultLabelText;
+            label.title = defaultLabelText;
+
+            button.addEventListener("click", function() {
+                hiddenInput.click();
+            });
+
+
+            hiddenInput.addEventListener("change", function() {
+                const filename = hiddenInput.files[0].name;
+                label.textContent = filename || defaultLabelText;
+                label.title = label.textContent;
+            });
+
+            const resetButton = button.parentElement.querySelector(".file-upload__reset"); 
+            resetButton.addEventListener("click", function() {
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                // const form = document.querySelector("#myform");
+                // form.reset();
+                hiddenInput.value = ""; 
+                label.textContent = defaultLabelText;
+                label.title = defaultLabelText;
+            });
+        }
+    );
+  </script>                
+
+  

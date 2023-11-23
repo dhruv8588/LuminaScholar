@@ -18,6 +18,22 @@
                 <td>{{ paper.title }}</td>
               </tr>
               <tr>
+                <th>Attributes:</th>
+                <td>
+                    {% for attribute in paper.attributes.all %}
+                        {{ attribute.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+              </tr>
+              <tr>
+                <th>Additional Attributes:</th>
+                <td>
+                    {% for attribute in paper.additionalAttributes.all %}
+                        {{ attribute.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+              </tr>
+              <tr>
                 <th>Submitting Author</th>
                 <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
               </tr>
@@ -32,7 +48,7 @@
             </tbody>    
         </table>
        
-        <a href="{% url 'merge_pdfs' paper.id %}" target="_blank" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
+        <a href="{{ paper.file.url }}" target="_blank" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
         <a href="#" data-toggle="modal" data-target="#OriginalFiles" style="margin-right: 60px;"><i class="fa fa-file-alt"></i> Original Files</a>
         {% if paper.cover_letter or paper.cover_letter_file %}
             <a href="#" data-toggle="modal" data-target="#CoverLetter" style="margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
@@ -52,34 +68,71 @@
             <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
                 <div class="htmx-indicator">Updating...</div>
                 {% for paper_reviewer in paper_reviewers %}
-                    <div>
-                        <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">    
-                            #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
-                            {% if paper_reviewer.status %}
-                                {{ paper_reviewer.status }}
-                            {% else %}
-                                <button type="button" class="btn btn-success btn-sm invite-btn" hx-post="{% url 'invite_rev' paper_reviewer.id %}" hx-target="#reviewers_progress" hx-trigger="click"><i class="fas fa-check"></i>&nbsp;Invite</button>
-                                <div class="spinner" style="display: none;">
-                                    <div class="spinner-border text-success" role="status" style="width: 1.2rem; height: 1.2rem;"></div> <span style="color: grey">Inviting...</span>   
-                                </div>                                   
-                            {% endif %}
-                            <select>
-                                <option selected disabled>Select...</option>
-                                {% if not paper_reviewer.reviewer.user %}
-                                    <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
-                                {% endif %}    
-                                <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#add-remove_reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
-                            </select>  
-                        </li>
-                    </div>    
+                    {% if paper_reviewer.status != 'Alternate' %}
+                        <div>
+                            <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">    
+                                #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} {% if paper_reviewer.preference %}<i style="color: grey;">({{paper_reviewer.preference}})</i>{% endif %} <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
+                               
+                                {% if paper_reviewer.status == ''  %}
+                                    <button type="button" class="btn btn-success btn-sm invite-btn" hx-post="{% url 'invite_rev' paper_reviewer.id %}" hx-target="#reviewers_progress" hx-trigger="click"><i class="fas fa-check"></i>&nbsp;Invite</button>
+                                    <div class="spinner" style="display: none;">
+                                        <div class="spinner-border text-success" role="status" style="width: 1.2rem; height: 1.2rem;"></div> <span style="color: grey">Inviting...</span>   
+                                    </div>     
+                                {% elif paper_reviewer.status == 'Declined' %}
+                                    <span style="color: red;">{{ paper_reviewer.status }}</span>
+                                {% else  %}
+                                    <span style="color: #32CD32;">{{ paper_reviewer.status }}</span>                                
+                                {% endif %}
+                                
+                                <select>
+                                    <option selected disabled>Select...</option>
+                                    {% if paper_reviewer.status == '' %}
+                                        <option data-toggle="modal" data-target="#AlternateReviewer{{ paper_reviewer.id }}">Alternate Reviewer</option>
+                                    {% endif %}
+                                    {% if not paper_reviewer.reviewer.user %}
+                                        <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
+                                    {% endif %}
+                                    {% if paper_reviewer.status != 'Submitted' %}    
+                                        <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#add-remove_reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
+                                    {% endif %}    
+                                </select>  
+                            </li>
+                        </div>
+                    {% endif %}    
+                {% endfor %}
+            </form>   
+            <button type="button" class="btn btn-success btn-sm" id="inviteAll-btn" style="float: right; margin-top: 10px;" data-toggle="modal" data-target="#InviteAllReviewers"><i class="fas fa-check"></i>&nbsp;Invite All</button>
+        </p>
+        <br/>
+
+        <h5 class="card-title text-secondary">Alternate Reviewer List:</h5>
+        <p class="card-text">
+            {% csrf_token %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">    
+                <span><b>ORDER REVIEWER ACTION</b></span>
+            </li>
+            <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
+                <div class="htmx-indicator">Updating...</div>
+                {% for paper_reviewer in paper_reviewers %}
+                    {% if paper_reviewer.status == 'Alternate' %}
+                        <div>
+                            <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">    
+                                #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
+                                <select>
+                                    <option selected disabled>Select...</option>
+                                    <option hx-delete="{% url 'remove_reviewer' paper_reviewer.id %}" hx-target="#reviewers_progress">Remove</option>
+                                </select>  
+                            </li>
+                        </div>
+                    {% endif %}    
                 {% endfor %}
             </form>    
-            <br/>
-            <button type="button" class="btn btn-success btn-sm" id="inviteAll-btn" style="float: right;" data-toggle="modal" data-target="#InviteAllReviewers"><i class="fas fa-check"></i>&nbsp;Invite All</button>
         </p>
     </div>
-</div>    
+</div>
+
 
 {% for paper_reviewer in paper_reviewers %}
     {% if not paper_reviewer.reviewer.user %}
@@ -94,28 +147,31 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form id="edit-reviewer-form{{ paper_reviewer.reviewer.id }}">
+                    <form id="edit-reviewer-form{{ paper_reviewer.reviewer.id }}" class="modal-form" hx-post="{% url 'edit_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers'>
                         {% csrf_token %}
                         <div class="modal-body">
                             <div class="form-row">
                                 <div class="form-group col-md-6">
-                                    <label>First name</label>
+                                    <label><span style="color: red">*</span> First name</label>
                                     <input type="text" id="first-name-edit{{ paper_reviewer.reviewer.id }}" class="form-control" name="first_name" value="{{ paper_reviewer.reviewer.first_name }}">
-                                    <div id="first-name-error-edit{{ paper_reviewer.reviewer.id }}" class="error-message" style="color:red;"></div>
+                                    {% comment %} <div id="first-name-error-edit{{ paper_reviewer.reviewer.id }}" class="error-message" style="color:red;"></div> {% endcomment %}
                                 </div>
                                 <div class="form-group col-md-6">
-                                    <label>Last name</label>
+                                    <label><span style="color: red">*</span> Last name</label>
                                     <input type="text" id="last-name-edit{{ paper_reviewer.reviewer.id }}" class="form-control" name="last_name" value="{{ paper_reviewer.reviewer.last_name }}">
-                                    <div id="last-name-error-edit{{ paper_reviewer.reviewer.id }}" class="error-message" style="color:red;"></div>
+                                    {% comment %} <div id="last-name-error-edit{{ paper_reviewer.reviewer.id }}" class="error-message" style="color:red;"></div> {% endcomment %}
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer justify-content-between">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
-                            <button type="button" class="btn btn-primary" id="edit-rev-btn{{ paper_reviewer.reviewer.id }}">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Cancel</button>
+                            <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Reviewer
                             </button>
-                            <button type="submit" id="edit-rev-btn-hidden{{ paper_reviewer.reviewer.id }}" style="display: none;" hx-post="{% url 'edit_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers' hx-trigger='click'></button>
+                            {% comment %} <button type="button" class="btn btn-primary" id="edit-rev-btn{{ paper_reviewer.reviewer.id }}">
+                                <i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Reviewer
+                            </button>
+                            <button type="submit" id="edit-rev-btn-hidden{{ paper_reviewer.reviewer.id }}" style="display: none;" hx-post="{% url 'edit_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers' hx-trigger='click'></button> {% endcomment %}
                         </div>
                     </form>      
                 </div>
@@ -123,14 +179,14 @@
         </div>
         <!-- Modal end -->
         <script>
-            {% comment %} document.getElementById('edit-reviewer-form{{ paper_reviewer.reviewer.id }}').addEventListener('submit', function(event) {
+            document.getElementById('edit-reviewer-form{{ paper_reviewer.reviewer.id }}').addEventListener('submit', function(event) {
                 event.preventDefault();
 
                 $('#editReviewerModal{{ paper_reviewer.reviewer.id }}').modal('hide');
-            }); {% endcomment %}
+            });
 
                 
-                button2 = document.getElementById('edit-rev-btn{{ paper_reviewer.reviewer.id }}');
+                {% comment %} button2 = document.getElementById('edit-rev-btn{{ paper_reviewer.reviewer.id }}');
                 hiddenButton2 = document.getElementById('edit-rev-btn-hidden{{ paper_reviewer.reviewer.id }}');
 
                 button2.addEventListener("click", function() {
@@ -153,11 +209,10 @@
                         lastNameError.innerHTML = '';
                     
                     if (firstName.value && lastName.value) {
-                        console.log("Rosyyy");
                         hiddenButton2.click();
                         $('#editReviewerModal{{ paper_reviewer.reviewer.id }}').modal('hide');
                     }
-                });
+                }); {% endcomment %}
             
         </script>
     {% endif %}        
@@ -184,6 +239,37 @@
       </div>
     </div>
 </div>
+
+
+{% for paper_reviewer in paper_reviewers %}
+    {% if paper_reviewer.status == '' %}
+        <!-- Modal -->
+        <div class="modal fade" id="AlternateReviewer{{ paper_reviewer.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add <span style="color: grey;">{{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }}</span> as an Alternate Reviewer?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    A reviewer will be added from the Alternate Reviewer list to the Main Reviewer list and will be auto-invited:
+                    <ol>
+                        <li>Whenever any reviewer from the Main Reviewer list declines to review,</li> 
+                        <li>If there are no reviewers in the Main Reviewer list which are left to be invited and</li>
+                        <li>If the no. of reviewers who have agreed to review or have neither agreed or declined is less than the no. of reviews required to make decision</li>
+                    </ol>
+                </div>  
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Cancel</button>
+                    <a href="#" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'add_alternate_reviewer' paper_reviewer.id %}" hx-target="#reviewers_progress"><i class="fas fa-check"></i>&nbsp;Yes, Add</a>
+                </div>  
+            </div>
+            </div>
+        </div>
+    {% endif %}    
+{% endfor %}
 
 
 <script>

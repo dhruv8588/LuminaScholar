@@ -1,0 +1,117 @@
+{% load custom_filters %}    
+
+<table class="table table-bordered" style="width: 650px;">
+    <thead class="table-success">
+      <tr style="color: green;">
+        <th scope="col">File</th>
+        <th scope="col">View Constraint</th>
+        <th scope="col">Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for rev_file in review.review_files.all %}
+            {% if rev_file.view %}
+                <tr>
+                    <td><a href="{{ rev_file.file.url }}">{{ rev_file.file|basename }}</a></td>
+                    <td>{{ rev_file.view }}</td>
+                    <td>
+                        <div hx-delete="{% url 'remove_rev_file' review.id rev_file.id %}" hx-target="#review-files" hx-confirm="Are you sure you wish to delete this file?"><i class="fa-solid fa-trash-can fa-lg" style="color: red; cursor: pointer;"></i></div>
+                    </td>  
+                </tr>
+            {% endif %}    
+        {% endfor %}
+    </tbody>
+</table>
+
+<form action="/target" class="dropzone" id="my-great-dropzone"> {% csrf_token %}</form>
+
+<form hx-post="{% url 'upload_rev_file' review.id %}" hx-target="#review-files" hx-encoding="multipart/form-data" style="display: none;">
+    {% csrf_token %}
+    <input type="file" name="rev_file" id="file-input" />
+    <button type='submit' id='file-input-btn'></button>
+</form>
+<br/>
+
+{% if duplicate_file %}
+    <div class="error-box"> 
+        <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+        A file named {{ duplicate_file }} is already uploaded for this manuscript. If you want to upload this file (e.g. this is a replacement for an existing file) you must rename the new file and then upload it.
+    </div><br/>
+{% endif %}
+
+<form hx-post="{% url 'upload_rev_files' review.id %}" hx-target="#review-files" hx-encoding="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table class="table table-bordered" style="width: 650px;">
+        <thead class="table-primary">
+            <tr style="color: blue;">
+                <th scope="col">Selected File</th>
+                <th scope="col">View Constraint</th>
+                <th scope="col">Remove</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in formset %}
+                <tr>
+                    {{ form.id }}
+                    <td> <a href="{{ form.file.value.url }}">{{ form.file.value|basename }}</a></td>
+                    <td>
+                        {{ form.view }}
+                        <div class="error-msg" style="color: red;"></div> 
+                    </td>
+                    <td>
+                        <span class="badge badge-danger badge-pill" id="badge"
+                                style="cursor: pointer;"
+                                hx-delete="{% url 'remove_rev_file' review.id form.id.value %}"
+                                hx-target="#review-files">X</span>
+                    </td>  
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success btn-sm" id="upload-files"><i class="fas fa-upload"></i>&nbsp;Upload Files</button>
+</form>
+
+<script>
+    
+    {% comment %} var deleteBadge = document.getElementById('badge');
+
+    if (deleteBadge) {
+        deleteBadge.addEventListener('click', function() {
+            dropzone.removeAllFiles();
+        });
+    } {% endcomment %}
+
+    var dropzone = new Dropzone('#my-great-dropzone', {
+        autoProcessQueue: false,
+    });
+
+
+    dropzone.on("addedfile", file => {
+        var inputFile = document.getElementById("file-input");
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        inputFile.files = dataTransfer.files;
+        
+        var inputFileButton = document.getElementById("file-input-btn");
+        inputFileButton.click();  
+
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            for (var i = 0; i < errors.length; i++) {
+                errors[i].innerHTML = '';
+            }
+        });    
+    });
+
+    var btn = document.getElementById('upload-files');
+    var errors = document.getElementsByClassName('error-msg');
+    btn.addEventListener("click", function() {
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            for (var i = 0; i < errors.length; i++) {
+                errors[i].innerHTML = 'Please select the View Constraint for this file...';
+            }
+      });
+    });
+</script>

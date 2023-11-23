@@ -39,6 +39,7 @@ Find using Author's email address or from the list of authors previously added b
                 <th>#</th>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Institution</th>
                 <th class="action-color"></th>
             </tr>
         </thead>
@@ -47,7 +48,8 @@ Find using Author's email address or from the list of authors previously added b
                 <td>{{ forloop.counter }}</td>
                 <td>{{ author.first_name }} {{ author.last_name }}</td>
                 <td><a href="mailto:{{ author.email }}">{{ author.email }}</a></td>
-                <td><a href="#" class="btn btn-success btn-sm" hx-post="{% url 'add_author_from_my_previous_papers' paper.id author.id %}" hx-target="#authors"><i class="fas fa-plus"></i> Add</a></td>
+                <td>{{ author.institution }}{% if author.city %}, {{ author.city }}{% endif %}{% if author.state  %}, {{ author.state }}{% endif %}, {{ author.country }}</td>
+                <td><a href="#" class="btn btn-success btn-sm" hx-post="{% url 'add_author_from_my_previous_papers' paper.id author.id %}" hx-target="#add_authors"><i class="fas fa-plus"></i> Add</a></td>
             </tr>
         {% endfor %}    
     </table>            
@@ -104,7 +106,7 @@ Find using Author's email address or from the list of authors previously added b
   
           // Disable sort columns
          "columnDefs": [{
-              "targets": 3, // 1 column
+              "targets": 4, // 1 column
               // "targets": [4, 5], // More than 1 column
               "orderable": false
           }], 
@@ -114,7 +116,7 @@ Find using Author's email address or from the list of authors previously added b
   
               // Set the columns you wish filtering
               api
-                  .columns([0, 1, 2])
+                  .columns([0, 1, 2, 3])
                   .eq(0)
                   .each(function(colIdx) {
                       var cell = $('.filters th').eq(
@@ -168,7 +170,7 @@ Find using Author's email address or from the list of authors previously added b
   
                   // Choose the columns you wish to copy
                   exportOptions: {
-                      columns: [0, 1, 2]
+                      columns: [0, 1, 2, 3]
                   },
               },
   
@@ -182,7 +184,7 @@ Find using Author's email address or from the list of authors previously added b
   
                   // Choose the columns you wish to export to excel
                   exportOptions: {
-                      columns: [0, 1, 2]
+                      columns: [0, 1, 2, 3]
                   },
               },
   
@@ -195,7 +197,7 @@ Find using Author's email address or from the list of authors previously added b
   
                   // Choose the columns you wish to print
                   exportOptions: {
-                      columns: [0, 1, 2]
+                      columns: [0, 1, 2, 3]
                   },
                   // Font size (when export to print)
                   customized: function( win ){
@@ -215,7 +217,7 @@ Find using Author's email address or from the list of authors previously added b
   
                   // Choose the columns you wish to export to pdf
                   exportOptions: {
-                      columns: [0, 1, 2]
+                      columns: [0, 1, 2, 3]
                   },
   
                   // Center the table

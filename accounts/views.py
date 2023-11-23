@@ -12,7 +12,7 @@ from paper.models import Author, Paper, Paper_Reviewer, Reviewer
 
 from .utils import detectUser, send_verification_email
 
-from .models import additionalResearchArea, User
+from .models import Role, additionalResearchArea, User
 from .forms import additionalResearchAreaFormSet, UserForm
 
 
@@ -29,6 +29,15 @@ def register_user(request):
             user.username = user.email.split("@")[0]
             password = User.objects.make_random_password()
             user.set_password(password)
+
+            user.first_name = form.cleaned_data['first_name'].capitalize()
+            user.last_name = form.cleaned_data['last_name'].capitalize()
+            user.email = form.cleaned_data['email'].lower()
+            user.institution = form.cleaned_data['institution'].capitalize()
+            user.country = form.cleaned_data['country'].capitalize()
+            user.state = form.cleaned_data['state'].capitalize()
+            user.city = form.cleaned_data['city'].capitalize()
+            
             user.save()
 
             try:
@@ -36,14 +45,28 @@ def register_user(request):
             except:
                 author = None
             if author:
-                author.user = user 
+                if author:
+                    author.user = user
+                    author.first_name = user.first_name
+                    author.last_name = user.last_name
+                    author.institution = user.institution
+                    author.country = user.country
+                    author.state = user.state
+                    author.city = user.city
+                    author.save()
 
+                    user.roles.add(Role.objects.get(name='AU'))
             try:
                 reviewer = Reviewer.objects.get(email=user.email)
             except:
                 reviewer = None
             if reviewer:
-                reviewer.user = user     
+                reviewer.user = user    
+                reviewer.first_name = user.first_name
+                reviewer.last_name = user.last_name 
+                reviewer.save()
+
+                user.roles.add(Role.objects.get(name='REV'))
 
             for rform in formset:
                 research_area = rform.save(commit=False)
@@ -146,8 +169,7 @@ def activate(request, uidb64, token):
 
 def login(request):
     if request.user.is_authenticated:
-        messages.warning(request, 'You are already logged in!')
-        return redirect('myAccount')
+        return redirect('home')
     elif request.method=="POST":
         username = request.POST["username"]
         password = request.POST["password"]

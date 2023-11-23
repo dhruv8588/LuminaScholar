@@ -75,6 +75,23 @@
                 <h5 class="text-secondary" style="margin-left: 10px;">Submission</h5>
             </div>
             <ul class="list-group list-group-flush text-secondary">
+
+              {% if paper.eicdecision %}
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step0' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if paper.decision_response %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        {% endif %}
+                        <span>Step 0: View and Respond to Decision Letter</span>
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+              {% endif %}
+
                 <li class="list-group-item">
                   <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
@@ -138,6 +155,8 @@
                       {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
                           {% if figures_tables_published_elsewhere_desc %}
                             <i class="fas fa-check green-check"></i>  
+                          {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;   
                           {% endif %}  
                       {% else %}
                           <i class="fas fa-check green-check"></i>&nbsp; 
@@ -153,11 +172,21 @@
 
               
             <li class="list-group-item">
-                <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
-                    &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
-                    <i class="fas fa-angle-right"></i>
-                </a>
+              <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check green-check"></i>&nbsp;Step 6: Reviewers
+                </div>
+                <i class="fas fa-angle-right"></i>
+              </a>
             </li>
+
+              
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step7' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                    &nbsp;&nbsp;&nbsp;&nbsp;Step 7: Review & Submit
+                  <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
           </ul>
         </div>
     </div>
@@ -306,24 +335,6 @@
   htmx.onLoad(function(content) {
       initializeSortable();
   });
-
-
-  dropContainer.ondragover = dropContainer.ondragenter = function(evt) {
-    evt.preventDefault();
-  };
-  
-  dropContainer.ondrop = function(evt) {
-    // pretty simple -- but not for IE :(
-    fileInput.files = evt.dataTransfer.files;
-  
-    // If you want to use some of the dropped files
-    const dT = new DataTransfer();
-    dT.items.add(evt.dataTransfer.files[0]);
-    dT.items.add(evt.dataTransfer.files[3]);
-    fileInput.files = dT.files;
-  
-    evt.preventDefault();
-  };
   
 </script>    
 

@@ -1,0 +1,161 @@
+
+<!-- Modal -->
+<div class="modal fade" id="editReviewerModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit"></i>&nbsp;&nbsp;Edit Reviewer <span style="color: grey;">{{ paper_reviewer.reviewer.email }}</span></h5>
+            
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="edit-reviewer-form" class="modal-form" hx-post="{% url 'edit_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.id %}" hx-target='#reviewers'>
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label><span style="color: red">*</span> First name</label>
+                            <input type="text" class="form-control" id="first-name2" name="first_name" value="{{ paper_reviewer.reviewer.first_name }}">
+                            <div id="first-name-error2" class="error-message" style="color:red;"></div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label><span style="color: red">*</span> Last name</label>
+                            <input type="text" class="form-control" id="last-name2" name="last_name" value="{{ paper_reviewer.reviewer.last_name }}">
+                            <div id="last-name-error2" style="color:red;"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label><span style="color: red">*</span> Preference</label><br/>
+                            <label>
+                                &nbsp;&nbsp;<input type="radio" name="preference" class="preference2" value="Recommended" {% if paper_reviewer.preference == 'Recommended' %}checked{% endif %}>&nbsp;I recommend this Reviewer
+                            </label>
+                            <label>
+                                &nbsp;&nbsp;<input type="radio" name="preference" class="preference2" value="Opposed" {% if paper_reviewer.preference == 'Opposed' %}checked{% endif %}>&nbsp;I oppose this Reviewer
+                            </label>
+                            <div id="preference-error2" style="color:red;"></div>
+                        </div>
+                    </div>
+                    <div class="form-row" id="reason-div">
+                        <div class="form-group col-md-12">
+                            <label>Reason for <span id="preference-text2">{% if paper_reviewer.preference == 'Recommended' %}Recommendation{% else %}Opposition{% endif %}</span></label>
+                            <span class="badge badge-info" id="result2" style="float: right;"></span>
+                            <input type="text" class="form-control" id="reason2" name="reason" value="{{ paper_reviewer.reason }}">
+                            <div id="reason-error" class="reason-message" style="color:red;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Cancel</button>
+
+                    <a href="#" id="edit-reviewer-button-hidden" type="button" class="btn btn-primary" data-dismiss="modal" hx-post="{% url 'edit_reviewer_preference' paper_reviewer.id %}" hx-target="#reviewers" style="display: none;"></a>
+                    <a href="#" id="edit-reviewer-button" type="button" class="btn btn-primary"><i class="fas fa-edit"></i>&nbsp;Edit Reviewer</a>
+                </div>
+            </form>      
+        </div>
+    </div>
+</div>
+<!-- Modal end -->
+<script>
+    {% comment %} document.getElementById('edit-reviewer-form{{ paper_reviewer.reviewer.id }}').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        $('#editReviewerModal{{ paper_reviewer.reviewer.id }}').modal('hide');
+    }); {% endcomment %}
+    
+        $(document).ready(function() {
+          $('#editReviewerModal').modal('show');
+        }); 
+        
+     
+  
+      function getSelectedRadioButtonValue(radioButtonClass) {
+          var radioButtons = document.getElementsByClassName(radioButtonClass);
+  
+          for (var i = 0; i < radioButtons.length; i++) {
+              if (radioButtons[i].checked) {
+                  return radioButtons[i].value;
+              }
+          }
+  
+          return null;
+      } 
+  
+      var preferenceRadios2 = document.getElementsByClassName('preference2');
+  
+      var reason2 = document.getElementById("reason2");
+  
+      var result2 = document.getElementById("result2");
+      var limit = 200;
+      result2.textContent = reason2.value.length + ' OUT OF ' + limit + ' CHARACTERS';
+  
+      for (var i = 0; i < preferenceRadios2.length; i++) {
+        preferenceRadios2[i].addEventListener('change', function() {
+        
+            var preferenceValue2 = getSelectedRadioButtonValue('preference2');
+            
+            preferenceText2 = document.getElementById("preference-text2");
+            if (preferenceValue2 === 'Recommended') {
+              preferenceText2.innerHTML = 'Recommendation';
+            } else if (preferenceValue2 === 'Opposed') {
+              preferenceText2.innerHTML = 'Opposition';
+            } 
+  
+            reason2.value = '';
+            result2.textContent = 0 + ' OUT OF ' + limit + ' CHARACTERS';
+        });
+      }
+  
+      reason2.addEventListener("input",function(){
+          var textLength = reason2.value.length;
+  
+          if(textLength >= limit){
+            reason2.value = reason2.value.substring(0, limit);
+            textLength -= 1;
+          }
+  
+          result2.textContent = textLength + ' OUT OF ' + limit + ' CHARACTERS';
+          
+      });
+
+      hiddenButton2 = document.getElementById('edit-reviewer-button-hidden');
+      button2 = document.getElementById('edit-reviewer-button');
+      button2.addEventListener("click", function() {
+      
+    
+        firstName2 = document.getElementById('first-name2');
+        lastName2 = document.getElementById('last-name2');
+        preferenceRadios2 = document.getElementsByClassName('preference2');
+
+        firstNameError2 = document.getElementById('first-name-error2');
+        lastNameError2 = document.getElementById('last-name-error2');
+        preferenceError2 = document.getElementById('preference-error2');
+
+        if (firstName2.value == '')
+          firstNameError2.innerHTML = 'First Name is required';
+        else
+          firstNameError2.innerHTML = '';
+      
+        if (lastName2.value == '')
+          lastNameError2.innerHTML = 'Last Name is required';
+        else
+          lastNameError2.innerHTML = '';
+
+
+        var isAnyPreferenceRadioSelected2 = Array.from(preferenceRadios2).some(preferenceRadio2 => preferenceRadio2.checked);
+        if (!isAnyPreferenceRadioSelected2) 
+          preferenceError2.innerHTML = 'Preference is required';
+        else  
+          preferenceError2.innerHTML = '';
+
+      
+        if (firstName2.value && lastName2.value && isAnyPreferenceRadioSelected2) {
+          hiddenButton2.click();}
+      
+    });
+
+  </script>
+
+
+  

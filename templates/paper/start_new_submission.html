@@ -66,6 +66,22 @@
                       <i class="fas fa-angle-right"></i>
                       </a>  
                   </li>
+                  <li class="list-group-item">
+                    <a href="{% url 'manuscripts_with_decision' %}" class="list-link d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Manuscripts with Decision
+                        </div>
+                        <i class="fas fa-angle-right"></i>
+                    </a>  
+                  </li>
+                  <li class="list-group-item">
+                    <a href="{% url 'revised_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Revised Manuscripts in Draft
+                        </div>
+                        <i class="fas fa-angle-right"></i>
+                    </a>  
+                  </li>
                   <li class="list-group-item selected text-secondary">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center" style="margin-left: 15px;">
@@ -82,7 +98,7 @@
   
       <div class="col-md-8">
         <b style="color: #54626F;">Please make sure to upload your revised paper as a REVISION and not a NEW SUBMISSION. Do not start a new submission for revised papers.</b><br/><br/>
-        <a href="{% url 'submit_paper_step0' %}">
+        <a href="{% url 'create_paper' %}">
             <button type="button" class="btn btn-dark mb-3">Begin Submission</button>
         </a>
       </div>

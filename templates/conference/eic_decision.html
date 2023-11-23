@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load custom_filters %} 
+{% load widget_tweaks %}
+{% block content %}
+
+<style>
+  .page-item.active .page-link {
+      columns: #fff;
+      background-color: #6c757d;
+      border: 1px solid #6c757d;
+  }
+
+  .pagination > li > a {
+      background-color: #fff;
+      color: #6c757d;
+  }
+
+  .pagination > li > a:focus,
+  .pagination > li > a:hover,
+  .pagination > span > a:focus,
+  .pagination > span > a:hover {
+      color: #111;
+      background-color: #d3d3d3;
+      border: 1px solid #6c757d;
+      box-shadow: none;
+  }
+
+  #eic {
+    background-color: #555;
+  }
+
+</style>
+
+
+<br/>
+<h3 style="margin-left: 210px;">Submitted EIC Decisions</h3>
+<br/>
+
+<div class="card" style="max-width: 42rem; margin-left: 210px; float: left;">
+    <div class="card-header text-secondary" style="padding: 30px;">
+        <h5 class="card-title text-secondary">Manuscript Details:</h5>
+        <table class="table table-bordered" style="width: 600px;">
+            <thead class="table-active">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">DETAILS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>ID</th>
+                <td>{{ paper.journal_id }}</td>
+              </tr>
+              <tr>
+                <th>Title</th>
+                <td>{{ paper.title }}</td>
+              </tr>
+              <tr>
+                <th>Attributes:</th>
+                <td>
+                    {% for attribute in paper.attributes.all %}
+                        {{ attribute.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+              </tr>
+              <tr>
+                <th>Additional Attributes:</th>
+                <td>
+                    {% for attribute in paper.additionalAttributes.all %}
+                        {{ attribute.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+              </tr>
+              <tr>
+                <th>Submitting Author</th>
+                <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>{{ paper.type }}</td>
+              </tr>
+              <tr>
+                <th>Date Submitted</th>
+                <td>{{ paper.date_submitted|date }}</td>
+              </tr>
+            </tbody>    
+        </table>
+       
+        <a href="{{ paper.file.url }}" target="_blank" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
+        <a href="#" data-toggle="modal" data-target="#OriginalFiles" style="margin-right: 60px;"><i class="fa fa-file-alt"></i> Original Files</a>
+        {% if paper.cover_letter or paper.cover_letter_file %}
+            <a href="#" data-toggle="modal" data-target="#CoverLetter" style="margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
+        {% else %}    
+            <a href="#" data-toggle="modal" data-target="#CoverLetter" style="pointer-events: none; opacity: .4; margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
+        {% endif %}
+        <a href="#" data-toggle="modal" data-target="#Abstract"><i class="fa fa-pen"></i> Abstract</a>
+    </div>
+</div>
+
+
+<div class="card border-secondary mb-3" style="max-width: 18rem; float: right;  margin-right: 210px;">
+    <h5 class="card-header text-secondary">Reviews</h5>
+    <div class="card-body">
+      <table class="table table-bordered">
+        <tbody>
+          {% for paper_reviewer in paper_reviewers %}
+              {% if paper_reviewer.status == 'Submitted' %}
+                  <tr>
+                      <th class="text-secondary">{{paper_reviewer.reviewer.first_name}} {{paper_reviewer.reviewer.last_name}} </th>
+                      <td>{{ paper_reviewer.review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' paper_reviewer.id %}')">View</a></td>
+                  </tr>
+                {% endif %}
+          {% endfor %}  
+        </tbody>    
+    </table> 
+    </div>
+  </div>
+
+  <div class="card border-secondary mb-3" style="max-width: 18rem; float: right;  margin-right: 210px;">
+    <h5 class="card-header text-secondary">Recommendations</h5>
+    <div class="card-body">
+      <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <th class="text-secondary">{{ paper.associate_editor.first_name}} {{ paper.associate_editor.last_name}} </th>
+                <td>{{ paper.aerecommendation.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_recommendation' paper.aerecommendation.id %}')">View</a></td>
+            </tr>
+        </tbody>    
+    </table> 
+    </div>
+  </div>
+  
+  
+
+<!-- Modal -->
+<div class="modal fade" id="OriginalFiles" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Original Files</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-bordered" style="width: 450px; margin: auto">
+            <thead>
+              <tr class="table-info">
+                <th scope="col"></th>
+                <th scope="col" style="color: DarkMagenta;">File</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for file in paper.files.all %}
+                <tr><th scope="row" style="color: DarkMagenta;">{{ forloop.counter }}</th>
+                <td><a href="{{ file.file.url }}">{{ file|basename }}</a></td></tr>
+              {% endfor %}
+            </tbody>  
+          </table>  
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" style="display: inline-block; float: right;" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal End -->
+
+  <!-- Modal -->
+  <div class="modal fade" id="Abstract" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Abstract</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            {{ paper.abstract }}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" style="display: inline-block; float: right;" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal End -->
+
+  <!-- Modal -->
+  <div class="modal fade" id="CoverLetter" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Cover Letter</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            {% if paper.cover_letter %}
+                {{ paper.cover_letter }}<br/><br/>
+            {% endif %}
+            {% if paper.cover_letter_file %}
+                <b>Attached Files:</b><br/>
+                <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" style="display: inline-block; float: right;" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal End -->
+
+
+<div style="width: 700px; margin-left: 210px; margin-top: 560px;">
+    <h4>EIC Decision</h4>
+    <table class="table table-bordered" >
+        <tr>
+          <td>
+            <b><span style="color: red;">*</span> Make a Decision</b>
+            {{ form.decision }}
+          </td>
+        </tr>
+  
+        <tr>
+          <td>  
+            <b>Decision Comments</b>
+            {{ form.comments|add_class:'form-control' }}
+          </td>
+        </tr> 
+
+        <tr>
+          <td>  
+              <b>Files Attached:</b><br/>
+              {% for eic_file in decision.decision_files.all %}
+                  {{ forloop.counter }}. <a href="{{ eic_file.file.url }}">{{ eic_file.file|basename }}</a><br/>
+              {% endfor %}
+          </td>
+        </tr>  
+
+      </table>
+</div>
+
+
+<br/><br/>
+<hr>
+
+<div style="display: inline-block; float: left;">  
+    <a href="{% url 'submitted_eic_decisions' %}" class="btn btn-dark" style="margin-left: 150px;"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
+</div>
+
+
+<div style="display: inline-block; float: right; margin-right: 150px;">    
+    {% if page_obj.has_other_pages %}
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a href="?page=1" class="page-link">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"></li>
+            {% endif %}
+
+
+            {% if pages_obj.number|add:'-2' > 1 %}
+                <li><a class='page-link' href="?page={{ page_obj.number|add:'-2' }}">&hellip;</a></li>
+            {% endif %}
+
+
+            {% for i in page_obj.paginator.page_range %}
+                {% if page_obj.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}<span class="sr-only">(current)</span></span>
+                    </li>
+                {% elif i > page_obj.number|add:'-2' and i < page_obj.number|add:'2' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+
+            {% if page_obj.paginator.num_pages > page_obj.number|add:'2' %}
+                <li><a class="page-link" href="?page={{ page_obj.number|add:'-2' }}">&hellip;</a></li>
+                <li><a href="?page={{ i }}">{{ i }}</a></li>
+                <li><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a></li>
+            {% endif %}
+            
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+</div>   
+
+
+<script>
+    $(':radio:not(:checked)').attr('disabled', true);
+    function openNewWindow(url) {
+      window.open(url, '_blank', 'width=700,height=700'); // Adjust width and height as needed
+  }
+</script>  
+ 
+{% endblock %}

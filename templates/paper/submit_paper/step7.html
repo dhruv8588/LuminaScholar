@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+
+{% load custom_filters %}     
+{% load widget_tweaks %}
+{% block content %}
+
+<style>
+  .list-group-item {
+      background-color: transparent; /* To remove default background */
+      padding: 0; /* To remove default padding */
+  }
+  
+  .list-link {
+      display: block;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+      text-decoration: none; /* Remove underline */
+      color: #333; /* Default color */
+      transition: color 0.3s; /* Smooth color transition on hover */
+  }
+  
+  .list-link:hover {
+      cursor: pointer;
+      text-decoration: none;
+      background-color: #d3d3d3;
+      color: #808080; /* Change color on hover */
+  }
+  
+  .selected {
+      background-color: #d3d3d3;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+  }
+
+  .error-box {
+    border: 2px solid red;
+    background-color: lightcoral;
+    color: darkred;
+    padding: 10px;
+    width: 800px;
+}
+
+.green-check {
+  color: green;
+} 
+
+.red-asterisk {
+  color: red;
+}
+
+#au {
+  background-color: #555;
+}
+</style>  
+
+<div class="row">
+    
+    <div class="col-md-4">
+      <br/><br/>
+        <a href="{% url 'unsubmitted_manuscripts' %}" class="btn btn-secondary" style="width: 18rem; margin-left: 50px;"><h5><i class="fas fa-angle-left"></i>&nbsp;Author Dashboard</h5></a><br/><br/>
+        <div class="card" style="width: 18rem; margin-left: 50px;">
+            <div class="card-header">
+              <h5 class="text-secondary">&nbsp;&nbsp;Submission</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+
+              {% if paper.eicdecision %}
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step0' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if paper.decision_response %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        {% endif %}
+                        <span>Step 0: View and Respond to Decision Letter</span>
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+              {% endif %}
+
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if paper.type and paper.title and paper.abstract %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        {% endif %}
+                        <span>Step 1: Type, Title, & Abstract</span>
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            
+            <li class="list-group-item">
+              <a href="{% url 'submit_paper_step2' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    {% if paper.authors.all %}
+                        <i class="fas fa-check green-check"></i>&nbsp;
+                    {% else %}
+                        &nbsp;&nbsp;&nbsp;&nbsp;    
+                    {% endif %}
+                    <span>Step 2: Authors</span>
+                </div>
+                <i class="fas fa-angle-right"></i>
+              </a>
+            </li>
+            
+
+            <li class="list-group-item">
+                <a href="{% url 'submit_paper_step3' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if paper.attributes.all and paper.additionalAttributes.all %}
+                            <i class="fas fa-check green-check"></i>&nbsp;
+                        {% else %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;    
+                        {% endif %}
+                        <span>Step 3: Attributes</span>
+                    </div>    
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+
+
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step4' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                    {% if paper.files.all %}
+                      <i class="fas fa-check green-check"></i>&nbsp;
+                    {% else %}
+                      &nbsp;&nbsp;&nbsp;&nbsp;    
+                    {% endif %}
+                    <span>Step 4: File Upload</span>
+                  </div>    
+                  <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+
+
+              <li class="list-group-item">
+                <a href="{% url 'submit_paper_step5' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                  {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+                    {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                        {% if figures_tables_published_elsewhere_desc %}
+                          <i class="fas fa-check green-check"></i>  
+                        {% else %}
+                          &nbsp;&nbsp;&nbsp;&nbsp;     
+                        {% endif %}  
+                    {% else %}
+                        <i class="fas fa-check green-check"></i>&nbsp; 
+                    {% endif %}
+                {% else %}
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                {% endif %}  
+                <span>Step 5: Details & Comments</span>
+              </div>    
+              <i class="fas fa-angle-right"></i>
+            </a>
+          </li>
+
+          <li class="list-group-item">
+            <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                  <i class="fas fa-check green-check"></i>&nbsp;Step 6: Reviewers
+              </div>
+              <i class="fas fa-angle-right"></i>
+            </a>
+          </li>
+
+            
+              <li class="list-group-item selected text-secondary">
+                <div class="d-flex justify-content-between align-items-center">
+                  &nbsp;&nbsp;&nbsp;&nbsp;Step 7: Review & Submit
+                <i class="fas fa-angle-right"></i>
+                </div>
+            </li>
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+      <div style="margin-right: 100px;">
+        <br/>
+      <h2>Step 7: Review & Submit</h2>
+      <p style="color: #54626F;">Review the information below for correctness and make changes as needed. <b>After reviewing the manuscript proof at the foot of this page, you MUST CLICK 'SUBMIT' to complete your submission.</b><br/><span class="red-asterisk">*</span> = Required Fields</p>
+      <hr/>
+
+      {% if paper.eicdecision %}
+            {% comment %} step0 {% endcomment %}
+            <h5 style="display: inline-block; margin-right: 10px;">
+              {% if not paper.decision_response %}
+                <i class="fas fa-x fa-xs" style="color: red;"></i> 
+              {% else %}
+                <i class="fas fa-check fa-xs" style="color: green;"></i> 
+              {% endif %}  
+              Step 0: View and Respond to Decision Letter
+            </h5>
+            <a href="{% url 'submit_paper_step0' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+            {% include 'partials/step0_errors.html' %}<br/>
+              <table class="table table-bordered table-striped" style="width: 800px;">
+                  <thead class="thead-dark">
+                      <tr>
+                          <th scope="col">FIELD</th>
+                          <th scope="col">RESPONSE</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <th>Response to Decision Letter</th>
+                          {% if paper.decision_response %}
+                            <td>{{ paper.decision_response }}</td>
+                          {% else %}
+                            <td><span class="badge badge-danger">Incomplete</span></td>
+                          {% endif %}
+                      </tr>
+                  </tbody>    
+              </table>
+              <br/> 
+        {% endif %}
+    
+               
+      {% comment %} step1 {% endcomment %}
+        <h5 style="display: inline-block; margin-right: 10px;">
+          {% if not paper.title or not paper.abstract or not paper.type %}
+            <i class="fas fa-x fa-xs" style="color: red;"></i> 
+          {% else %}
+            <i class="fas fa-check fa-xs" style="color: green;"></i> 
+          {% endif %}  
+          Step 1: Type, Title, & Abstract
+        </h5>
+        <a href="{% url 'submit_paper_step1' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+        {% include 'partials/step1_errors.html' %}<br/>
+        <table class="table table-bordered table-striped" style="width: 800px;">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">RESPONSE</th>
+              </tr>
+            </thead>
+            <tbody>
+                <tr>
+                  <th>Type</th>
+                  {% if paper.type %}
+                    <td>{{ paper.type }}</td>
+                  {% else %}
+                    <td><span class="badge badge-danger">Incomplete</span></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>Title</th>  
+                  {% if paper.title %}
+                    <td>{{ paper.title }}</td>
+                  {% else %}
+                    <td><span class="badge badge-danger">Incomplete</span></td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  <th>Abstract</th>  
+                  {% if paper.abstract %}
+                    <td>{{ paper.abstract }}</td>
+                  {% else %}
+                    <td><span class="badge badge-danger">Incomplete</span></td>
+                  {% endif %}
+                </tr>  
+              </tbody>    
+            </table>
+    
+
+        <br/>    
+        {% comment %} step2 {% endcomment %}
+        <h5 style="display: inline-block; margin-right: 10px;">
+          {% if not paper.authors.all %}
+            <i class="fas fa-x fa-xs" style="color: red;"></i> 
+          {% else %}
+            <i class="fas fa-check fa-xs" style="color: green;"></i> 
+          {% endif %}  
+          Step 2: Authors 
+        </h5>
+        <a href="{% url 'submit_paper_step2' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+        {% include 'partials/step2_errors.html' %}<br/>
+        <table class="table table-bordered table-striped" style="width: 800px;">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">RESPONSE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for paper_author in paper_authors %}
+              <tr>
+                <th>Author {{ forloop.counter }}</th>
+                <td>{{ paper_author.author.first_name }} {{ paper_author.author.last_name }}<br/><a href="mailto:{{ paper_author.author.email }}">{{ paper_author.author.email }}</a></td>
+              </tr>  
+              {% endfor %}
+            </tbody>    
+        </table> 
+
+
+        <br/>    
+        {% comment %} step3 {% endcomment %}
+
+        <h5 style="display: inline-block; margin-right: 10px;">
+          {% if not paper.attributes.all %}
+            <i class="fas fa-x fa-xs" style="color: red;"></i> 
+          {% else %}
+            <i class="fas fa-check fa-xs" style="color: green;"></i> 
+          {% endif %}  
+          Step 3: Attributes
+        </h5>
+        <a href="{% url 'submit_paper_step3' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+        {% include 'partials/step3_errors.html' %}<br/>
+        <table class="table table-bordered table-striped" style="width: 800px;">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">RESPONSE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for attribute in paper.attributes.all %}
+                <tr>
+                  <th>Attribute {{ forloop.counter }}</th>
+                  <td>{{ attribute.name }}</td>
+                </tr>  
+              {% endfor %}
+              {% for attribute in paper.additionalAttributes.all %}
+                <tr>
+                  <th>Additional Attribute {{ forloop.counter }}</th>
+                  <td>{{ attribute.name }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>    
+        </table>
+  
+        <br/>    
+        {% comment %} step4 {% endcomment %}
+
+        <h5 style="display: inline-block; margin-right: 10px;">
+          {% if not paper.files.all %}
+            <i class="fas fa-x fa-xs" style="color: red;"></i> 
+          {% else %}
+            <i class="fas fa-check fa-xs" style="color: green;"></i> 
+          {% endif %}  
+          Step 4: File Upload
+        </h5>
+        <a href="{% url 'submit_paper_step4' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+        {% include 'partials/step4_errors.html' %}<br/>
+        <table class="table table-bordered table-striped" style="width: 800px;">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">RESPONSE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for file in paper.files.all %}
+              <tr>
+                <th>File {{ forloop.counter }}</th>
+                <td><a href="{{ file.file.url }}">{{ file|basename }}</a></td>
+              </tr>  
+              {% endfor %}
+            </tbody>    
+          </table>
+
+
+        <br/>    
+        {% comment %} step5 {% endcomment %}
+
+        <h5 style="display: inline-block; margin-right: 10px;">
+          {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
+              {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
+                  {% if figures_tables_published_elsewhere_desc %}
+                      <i class="fas fa-check green-check"></i>  
+                  {% endif %}  
+              {% else %}
+                  <i class="fas fa-check green-check"></i>&nbsp; 
+              {% endif %}
+          {% else %}
+              <i class="fas fa-x fa-xs" style="color: red;"></i> 
+          {% endif %}  
+          Step 5: Details & Comments
+        </h5>
+        <a href="{% url 'submit_paper_step5' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+        {% include 'partials/step5_errors.html' %}<br/>
+          <b>Cover Letter</b>
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <label>Write Cover Letter</label>
+                          {{ form.cover_letter|add_class:'form-control' }}
+                      </div>
+                  </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                    <div class="file-upload form-group">
+                        <label>Upload Cover Letter</label><br/>
+                        {% if paper.cover_letter_file %}
+                          <a href="{{ paper.cover_letter_file.url }}">{{ paper.cover_letter_file|basename }}</a>
+                        {% endif %}
+                        
+                    </div>
+                </div>
+              </div>
+
+              <hr>
+
+              <b>Manuscript Information</b>
+              <table class="table table-bordered table-striped" style="width: 800px;">
+                <tbody>
+                    <tr>
+                        <td><span class="red-asterisk">*</span> Number of figures (total)</td>
+                        <td>{% render_field form.number_of_figures class="form-control" style="width: 250px" %}</td>
+                    </tr>
+                    
+                    <tr>
+                        <td><span class="red-asterisk">*</span> Number of tables</td>
+                        <td>{% render_field form.number_of_tables class="form-control" style="width: 250px" %}</td>
+                    </tr>
+
+                    <tr>
+                        <td><span class="red-asterisk">*</span> Word count</td>
+                        <td>{% render_field form.word_count class="form-control" style="width: 250px" %}</td>
+                    </tr>
+                </tbody>    
+              </table>
+              
+              <hr>
+
+              <b>Confirm the following:</b>
+             
+              <table class="table table-bordered" >
+                <tr>
+                  <td>
+                    <label><span class="red-asterisk">*</span> Have you uploaded a Microsoft Word file for the main document?</label><br/>
+                    {{ form.MSWord_file }}
+                  </td>
+                </tr>
+              
+                <tr>
+                  <td>
+                    <label><span class="red-asterisk">*</span> Have you submitted your Certification Form?</label><br/>
+                    {{ form.certification_form }}
+                  </td>
+                </tr>
+              
+                <tr>
+                  <td>
+                    <label><span class="red-asterisk">*</span> Do you certify that this manuscript has not been published previously and is not currently under consideration for publication elsewhere?</label><br/>
+                    {{ form.publish_elsewhere }}
+                  </td>
+                </tr>
+              
+                <tr>
+                  <td>
+                    <label><span class="red-asterisk">*</span> Does this research require the approval of an institutional ethical committee/institutional review board (IRB)?</label><br/>
+                    {{ form.approval }}
+                  </td>
+                </tr>
+              
+                <tr>
+                  <td>
+                    <label><span class="red-asterisk">*</span> Does your manuscript include an appropriate statement, along with the number of the institutional ethical committee/IRB approval, in the main text?</label><br/>
+                    {{ form.appropriate_statement }}
+                  </td>
+                </tr>
+              
+                <tr>
+                  <td>
+                    <label>Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
+                    {{ form.figures_tables_published_elsewhere }}
+                  </td>
+                </tr>
+              
+                <tr>
+                  <td>
+                    <label>Please describe the figure/table numbers that have already been published. Please note that authors wishing to include figures or tables that have already been published are required to obtain permission from the copyright owner(s) for both the print and online format. The sources must be acknowledged in the figure legends or the table footnotes.</label><br/>
+                    {{ form.figures_tables_published_elsewhere_desc|add_class:'form-control' }}
+                  </td>
+                </tr>
+              </table>
+              <br/>
+
+   
+        {% comment %} step6 {% endcomment %}
+        
+        <h5 style="display: inline-block; margin-right: 10px;">
+          <i class="fas fa-check fa-xs" style="color: green;"></i> Step 6: Reviewers 
+        </h5>
+        <a href="{% url 'submit_paper_step6' paper.id %}" class="btn btn-info btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+        <table class="table table-bordered table-striped" style="width: 800px;">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">FIELD</th>
+                <th scope="col">RESPONSE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for paper_reviewer in paper_reviewers %}
+              <tr>
+                <th>Reviewer {{ forloop.counter }}</th>
+                <td>{{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} <i style="color: grey;">({{ paper_reviewer.preference }})</i><br/>Reason: {{ paper_reviewer.reason }}<br/><a href="mailto:{{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a></td>
+              </tr> 
+              {% endfor %}
+            </tbody>    
+        </table> 
+
+
+        <br/><br/>
+              
+    <h5><span class="red-asterisk">*</span> View Submission</h5>
+      You must view the Submission before you can submit<br/><br/>
+      <a href="{% url 'merge_pdfs' paper.id %}" target="_blank" class="btn btn-secondary" id="viewSubmissionBtn">View Submission</a> 
+    <br/><br/><hr/>
+    <div style="display: inline-block; float: left;">
+      <a href="{% url 'submit_paper_step6' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
+    </div>
+    <div style="display: inline-block; float: right;">    
+        {% comment %} <button type="button" class="btn btn-dark mb-3 btn-sm" disabled id="submitButton">Submit&nbsp;<i class="fas fa-angle-right"></i></button>   {% endcomment %}
+
+        <a href="{% url 'submit_paper' paper.id %}" class="btn btn-dark btn-sm disabled" id="submitBtn">Submit&nbsp;<i class="fas fa-angle-right"></i></a>
+    </div>    
+  </div> 
+</div>
+
+</div> 
+
+
+  <script>
+    $(':radio:not(:checked)').attr('disabled', true);
+  </script>  
+
+  <script>
+    $(document).ready(function() {
+      var viewSubmissionBtn = $("#viewSubmissionBtn");
+      var submitBtn = $("#submitBtn");
+      var errorBox = $(".error-box");
+    
+      // Disable the submit link initially
+      submitBtn.addClass("disabled");
+    
+      // Check if the view submission button is clicked
+      viewSubmissionBtn.click(function() {
+        // Check if there is an error box visible
+        if (errorBox.is(":visible")) {
+          submitBtn.addClass("disabled");
+        } else {
+          submitBtn.removeClass("disabled");
+        }
+      });
+    });
+    </script>
+    
+{% endblock %}

@@ -1,202 +1,332 @@
 from datetime import datetime
+import os
 import time
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.exceptions import PermissionDenied
 from django.urls import resolve
 from django.core.paginator import Paginator
-from django.db.models import Q, F, Count
+from django.db.models import Q
 
 from accounts.models import Role, User
-from paper.models import Paper, Paper_Reviewer, Review, Reviewer
-from conference.utils import send_review_invitation_email, send_review_invitation_email2
+from paper.forms import AERecommendationForm, EICDecisionForm, ReviewForm
+from paper.models import AERecommendation, AERecommendationFile, DecisionFile, EICDecision, Paper, Paper_Reviewer, PreferencePaper_Reviewer, Reviewer
+from conference.utils import send_review_invitation_email, send_review_invitation_email2, send_review_withdrawal_email
 from paper.utils import get_max_order_reviewer, reorder_reviewers
-# from .utils import send_approval_request_email
-
-from .forms import UserModelFormset, ReviewerForm
-
-def check_role_admin(user):
-    if user.is_admin == True:
-        return True
-    else:
-        raise PermissionDenied
 
 
-def eic_dashboard(request):
-    return render(request, 'conference/eic_dashboard.html')
-
-def awaiting_ae_assignment(request):
-    papers = Paper.objects.all()
-
-    paginator = Paginator(papers, 3)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'papers':papers,
-        "page_obj": page_obj,
-    }
-    return render(request, 'conference/awaiting_ae_assignment.html', context)
-
-def select_ae(request, page_number):
-    associate_editor_role = Role.objects.get(name='AE')
-    
-    associate_editors = User.objects.filter(roles=associate_editor_role)
-
-    papers = Paper.objects.all()
-    paginator = Paginator(papers, 1)
-
-    page_obj = paginator.get_page(page_number)
-        
-    context = {
-        'associate_editors': associate_editors,
-        "page_obj": page_obj,
-        'papers':papers,
-    }
-    return render(request, 'conference/assign_ae.html', context)
-
-def assign_ae(request, paper_id):
+def select_ae(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
 
     if request.method == 'POST':
         selected_ae_id = request.POST.get('selected_ae')
 
         user = User.objects.get(id=selected_ae_id)
-        print(selected_ae_id)
         paper.associate_editor = user
 
         paper.save() 
+
+        AERecommendation.objects.create(paper=paper)
 
     context = {
         'paper': paper
     }
 
-    return render(request, 'partials/assigned_ae.html', context)   
+    return render(request, 'partials/assigned_ae.html', context) 
+      
 
 
-def ae_dashboard(request):
-    return render(request, 'conference/ae_dashboard.html')
-
-
-
-def awaiting_rev_selection(request):
+def get_papers_awaiting_rev_selection(papers):
     # papers = Paper.objects.all()
     # papers_awaiting_rev_selection = []
     # for paper in papers:
-    #     paper_reviewers = Paper_Reviewer.objects.filter(Q(paper=paper) & (Q(status='') | Q(status='Accepted') | Q(status='Invited') | Q(status='Submitted')))
+    #     paper_reviewers = Paper_Reviewer.objects.filter(Q(paper=paper) & (Q(status='') | Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted')))
     #     if paper_reviewers.count() < paper.required_reviews:
     #         papers_awaiting_rev_selection.append(paper)
 
     papers_awaiting_rev_selection = [
-        paper for paper in Paper.objects.all()
+        paper for paper in papers
             if Paper_Reviewer.objects.filter(
-                Q(paper=paper) & (Q(status='') | Q(status='Accepted') | Q(status='Invited') | Q(status='Submitted'))
+                Q(paper=paper) & (Q(status='') | Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted'))
             ).count() < paper.required_reviews
     ]
 
-    papers = papers_awaiting_rev_selection
+    return papers_awaiting_rev_selection
 
-    paginator = Paginator(papers, 3)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'papers':papers,
-        "page_obj": page_obj,
-    }
-    return render(request, 'conference/awaiting_rev.html', context)
-   
-
-
-def awaiting_rev_invitation(request):
+def get_papers_awaiting_rev_invitation(papers):
     # papers = Paper.objects.all()
     # papers_awaiting_rev_invitation = []
     # for paper in papers:
-    #     paper_reviewers = Paper_Reviewer.objects.filter(Q(paper=paper) & (Q(status='') | Q(status='Accepted') | Q(status='Invited') | Q(status='Submitted')))
+    #     paper_reviewers = Paper_Reviewer.objects.filter(Q(paper=paper) & (Q(status='') | Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted')))
     #     if paper_reviewers.count() >= paper.required_reviews:
-    #         paper_reviewers = paper_reviewers.filter(status='Invited')
+    #         paper_reviewers = paper_reviewers.filter(Q(paper=paper) & (Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted')))
     #         if paper.required_reviews > paper_reviewers:
     #             papers_awaiting_rev_invitation.append(paper)
 
+    # papers_awaiting_rev_invitation = [
+    #     paper for paper in papers
+    #     if Paper_Reviewer.objects.filter(
+    #         Q(paper=paper) & (Q(status='') | Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted'))
+    #     ).count() >= paper.required_reviews and
+
+    #     Paper_Reviewer.objects.filter(
+    #         Q(paper=paper) & (Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted'))
+    #     ).count() < paper.required_reviews
+    # ]
+    # return papers_awaiting_rev_invitation
+
+    # papers_awaiting_rev_invitation = [
+    # paper for paper in papers
+    # if (
+    #     Paper_Reviewer.objects.filter(
+    #         Q(paper=paper, status__in=['', 'Agreed', 'Invited', 'Submitted'])
+    #     ).count() >= paper.required_reviews
+    #     and
+    #     Paper_Reviewer.objects.filter(
+    #         Q(paper=paper, status__in=['Agreed', 'Invited', 'Submitted'])
+    #     ).count() < paper.required_reviews
+    # )
+    # ]
+ 
     papers_awaiting_rev_invitation = [
-        paper for paper in Paper.objects.all()
-        if Paper_Reviewer.objects.filter(
-            Q(paper=paper) & (Q(status='') | Q(status='Accepted') | Q(status='Invited') | Q(status='Submitted'))
-        ).count() >= paper.required_reviews and
-        paper.required_reviews > Paper_Reviewer.objects.filter(paper=paper, status='Invited').count()
+        paper for paper in papers
+        if (paper_reviewers := Paper_Reviewer.objects.filter(
+            Q(paper=paper) & (Q(status='') | Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted'))
+        )).count() >= paper.required_reviews and
+
+        paper_reviewers.filter(
+            Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted')
+        ).count() < paper.required_reviews
     ]
 
-    papers = papers_awaiting_rev_invitation
-
-    paginator = Paginator(papers, 3)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'papers':papers,
-        "page_obj": page_obj,
-    }
-
-    return render(request, 'conference/awaiting_rev.html', context)
+    return papers_awaiting_rev_invitation
 
 
-def awaiting_rev_assignment(request):
-    awaiting_rev_assignment = [
-        paper for paper in Paper.objects.all()
-        if Paper_Reviewer.objects.filter(
-            Q(paper=paper) & (Q(status='') | Q(status='Accepted') | Q(status='Invited') | Q(status='Submitted'))
-        ).count() >= paper.required_reviews and
-        paper.required_reviews <= Paper_Reviewer.objects.filter(paper=paper, status='Invited').count()
+def get_papers_awaiting_rev_assignment(papers):
+    papers_awaiting_rev_assignment = [
+        paper for paper in papers
+        if (paper_reviewers := Paper_Reviewer.objects.filter(
+            Q(paper=paper) & (Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted'))
+        )).count() >= paper.required_reviews and
+
+        paper_reviewers.filter(
+            Q(status='Submitted')
+        ).count() < paper.required_reviews
     ]
 
-    papers = awaiting_rev_assignment
+    return papers_awaiting_rev_assignment
 
-    paginator = Paginator(papers, 3)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'papers':papers,
-        "page_obj": page_obj,
-    }
-
-    return render(request, 'conference/awaiting_rev.html', context)
-
-
-
-def awaiting_ae_recommendation(request):
-    awaiting_ae_recommendation = [
-        paper for paper in Paper.objects.all()
+def get_papers_awaiting_ae_recommendation(papers):
+    papers_awaiting_ae_recommendation = [
+        paper for paper in papers
         if Paper_Reviewer.objects.filter(
             Q(paper=paper) & Q(status='Submitted')
         ).count() >= paper.required_reviews
+
+        and
+
+        AERecommendation.objects.get(paper=paper).date_submitted == None
     ]
 
-    papers = awaiting_ae_recommendation
+    return papers_awaiting_ae_recommendation
+
+def get_papers_submitted_ae_recommendation(papers):
+    papers_submitted_ae_recommendation = [
+        paper for paper in papers
+        if Paper_Reviewer.objects.filter(
+            Q(paper=paper) & Q(status='Submitted')
+        ).count() >= paper.required_reviews
+
+        and
+
+        AERecommendation.objects.get(paper=paper).date_submitted != None
+    ]
+
+    return papers_submitted_ae_recommendation
+
+
+def get_status_count_multiple_papers(papers):
+    i = 0
+    status_count = []
+    for paper in papers:
+        paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+        counts = [paper_reviewers.filter(status=status).count() for status in ["", "Invited", "Agreed", "Declined", "Submitted"]]
+        counts[0] = sum(counts) 
+        status_count.append(counts)
+        i += 1
+
+    return status_count    
+
+
+
+def display_papers_awaiting_reviewer_selection(request):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    papers = get_papers_awaiting_rev_selection(papers)
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    status_count = get_status_count_multiple_papers(papers)
+
+    zipped_data = zip(page_obj, status_count)
+
+    context = {
+        'type': 'papers_awaiting_reviewer_selection', 
+        'zipped_data': zipped_data
+    }
+
+    return render(request, 'conference/awaiting_reviewer_selection.html', context)
+   
+
+def display_papers_awaiting_reviewer_invitation(request):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    papers = get_papers_awaiting_rev_invitation(papers)
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    status_count = get_status_count_multiple_papers(papers)
+
+    zipped_data = zip(page_obj, status_count)
+
+    context = {
+        'type': 'papers_awaiting_reviewer_invitation',
+        'zipped_data': zipped_data
+    }
+
+    return render(request, 'conference/awaiting_reviewer_invitation.html', context)
+
+
+def display_papers_awaiting_reviewer_assignment(request):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    papers = get_papers_awaiting_rev_assignment(papers)
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    status_count = get_status_count_multiple_papers(papers)
+
+    zipped_data = zip(page_obj, status_count)
+
+    context = {
+        'zipped_data': zipped_data,
+        'type': 'papers_awaiting_reviewer_assignment',
+        'page_obj': page_obj
+    }
+
+    return render(request, 'conference/awaiting_reviewer_assignment.html', context)
+
+
+def display_papers_awaiting_ae_recommendation(request):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    papers = get_papers_awaiting_ae_recommendation(papers)
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    status_count = get_status_count_multiple_papers(papers)
+
+    zipped_data = zip(page_obj, status_count)
+
+    context = {
+        'zipped_data': zipped_data,
+        'type': 'papers_awaiting_ae_recommendation'
+    }
+
+    return render(request, 'conference/awaiting_ae_recommendation.html', context)
+
+
+def display_papers_submitted_ae_recommendation(request):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    papers = get_papers_submitted_ae_recommendation(papers)
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    status_count = get_status_count_multiple_papers(papers)
+
+    zipped_data = zip(page_obj, status_count)
+
+    context = {
+        'zipped_data': zipped_data,
+        'type': 'papers_awaiting_ae_recommendation'
+    }
+
+    return render(request, 'conference/submitted_ae_recommendation.html', context)
+
+
+def display_papers_awaiting_ae_selection(request):
+    papers = Paper.objects.filter(associate_editor=None)
 
     paginator = Paginator(papers, 3)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'papers':papers,
-        "page_obj": page_obj,
+        'page_obj': page_obj,
+        'type': 'papers_awaiting_ae_selection'
     }
 
-    return render(request, 'conference/awaiting_rev.html', context)
+    return render(request, 'conference/awaiting_ae_selection.html', context)
+
+
+def display_papers_awaiting_ae_assignment(request):
+    papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=True))
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'type': 'papers_awaiting_ae_assignment'
+    }
+
+    return render(request, 'conference/awaiting_ae_assignment.html', context)
+
+
+def display_papers_awaiting_eic_decision(request):
+    papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=False) & Q(eicdecision__date_submitted__isnull=True))
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'type': 'papers_awaiting_eic_decision'
+    }
+
+    return render(request, 'conference/awaiting_eic_decision.html', context)
+
+def display_papers_submitted_eic_decision(request):
+    papers = Paper.objects.filter(Q(eicdecision__date_submitted__isnull=False))
+
+    paginator = Paginator(papers, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'type': 'papers_submitted_eic_decision'
+    }
+
+    return render(request, 'conference/submitted_eic_decision.html', context)
 
 
 def edit_reviewer(request, paper_id, reviewer_id):
     first_name = request.POST.get('first_name').capitalize()
     last_name = request.POST.get('last_name').capitalize()
-    print(first_name)
 
     reviewer = get_object_or_404(Reviewer, id=reviewer_id)
-    print(reviewer)
     reviewer.first_name = first_name
     reviewer.last_name = last_name
     reviewer.save()
-    # print(reviewer)
+    
     paper = get_object_or_404(Paper, id=paper_id)
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
@@ -211,7 +341,9 @@ def edit_reviewer(request, paper_id, reviewer_id):
 def get_status_count(paper_id):
     paper = Paper.objects.get(id=paper_id)
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
-    status_count = [paper_reviewers.filter(status=status).count() for status in ["Invited", "Agreed", "Declined"]]
+    status_count = [paper_reviewers.filter(status=status).count() for status in ["", "Invited", "Agreed", "Declined", "Submitted"]]
+    status_count[0] = sum(status_count[0:])
+
     return status_count
 
 
@@ -247,8 +379,58 @@ def decline_to_review(request, paper_reviewer_id):
     paper_reviewer.status = "Declined"
     paper_reviewer.save()
 
-    return render(request, 'accounts/login.html')
+    paper = paper_reviewer.paper
 
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    
+    if not paper_reviewers.filter(status='') and (paper_reviewers.filter(status='Agreed') | paper_reviewers.filter(status='Invited')).count() < paper.required_reviews:
+        try:
+            paper_reviewer = Paper_Reviewer.objects.get(status='Alternate', order=1)
+        except:
+            paper_reviewer = None
+
+        if paper_reviewer:
+            paper_reviewer.status = 'Invited'
+            paper_reviewer.invite_sent_date = datetime.now().date()
+            paper_reviewer.save()
+            send_review_invitation_email(request, paper_reviewer)
+
+            reorder_reviewers(paper_id=paper.id)
+
+
+    return render(request, 'paper/reviewer_invitations.html')
+
+
+def view_review(request, paper_reviewer_id):
+    paper_reviewer = get_object_or_404(Paper_Reviewer, id=paper_reviewer_id)
+    review = paper_reviewer.review
+
+    form = ReviewForm(instance=review)
+
+    for field_name in ['what_should_be_deleted', 'comments_to_editor', 'comments_to_author']: 
+            form.fields[field_name].widget.attrs['readonly'] = True
+
+    context = {
+        'form': form,
+        'review': review,
+    }    
+    return render(request, 'conference/view_review.html', context)
+
+
+def view_recommendation(request, aerecommendation_id):
+    recommendation = get_object_or_404(AERecommendation, id=aerecommendation_id)
+
+    form = AERecommendationForm(instance=recommendation)
+
+    for field_name in ['comments_to_eic', 'comments_to_author']: 
+            form.fields[field_name].widget.attrs['readonly'] = True
+
+    context = {
+        'form': form,
+        'recommendation': recommendation,
+    }    
+    return render(request, 'conference/view_recommendation.html', context)
+    
 
 
 
@@ -320,7 +502,7 @@ def get_matching_users(paper_id):
     return matching_users  
 
 
-def delete_reviewer(request, paper_id, reviewer_id):
+def delete_reviewer(request, paper_id, reviewer_id): # from Main Reviewer list
     paper = get_object_or_404(Paper, id=paper_id)
     paper.reviewers.remove(reviewer_id)
 
@@ -329,32 +511,155 @@ def delete_reviewer(request, paper_id, reviewer_id):
     reviewer = get_object_or_404(Reviewer, id=reviewer_id)
 
     papers = Paper.objects.filter(paper_reviewer__reviewer_id=reviewer)
-    if not papers:
+    if not papers and not PreferencePaper_Reviewer.objects.filter(reviewer=reviewer):
         reviewer.delete()
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)  
+
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
     context = {
         'paper': paper,
         'users': get_matching_users(paper_id),
         'paper_reviewers': paper_reviewers,
-        'status_count': get_status_count(paper_id)
+        'status_count': get_status_count(paper_id),
+        'preferencepaper_reviewers': preferencepaper_reviewers
     }  
 
     return render(request, 'partials/add-remove_reviewers.html', context)
 
+def remove_reviewer(request, paper_reviewer_id): # from Alternate Reviewer list
+    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
+    paper_reviewer.status = ''
+    paper_reviewer.save()
 
-def rev_affairs(request):
-    #paper = get_object_or_404(Paper, id=paper_id)
+    paper = paper_reviewer.paper
 
-    # papers = Paper.objects.all().order_by('created_at')
+    reorder_reviewers(paper.id)
 
-    papers = Paper.objects.annotate(
-        num_matching_reviewers=Count('reviewers', 
-            filter=Q(reviewers__paper_reviewer__status__in=['', 'Invited', 'Agreed']))
-    ).filter( 
-        num_matching_reviewers__lt=F('required_reviews')
-    ).order_by('created_at')
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+
+    context = {
+        'paper_reviewers': paper_reviewers,
+        'paper': paper,
+        'status_count': get_status_count(paper.id)
+    }    
+
+    return render(request, 'partials/reviewers+progress.html', context)
+
+def add_alternate_reviewer(request, paper_reviewer_id):
+    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
+    paper_reviewer.status = 'Alternate'
+    paper_reviewer.save()
+
+    paper = paper_reviewer.paper
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+
+    reorder_reviewers(paper.id)
+
+    context = {
+            "paper_reviewers": paper_reviewers,
+            'paper': paper,
+            'status_count': get_status_count(paper.id)
+        }
+
+    return render(request, 'partials/reviewers+progress.html', context)
+
+
+def ae_affairs(request, type):
+    papers = Paper.objects.all()
+    if type == 'papers_awaiting_ae_selection':
+        papers = Paper.objects.filter(associate_editor=None)
+        if not papers:
+            return redirect('awaiting_ae_selection')
+    elif type == 'papers_awaiting_ae_assignment':    
+        papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=True))
+        if not papers:
+            return redirect('awaiting_ae_assignment')
+    elif type == 'papers_awaiting_eic_decision':
+        papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=False))
+        if not papers:
+            return redirect('awaiting_eic_decision')   
+    else:
+        papers = Paper.objects.filter(Q(eicdecison__date_submitted__isnull=True))
+
+    paginator = Paginator(papers, 1)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get the specific Paper object from the queryset based on the page number
+    current_paper_index = (page_obj.number - 1) * paginator.per_page
+    paper = papers[current_paper_index]  
+
+    context = {
+        'page_obj': page_obj,
+        'type': type,
+    }
+
+    if type == 'papers_awaiting_ae_selection':
+        associate_editors = User.objects.filter(roles=Role.objects.get(name='AE'))
+        context['associate_editors'] = associate_editors
+    elif type == 'papers_awaiting_eic_decision':
+        form = EICDecisionForm(instance=EICDecision.objects.get(paper=paper))
+        context.update({
+            'form': form,
+            'decision': paper.eicdecision,
+            'paper_reviewers': Paper_Reviewer.objects.filter(paper=paper)  
+        })
+
+    return render(request, 'conference/ae_affairs.html', context)  
+
+
+
+def rev_affairs(request, type):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    if type == 'papers_awaiting_reviewer_selection':
+        papers = get_papers_awaiting_rev_selection(papers)
+        if not papers:
+            return redirect('awaiting_reviewer_selection')
+    elif type == 'papers_awaiting_reviewer_invitation':
+        papers = get_papers_awaiting_rev_invitation(papers)
+        if not papers:
+            return redirect('awaiting_reviewer_invitation')
+    elif type == 'papers_awaiting_reviewer_assignment':       
+        papers =  get_papers_awaiting_rev_assignment(papers)
+        if not papers:
+            return redirect('awaiting_reviewer_assignment')
+    else:
+        papers = get_papers_awaiting_ae_recommendation(papers)    
+    
+    paginator = Paginator(papers, 1)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get the specific Paper object from the queryset based on the page number
+    current_paper_index = (page_obj.number - 1) * paginator.per_page
+    paper = papers[current_paper_index]
+    
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
+
+    context = {
+        'users': get_matching_users(paper.id),
+        'page_obj': page_obj,
+        'paper_reviewers': paper_reviewers,
+        'status_count': get_status_count(paper.id),
+        'type': type,
+        'preferencepaper_reviewers': preferencepaper_reviewers
+    }
+
+    if type == 'papers_awaiting_ae_recommendation':
+        form = AERecommendationForm(instance=AERecommendation.objects.get(paper=paper))
+        context['form'] = form
+        context['recommendation'] = paper.aerecommendation
+
+    return render(request, 'conference/reviewer_affairs.html', context)
+
+
+def ae_recommendation(request):
+    papers = Paper.objects.filter(associate_editor=request.user)
+    papers = get_papers_submitted_ae_recommendation(papers)   
 
     paginator = Paginator(papers, 1)
     page_number = request.GET.get('page')
@@ -363,16 +668,51 @@ def rev_affairs(request):
     # Get the specific Paper object from the queryset based on the page number
     current_paper_index = (page_obj.number - 1) * paginator.per_page
     paper = papers[current_paper_index]
-  
+
+    recommendation = AERecommendation.objects.get(paper=paper)
+
+    form = AERecommendationForm(instance=recommendation)
+    for field_name in ['recommendation', 'comments_to_eic', 'comments_to_author']:  
+            form.fields[field_name].widget.attrs['readonly'] = True
+
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
     context = {
-        'users': get_matching_users(paper.id),
+        'paper': paper,
+        'form': form,
         'page_obj': page_obj,
         'paper_reviewers': paper_reviewers,
-        'status_count': get_status_count(paper.id)
-    }
-    return render(request, 'conference/assign_rev.html', context)
+        'recommendation': recommendation
+    }  
+    return render(request, 'conference/ae_recommendation.html', context)   
+
+def eic_decision(request):
+    papers = Paper.objects.filter(Q(eicdecision__date_submitted__isnull=False))
+
+    paginator = Paginator(papers, 1)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get the specific Paper object from the queryset based on the page number
+    current_paper_index = (page_obj.number - 1) * paginator.per_page
+    paper = papers[current_paper_index]
+
+    decision = EICDecision.objects.get(paper=paper)
+
+    form = EICDecisionForm(instance=decision)
+    for field_name in ['decision', 'comments']:  
+            form.fields[field_name].widget.attrs['readonly'] = True
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)        
+
+    context = {
+        'paper': paper,
+        'form': form,
+        'page_obj': page_obj,
+        'paper_reviewers': paper_reviewers,
+        'decision': decision
+    }  
+    return render(request, 'conference/eic_decision.html', context)   
 
 
 
@@ -385,7 +725,9 @@ def sort_reviewers(request):
         paper_reviewer.save()
         paper_reviewers.append(paper_reviewer)
 
-    paper = Paper.objects.get(id=paper_reviewers[0].paper.id)    
+    paper = Paper.objects.get(id=paper_reviewers[0].paper.id)  
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
     context = {
         'paper_reviewers': paper_reviewers,
@@ -393,6 +735,9 @@ def sort_reviewers(request):
     }    
 
     return render(request, 'partials/reviewers.html', context)
+
+
+
 
 
 # def upload_file(request):
@@ -411,17 +756,42 @@ def select_rev(request, user_id, paper_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
+
     context = {
         'users': get_matching_users(paper_id),
         'paper_reviewers': paper_reviewers,
         'paper': paper,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'preferencepaper_reviewers': preferencepaper_reviewers
+    }
+    return render(request, 'partials/add-remove_reviewers.html', context)
+
+
+def add_preference_reviewer(request, paper_reviewer_id):
+    paper_reviewer = PreferencePaper_Reviewer.objects.get(id=paper_reviewer_id)
+    paper = paper_reviewer.paper
+    reviewer = paper_reviewer.reviewer
+
+    Paper_Reviewer.objects.create(paper=paper, reviewer=reviewer, preference=paper_reviewer.preference, order=get_max_order_reviewer(paper.id))
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
+
+    context = {
+        'users': get_matching_users(paper.id),
+        'paper_reviewers': paper_reviewers,
+        'paper': paper,
+        'status_count': get_status_count(paper.id),
+        'preferencepaper_reviewers': preferencepaper_reviewers
     }
     return render(request, 'partials/add-remove_reviewers.html', context)
 
 
 def add_user_as_reviewer(request, paper_id, user_id):
     user = get_object_or_404(User, id=user_id)
+    user.roles.add(Role.objects.get(name='REV'))
 
     reviewer = Reviewer.objects.get_or_create(user=user, first_name=user.first_name, last_name=user.last_name, email=user.email)[0]
 
@@ -432,11 +802,14 @@ def add_user_as_reviewer(request, paper_id, user_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
+
     context = {
         'users': get_matching_users(paper_id),
         'paper': paper,
         'paper_reviewers': paper_reviewers,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'preferencepaper_reviewers': preferencepaper_reviewers
     }
 
     return render(request, 'partials/add-remove_reviewers.html', context)
@@ -452,11 +825,14 @@ def add_reviewer_as_reviewer(request, paper_id, reviewer_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
+
     context = {
         'paper': paper,
         'users': get_matching_users(paper_id),
         'paper_reviewers': paper_reviewers,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'preferencepaper_reviewers': preferencepaper_reviewers
     }
 
     return render(request, 'partials/add-remove_reviewers.html', context)
@@ -476,11 +852,14 @@ def add_new_reviewer(request, paper_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
+
     context = {
         'users': get_matching_users(paper_id),
         'paper': paper,
         'paper_reviewers': paper_reviewers,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'preferencepaper_reviewers': preferencepaper_reviewers
     }
 
     return render(request, 'partials/add-remove_reviewers.html', context)
@@ -546,3 +925,152 @@ def search_user_rev(request, paper_id):
     # matching_users = User.objects.filter(
     #     additionalResearchAreas__name__icontains=[attr.replace(" ", "").lower() for attr in additional_attributes]
     # ).distinct()
+
+
+def upload_ae_files(request, recommendation_id):
+    recommendation = get_object_or_404(AERecommendation, id=recommendation_id)
+
+    duplicate_files = []
+    
+    saved_files = AERecommendationFile.objects.filter(aerecommendation=recommendation)
+    file_list = []
+    for file in saved_files:
+        file_list.append(os.path.basename(file.file.name))
+
+    files = request.FILES.getlist('ae_files[]')   
+
+    for file in files:
+        if file.name in file_list:
+            duplicate_files.append(file.name)
+        else: 
+            file_list.append(file.name)      
+            AERecommendationFile.objects.create(file=file, aerecommendation=recommendation)  
+
+    context = {
+        'recommendation': recommendation,
+        'duplicate_files': duplicate_files,
+    }
+
+    return render(request, 'partials/conference/ae_files.html', context) 
+
+def delete_ae_file(request, recommendation_id, file_id):
+    recommendation = get_object_or_404(AERecommendation, id=recommendation_id)
+
+    file = get_object_or_404(AERecommendationFile, id=file_id)
+    # file.file.delete(save=False)
+    file.delete()
+
+    context = {
+        'recommendation': recommendation,
+    }
+    return render(request, 'partials/conference/ae_files.html', context) 
+
+
+def save_recommendation(request, paper_id):
+    paper = Paper.objects.get(id=paper_id)
+
+    recommendation = AERecommendation.objects.get(paper=paper)
+
+    form = AERecommendationForm(request.POST, instance=recommendation)
+    recommendation = form.save(commit=False)
+    recommendation.save()
+
+    context = {
+        'paper': paper,
+        'form': form,
+        'recommendation': recommendation,
+    }    
+
+    return render(request, 'partials/conference/ae_form.html', context)
+
+def submit_recommendation(request, paper_id):
+    paper = Paper.objects.get(id=paper_id)
+
+    recommendation = AERecommendation.objects.get(paper=paper)
+    recommendation.date_submitted = datetime.now()
+    recommendation.save()
+
+    EICDecision.objects.create(paper=paper)
+
+    return redirect('submitted_ae_recommendation')
+    
+
+def save_decision_files(request, decision_id):
+    decision = get_object_or_404(EICDecision, id=decision_id)
+
+    duplicate_files = []
+    
+    saved_files = DecisionFile.objects.filter(decision=decision)
+    file_list = []
+    for file in saved_files:
+        file_list.append(os.path.basename(file.file.name))
+
+    files = request.FILES.getlist('eic_files[]')   
+
+    for file in files:
+        if file.name in file_list:
+            duplicate_files.append(file.name)
+        else: 
+            file_list.append(file.name)      
+            DecisionFile.objects.create(file=file, decision=decision) 
+
+    context = {
+        'decision': decision,
+        'duplicate_files': duplicate_files,
+    }
+
+    return render(request, 'partials/conference/eic_files.html', context) 
+
+
+def delete_decision_file(request, decision_id, file_id):
+    decision = get_object_or_404(EICDecision, id=decision_id)
+
+    file = get_object_or_404(DecisionFile, id=file_id)
+    # file.file.delete(save=False)
+    file.delete()
+
+    context = {
+        'decision': decision,
+    }
+    return render(request, 'partials/conference/eic_files.html', context) 
+
+
+def save_decision(request, paper_id):
+    paper = Paper.objects.get(id=paper_id)
+
+    decision = EICDecision.objects.get(paper=paper)
+
+    form = EICDecisionForm(request.POST, instance=decision)
+    decision = form.save(commit=False)
+    decision.save()
+
+    context = {
+        'paper': paper,
+        'form': form,
+        'decision': decision,
+    }    
+
+    return render(request, 'partials/conference/eic_form.html', context)
+
+
+    
+
+def submit_decision(request, paper_id):
+    paper = Paper.objects.get(id=paper_id)
+
+    decision = EICDecision.objects.get(paper=paper)
+    decision.date_submitted = datetime.now()
+    decision.save()
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper, status__in = ['Invited', 'Agreed'])
+    for paper_reviewer in paper_reviewers:
+        paper_reviewer.status = ''
+        paper_reviewer.invite_sent_date = None
+        paper_reviewer.save()
+        send_review_withdrawal_email(paper_reviewer)
+        if paper_reviewer.review:
+            paper_reviewer.review.delete()
+
+
+    return redirect('submitted_eic_decisions')
+        

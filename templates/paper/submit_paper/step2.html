@@ -112,10 +112,12 @@
       color: transparent;
     }
 
-    th:nth-child(4) {
+    th:nth-child(5) {
       border: none;
     }
 </style>  
+
+
 
     <div class="row">
       <div class="col-md-4">
@@ -125,7 +127,25 @@
               <div class="card-header">
                   <h5 class="text-secondary">&nbsp;&nbsp;Submission</h5>
               </div>
+
               <ul class="list-group list-group-flush">
+
+                {% if paper.eicdecision %}
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step0' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center">
+                          {% if paper.decision_response %}
+                              <i class="fas fa-check green-check"></i>&nbsp;
+                          {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp;
+                          {% endif %}
+                          <span>Step 0: View and Respond to Decision Letter</span>
+                      </div>
+                      <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+                {% endif %}
+
                   <li class="list-group-item">
                     <a href="{% url 'submit_paper_step1' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
@@ -190,28 +210,38 @@
                       {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
                             {% if figures_tables_published_elsewhere_desc %}
-                              <i class="fas fa-check green-check"></i>  
+                              <i class="fas fa-check green-check"></i> 
+                            {% else %}
+                              &nbsp;&nbsp;&nbsp;&nbsp; 
                             {% endif %}  
                         {% else %}
                             <i class="fas fa-check green-check"></i>&nbsp; 
                         {% endif %}
-                    {% else %}
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                    {% endif %}  
-                    <span>Step 5: Details & Comments</span>
-                  </div>    
-                  <i class="fas fa-angle-right"></i>
-                </a>
-              </li>
-
-                
-                  <li class="list-group-item">
-                    <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link d-flex justify-content-between align-items-center">
-                      &nbsp;&nbsp;&nbsp;&nbsp;Step 6: Review & Submit
+                      {% else %}
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                      {% endif %}  
+                      <span>Step 5: Details & Comments</span>
+                    </div>    
                     <i class="fas fa-angle-right"></i>
                   </a>
                 </li>
 
+                <li class="list-group-item">
+                  <a href="{% url 'submit_paper_step6' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check green-check"></i>&nbsp;Step 6: Reviewers
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+  
+                  
+                    <li class="list-group-item">
+                      <a href="{% url 'submit_paper_step7' paper.id %}" class="list-link form-next-link d-flex justify-content-between align-items-center">
+                        &nbsp;&nbsp;&nbsp;&nbsp;Step 7: Review & Submit
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
               </ul>
           </div>
       </div>
@@ -239,8 +269,8 @@
     </div>
 
   <!-- Modal -->
-  <div class="modal fade" id="AddNewAuthor" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+  <div class="modal fade bd-example-modal-lg" id="AddNewAuthor" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><i class="fas fa-plus"></i>&nbsp;&nbsp;Add Author</h5>
@@ -253,23 +283,47 @@
             <div class="modal-body">
               <div class="form-row">
                 <div class="form-group col-md-6">
-                  <label>First name</label>
+                  <label><span style="color: red;">*</span> First name</label>
                   <input type="text" class="form-control" id="first-name" name="first_name">
                   <div id="first-name-error" class="error-message" style="color:red;"></div>
                 </div>
                 <div class="form-group col-md-6">
-                  <label>Last name</label>
+                  <label><span style="color: red;">*</span> Last name</label>
                   <input type="text" class="form-control" id="last-name" name="last_name">
                   <div id="last-name-error" class="error-message" style="color:red;"></div>
                 </div>
               </div>
               <div class="form-row">
                   <div class="form-group col-md-6">
-                    <label>Email</label>
+                    <label><span style="color: red;">*</span> Email</label>
                     <input type="text" class="form-control" id="email" name="email" value="" hx-post="{% url 'search_user2' paper.id %}" hx-trigger="blur" hx-target='#search_user_result2'>
                     <div id="email-error" class="error-message" style="color:red;"></div>
                   </div>
-                  <div id="message" style="color:red;"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label><span style="color: red;">*</span> Institution</label>
+                  <input type="text" class="form-control" id="institution" name="institution" >
+                  <div id="institution-error" class="error-message" style="color:red;"></div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-4">
+                  <label><span style="color: red;">*</span> Country</label>
+                  <input type="text" class="form-control" id="country" name="country" >
+                  <div id="country-error" class="error-message" style="color:red;"></div>
+                </div>
+                <div class="form-group col-md-4">
+                  <label>State</label>
+                  <input type="text" class="form-control" id="state" name="state" >
+                  <div id="state-error" class="error-message" style="color:red;"></div>
+                </div>
+                <div class="form-group col-md-4">
+                  <label>City</label>
+                  <input type="text" class="form-control" id="city" name="city" >
+                  <div id="city-error" class="error-message" style="color:red;"></div>
+                </div>
+                <div id="message" style="color:red;"></div>
               </div>
             </div>  
             <div class="modal-footer justify-content-between">
@@ -300,10 +354,14 @@
         email = document.getElementById('email');
         firstName = document.getElementById('first-name');
         lastName = document.getElementById('last-name');
+        institution = document.getElementById('institution');
+        country = document.getElementById('country');
 
         emailError = document.getElementById('email-error');
         firstNameError = document.getElementById('first-name-error');
         lastNameError = document.getElementById('last-name-error');
+        institutionError = document.getElementById('institution-error');
+        countryError = document.getElementById('country-error');
 
         if (email.value == '') 
           emailError.innerHTML = 'Email is required';
@@ -319,8 +377,18 @@
           lastNameError.innerHTML = 'Last Name is required';
         else
           lastNameError.innerHTML = '';
-      
-        if (email.value && firstName.value && lastName.value) 
+
+        if (institution.value == '')
+          institutionError.innerHTML = 'Institution is required';
+        else
+          institutionError.innerHTML = '';
+
+        if (country.value == '')
+          countryError.innerHTML = 'Country is required';
+        else
+          countryError.innerHTML = '';
+
+        if (email.value && firstName.value && lastName.value && institution.value && country.value) 
           hiddenButton.click();
       
     });
@@ -351,8 +419,12 @@
               var emailValue = $('#email-input').val();
               $('#email').val(emailValue);
 
-              $('#first-name').val('')
-              $('#last-name').val('')
+              $('#first-name').val('');
+              $('#last-name').val('');
+              $('#institution').val('');
+              $('#country').val('');
+              $('#state').val('');
+              $('#city').val('');
               
           }
       });

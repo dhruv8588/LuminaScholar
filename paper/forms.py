@@ -1,7 +1,6 @@
 from django import forms
 from accounts.models import Role
-from conference.models import Attribute
-from paper.models import Author, Paper, Rev_File, Review, File, additionalAttribute
+from paper.models import AERecommendation, Author, EICDecision, Paper, ReviewFile, Review, additionalAttribute
 
 
 # class PaperForm(forms.ModelForm):
@@ -70,7 +69,7 @@ class PaperForm2(forms.ModelForm):
         model = Paper
         fields = ['cover_letter', 'number_of_figures', 'number_of_tables', 'word_count', 'MSWord_file', 'certification_form', 'publish_elsewhere', 'approval', 'appropriate_statement', 'figures_tables_published_elsewhere', 'figures_tables_published_elsewhere_desc']
         widgets = {
-          'cover_letter': forms.Textarea(attrs={'rows':4, 'cols':87}),
+          'cover_letter': forms.Textarea(attrs={'rows':4, 'cols':100}),
           'figures_tables_published_elsewhere_desc': forms.Textarea(attrs={'rows':4, 'cols':100})
         }
 
@@ -83,6 +82,15 @@ class PaperForm3(forms.ModelForm):
     class Meta:
         model = Paper
         fields = ['attributes']
+
+
+class PaperForm4(forms.ModelForm):
+    class Meta:
+        model = Paper
+        fields = ['decision_response']
+        widgets = {
+          'decision_response': forms.Textarea(attrs={'rows':5, 'cols':100}),
+        }
 
 
 class AssignEditorForm(forms.ModelForm):
@@ -171,12 +179,43 @@ class RevFileForm(forms.ModelForm):
     ]
     view = forms.ChoiceField(widget=forms.RadioSelect, choices=view_choices, required=False)
     class Meta:
-        model = Rev_File
+        model = ReviewFile
         fields = ['file', 'view']
 
-
-Rev_FileModelFormset = forms.modelformset_factory(
-    Rev_File,
+ReviewFileModelFormset = forms.modelformset_factory(
+    ReviewFile,
     form=RevFileForm,
     extra=0,
 )
+
+
+class AERecommendationForm(forms.ModelForm):
+    recommendation_choices = [
+        ('Accept', 'Accept'),
+        ('Minor Revision', 'Minor Revision'),
+        ('Major Revision', 'Major Revision'),
+        ('Reject', 'Reject')
+    ]
+    recommendation = forms.ChoiceField(widget=forms.RadioSelect, choices=recommendation_choices, required=False)
+    class Meta:
+        model = AERecommendation
+        fields = ['recommendation', 'comments_to_eic', 'comments_to_author']
+        widgets = {
+          'comments_to_eic': forms.Textarea(attrs={'rows':4, 'cols':50}),
+          'comments_to_author': forms.Textarea(attrs={'rows':4, 'cols':50}),
+        }
+
+class EICDecisionForm(forms.ModelForm):
+    decision_choices = [
+        ('Accept', 'Accept'),
+        ('Minor Revision', 'Minor Revision'),
+        ('Major Revision', 'Major Revision'),
+        ('Reject', 'Reject')
+    ]
+    decision = forms.ChoiceField(widget=forms.RadioSelect, choices=decision_choices, required=False)
+    class Meta:
+        model = EICDecision
+        fields = ['decision', 'comments']
+        widgets = {
+          'comments': forms.Textarea(attrs={'rows':4, 'cols':50}),
+        }        

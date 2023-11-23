@@ -75,15 +75,98 @@
     th:nth-child(7) {
       border: none;
     }
+
+    .hidden {
+      display: none;
+    }
+
+    #ae {
+      background-color: #555;
+    }
+
+    .error-box {
+      border: 2px solid red;
+      background-color: lightcoral;
+      color: darkred;
+      padding: 10px;
+  }
+
+  .file-upload__label {
+    color: #aaa;
+  }
 </style>
 
-<br/><h3 style="margin-left: 210px;">Assign REVIEWERS</h3><br/>
+<br/>
+<h3 style="margin-left: 210px;">
+  {% if type == 'papers_awaiting_reviewer_selection' %}
+    Awaiting Reviewer Selection
+  {% elif type == 'papers_awaiting_reviewer_invitation' %} 
+    Awaiting Reviewer Invitation
+  {% elif type == 'papers_awaiting_reviewer_assignment' %} 
+    Awaiting Reviewer Assignment
+  {% else %}  
+    Awaiting AE Recommendation
+  {% endif %}  
+</h3>
+<br/>
 
 {% for paper in page_obj %}
 
   <section id="add-remove_reviewers">
     {% include 'partials/add-remove_reviewers.html' %}
   </section>
+
+
+  {% if form %}
+  <div style="width: 700px; margin: auto; margin-top: 100px;">
+    <h4>AE Recommendation</h4>
+    <div id="success" class="alert alert-warning alert-dismissible fade show" role="alert" style="border: 1px solid red;">
+      <i class="fas fa-star"></i> <strong>Success!</strong> Your work has been saved!
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div id="ae-form">
+      {% include 'partials/conference/ae_form.html' %}
+    </div>
+
+    <b>Attach File(s)</b>
+
+    <div id="ae-files">
+      {% include "partials/conference/ae_files.html" %}
+    </div>
+
+    <br/>
+    <hr/>
+
+    <div style="display: inline-block; float: right;">    
+      <button class="showElementButton save-recommendation btn btn-dark btn-sm mb-3"><i class="fa-solid fa-floppy-disk"></i> Save Draft</button>
+      <button id='show_submit_recommendation_modal' class="showElementButton save-recommendation btn btn-dark btn-sm mb-3" data-dismiss="modal">Submit&nbsp;<i class="fas fa-angle-right"></i></button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="SubmitRecommendation" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation" style="color: red;"></i>&nbsp;Submit Recommendation?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you ready to submit this Recommendation?
+      </div>  
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No, Go Back</button>
+        <a href="{% url 'submit_recommendation' paper.id %}" type="button" class="btn btn-primary">Yes, Submit&nbsp;<i class="fas fa-angle-right"></i></a>
+      </div>   
+    </div> 
+  </div>
+</div>
+
+{% endif %}
 
 
   <!-- Modal -->
@@ -97,11 +180,20 @@
           </button>
         </div>
         <div class="modal-body">
-            <ol>
-                {% for file in paper.files.all %}
-                    <li><a href="{{ file.file.url }}">{{ file|basename }}</a><br/></li>
-                {% endfor %}
-            </ol>
+          <table class="table table-bordered" style="width: 450px; margin: auto">
+            <thead>
+              <tr class="table-info">
+                <th scope="col"></th>
+                <th scope="col" style="color: DarkMagenta;">File</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for file in paper.files.all %}
+                <tr><th scope="row" style="color: DarkMagenta;">{{ forloop.counter }}</th>
+                <td><a href="{{ file.file.url }}">{{ file|basename }}</a></td></tr>
+              {% endfor %}
+            </tbody>  
+          </table>  
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" style="display: inline-block; float: right;" data-dismiss="modal">Close</button>
@@ -165,7 +257,16 @@
 <hr>
 
 <div style="display: inline-block; float: left;">  
-  <a href="{% url 'awaiting_rev_selection' %}" class="btn btn-dark" style="margin-left: 150px;"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
+  {% if type == 'papers_awaiting_reviewer_selection' %}
+    <a href="{% url 'awaiting_reviewer_selection' %}"
+  {% elif type == 'papers_awaiting_reviewer_invitation' %} 
+    <a href="{% url 'awaiting_reviewer_invitation' %}" 
+  {% elif type == 'papers_awaiting_reviewer_assignment' %} 
+    <a href="{% url 'awaiting_reviewer_assignment' %}" 
+  {% else %}  
+    <a href="{% url 'awaiting_ae_recommendation' %}" 
+  {% endif %}  
+  class="btn btn-dark" style="margin-left: 150px;"><i class="fas fa-angle-left"></i>&nbsp;Back</a>
 </div>
 
 
@@ -224,9 +325,48 @@
     {% endif %}
 </div>   
 
+{% if form %}
+    <script>
+      {% comment %} document.addEventListener('DOMContentLoaded', function() {
+      $(".alert").alert('close')
+      }); {% endcomment %}
+        var saveBtns = document.getElementsByClassName("save-recommendation");
+        for (var i = 0; i < saveBtns.length; i++) {
+            saveBtns[i].addEventListener('click', function() {
+              //console.log(document.getElementById('success'));
+                document.getElementById("submit-recommendation-hidden").click();
+                document.getElementById('success').classList.remove('hidden');
+            });
+        }
 
+        var showSubmitRecommendationModalButton = document.getElementById("show_submit_recommendation_modal");
 
+        function showRecommendationModal() {
+          if ($('.error-box').is(':visible') || document.getElementById('permanentElement').classList.contains('hidden')) {
+            // Error box is visible, do nothing
+          } else {
+              // Error box is not visible, execute your JavaScript code
+              $('#SubmitRecommendation').modal('show');
+          }
+          //document.removeEventListener('htmx:afterSwap', afterSwapHandler);
+        }
 
+        function afterSwapHandler(event) {
+            // Handle htmx:afterSwap event here
+            showRecommendationModal();
+        }
 
+        showSubmitRecommendationModalButton.addEventListener('click', function() {
+            // Add the htmx:afterSwap event listener
+            document.addEventListener('htmx:afterSwap', afterSwapHandler);
+        });
+
+        // Optionally, you can also remove the htmx:afterSwap event listener when the modal is closed
+        $('#SubmitRecommendation').on('hidden.bs.modal', function () {
+          document.removeEventListener('htmx:afterSwap', afterSwapHandler);
+        });
+              
+    </script> 
+{% endif %}
 
 {% endblock %}

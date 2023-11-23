@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .list-group-item {
+      background-color: transparent; /* To remove default background */
+      padding: 0; /* To remove default padding */
+  }
+  
+  .list-link {
+      display: block;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+      text-decoration: none; /* Remove underline */
+      color: #333; /* Default color */
+      transition: color 0.3s; /* Smooth color transition on hover */
+  }
+  
+  .list-link:hover {
+      cursor: pointer;
+      text-decoration: none;
+      background-color: #d3d3d3;
+      color: #808080; /* Change color on hover */
+  }
+  
+  .selected {
+      background-color: #d3d3d3;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+  }
+
+  #au {
+    background-color: #555;
+  }
+
+  </style>  
+  
+
+    <h2 class="text-center">Manuscripts with Decision</h2>
+
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card" style="width: 18rem; margin-left: 50px;">
+            <div class="card-header">
+              <h5 class="text-secondary">&nbsp;&nbsp;Author Dashboard</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <a href="{% url 'unsubmitted_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center" style="margin-left: 15px;">
+                        Unsubmitted Manuscripts in Draft
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                    </a>  
+                </li>
+                  <li class="list-group-item">
+                        <a href="{% url 'submitted_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Submitted Manuscripts
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                  </li>
+                  <li class="list-group-item">
+                    <a href="{% url 'coAuthored_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center" style="margin-left: 15px;">
+                        Manuscripts I have Co-Authored
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                    </a>  
+                </li>
+                <li class="list-group-item selected text-secondary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Manuscripts with Decision
+                        </div>
+                        <i class="fas fa-angle-right"></i>
+                    </div>  
+              </li>
+              <li class="list-group-item">
+                <a href="{% url 'revised_manuscripts' %}" class="list-link d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center" style="margin-left: 15px;">
+                        Revised Manuscripts in Draft
+                    </div>
+                    <i class="fas fa-angle-right"></i>
+                </a>  
+              </li>
+                  <li class="list-group-item">
+                    <a href="{% url 'start_new_submission' %}" class="list-link d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Start New Submission
+                        </div>
+                        <i class="fas fa-angle-right"></i>
+                    </a>  
+                  </li>
+            </ul>
+        </div>
+      </div>
+  
+      <div class="col-md-8">
+        {% if papers %}
+        
+            <table class="table table-striped table-bordered" style="width: 900px;">
+                <thead class="table-secondary">
+                    <tr>
+                        <th scope="col">STATUS</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">TITLE</th>
+                        <th scope="col">CREATED</th>
+                        <th scope="col">SUBMITTED</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paper in papers %}
+                        <tr>
+                            <td>
+                                {{ paper.eicdecision.decision }}<br/> 
+                                ({{ paper.eicdecision.date_submitted|date }})<br/>
+                                <a href="#" onclick="openNewWindow('{% url 'view_decision_letter' paper.id %}')">View Decision Letter</a>  
+                                {% if paper.eicdecision.decision == 'Major Revision' or paper.eicdecision.decision == 'Minor Revision' %}
+                                    <br/><a href="{% url 'create_revision' paper.id %}">Create a Revision</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ paper.journal_id }}
+                            </td>    
+                            <td>
+                                {{ paper.title }}<br/>
+                                <a href="{% url 'merge_pdfs' paper.id %}" target="_blank">View Submission</a><br/>
+                                Submitting Author: {{ paper.submitter.first_name }} {{ paper.submitter.last_name }}    
+                            </td>
+                            <td>
+                                {{ paper.created_at|date }}
+                            </td>
+                            <td>
+                                {{ paper.date_submitted|date }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+       
+        {% endif %}
+      </div>
+  </div>
+  
+  <script>
+    function openNewWindow(url) {
+        window.open(url, '_blank', 'width=900,height=700'); // Adjust width and height as needed
+    }
+</script>
+{% endblock %}

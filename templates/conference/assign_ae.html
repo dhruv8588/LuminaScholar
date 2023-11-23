@@ -37,7 +37,7 @@
             </tbody>    
         </table>
        
-        <a href="{% url 'merge_pdfs' paper.id %}" target="_blank"><i class="fas fa-file-alt"></i> Submission</a>
+        <a href="{{ paper.file.url }}" target="_blank"><i class="fas fa-file-alt"></i> Submission</a>
         <a href="#" data-toggle="modal" data-target="#OriginalFiles"><i class="fa fa-file-alt"></i> Original Files</a>
         {% if paper.cover_letter or paper.cover_letter_file %}
             <a href="#" data-toggle="modal" data-target="#CoverLetter"><i class="fas fa-file-pen"></i> Cover Letter</a>
@@ -47,13 +47,13 @@
         <a href="#" data-toggle="modal" data-target="#Abstract"><i class="fa fa-pen"></i> Abstract</a>
     
     </div>
-    <div class="card-body text-secondary" id="ae">
+    <div class="card-body text-secondary" id="assign-ae">
         {% if paper.associate_editor %}
             {% include 'partials/assigned_ae.html' %}
         {% else %}
             <h5 class="card-title">Pick from a list:</h5>
             <p class="card-text">
-                <form hx-post="{% url 'assign_ae' paper.id %}" hx-target='#ae'>
+                <form hx-post="{% url 'assign_ae' paper.id %}" hx-target='#assign-ae'>
                     {% csrf_token %}
                     <select name="selected_ae" style="appearance: none; 
                       background-color: #f0f0f0; 

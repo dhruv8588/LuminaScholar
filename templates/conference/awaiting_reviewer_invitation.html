@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .list-group-item {
+      background-color: transparent; /* To remove default background */
+      padding: 0px; /* Add padding to create a clickable area */
+  }
+  
+  .list-link {
+      display: block;
+      padding: 10px 15px; /* Add padding to create a clickable area */
+      text-decoration: none; /* Remove underline */
+      color: #333; /* Default color */
+      transition: color 0.3s; /* Smooth color transition on hover */
+  }
+  
+  .list-link:hover {
+      cursor: pointer;
+      text-decoration: none;
+      background-color: #d3d3d3;
+      color: #808080; /* Change color on hover */
+  }
+  
+  .selected {
+      background-color: #d3d3d3;
+      padding: 10px 15px;
+  }
+
+  #ae {
+    background-color: #555;
+  }
+
+  a{
+    text-decoration: none;
+  }
+
+  .pagination > li > a {
+    background-color: #fff;
+    color: #6c757d;
+}
+
+.pagination > li > a:focus,
+.pagination > li > a:hover,
+.pagination > span > a:focus,
+.pagination > span > a:hover {
+    color: #111;
+    background-color: #d3d3d3;
+    border: 1px solid #6c757d;
+    box-shadow: none;
+}
+
+.page-item.active .page-link {
+    columns: #fff;
+    background-color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+</style>  
+
+    <h2 class="text-center">Papers Awaiting Reviewer Invitation</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card" style="width: 18rem; margin-left: 50px;">
+                <div class="card-header">
+                  <h5 class="text-secondary">&nbsp;&nbsp;AE Dashboard</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                      <li class="list-group-item">
+                        <a href="{% url 'awaiting_reviewer_selection' %}" class="list-link d-flex justify-content-between align-items-center">
+                          <div class="d-flex align-items-center" style="margin-left: 15px;">
+                            Awaiting Reviewer Selection
+                          </div>
+                          <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item selected text-secondary">
+                          <div class="d-flex justify-content-between align-items-center">
+                              <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Awaiting Reviewer Invitation
+                              </div>
+                              <i class="fas fa-angle-right"></i>
+                          </div>
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'awaiting_reviewer_assignment' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Awaiting Reviewer Assignment
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'awaiting_ae_recommendation' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Awaiting AE Recommendation
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                      <li class="list-group-item">
+                        <a href="{% url 'submitted_ae_recommendation' %}" class="list-link d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center" style="margin-left: 15px;">
+                                Submitted AE Recommendations
+                            </div>
+                            <i class="fas fa-angle-right"></i>
+                        </a>  
+                      </li>
+                </ul>
+            </div>
+        </div>
+  
+  
+      <div class="col-md-8">
+        <table class="table table-bordered table-striped" style="width: 900px;">
+            <thead class="table-secondary">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Date Submitted</th>
+                    <th scope="col">Submitting Author</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Take Action</th>
+                 </tr>   
+            </thead>
+            <tbody>
+                {% for paper, status_count in zipped_data %}
+                    <tr>
+                        <td>
+                            {{ paper.journal_id }}
+                        </td>
+                        <td>
+                            {{ paper.title }}<br/>[ <a href="{{ paper.file.url }}" target="_blank">View Submission</a> ]
+                        </td>
+                        <td>
+                            {{ paper.date_submitted|date }}
+                        </td>            
+                        <td>{{ paper.submitter.first_name }} {{ paper.submitter.last_name }}</td>
+                        <td>
+                            {{ status_count.0 }} selected, {{ status_count.1 }} invited, {{ status_count.2 }} agreed, {{ status_count.3 }} declined 
+                        </td>  
+                        <td>
+                            <a href="{% url 'rev_affairs' type %}?page={{ forloop.counter }}"><i class="fa-solid fa-angles-right"></i></a>
+                        </td>     
+                    </tr>
+                {% endfor %}    
+            </tbody>
+          </table>
+      </div>
+  </div>
+
+  {% include "includes/pagination.html" %} 
+  
+
+{% endblock %}
