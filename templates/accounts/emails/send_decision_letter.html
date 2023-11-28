@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" lang="en">
+{% load custom_filters %} 
+<head>
+  <link rel="stylesheet" type="text/css" hs-webfonts="true" href="https://fonts.googleapis.com/css?family=Lato|Lato:i,b,bi">
+  <meta property="og:title" content="Email template">  
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+  <style type="text/css">
+    #email {
+      margin: auto;
+      width: 1000px;
+      background-color: white;
+    } 
+    .wrapped-text {
+        width: 1000px;
+        white-space: pre-line;
+    }
+  </style>    
+</head>
+<body bgcolor="#F5F8FA" style="width: 100%; margin: auto 0; padding:0; font-size:16px; color:#33475B; word-break:break-word">
+    <div id="email">
+        <table bgcolor="#EAF0F6" width="100%" role="presentation" border="0" cellpadding="0" cellspacing="10px" style="padding: 20px 20px 20px 20px;">
+            <tr>
+                <td>
+    <pre>
+        Dear {{ paper.submitter.first_name}} {{ paper.submitter.last_name }},
+        
+        I write you in regards to Manuscript ID {% if not paper.date_submitted %}{{ paper.journal_id|previous_journal_id }}{% else %}{{ paper.journal_id }}{% endif %} entitled
+        "{{ paper.title }}" 
+        which you submitted to the Journal of Artificial Intelligence(JAIR).
+        {% if paper.eicdecision.decision == 'Reject' %}
+        We appreciate the effort you invested in submitting your manuscript to the Journal of Artificial Intelligence.
+        
+        After a thorough evaluation by our editorial team, it is with regret that we must inform you that your manuscript
+        did not meet the publication standards set by our journal. We understand the dedication and hard work that goes
+        into the preparation of manuscripts, and we sincerely appreciate your submission.
+        
+        The decision to deny publication is based on specific criteria that aim to ensure the highest quality and relevance
+        of content in our journal. Unfortunately, your manuscript did not fully comply with these standards.
+        
+        We encourage you to consider revising and resubmitting your work after addressing the identified areas that
+        contributed to the non-compliance. Our hope is that with the necessary adjustments, your manuscript can align more
+        closely with the standards upheld by the Journal of Artificial Intelligence.
+        
+        Please don't hesitate to contact us if you have any questions or if you would like additional feedback on the
+        evaluation. We value your contributions to the field and look forward to the possibility of reviewing an improved
+        version of your manuscript in the future.
+        
+        Thank you for considering the Journal of Artificial Intelligence for your research, and we wish you continued
+        success in your academic endeavors.
+        {% elif paper.eicdecision.decision == 'Accept' %}
+        We are delighted to inform you that your manuscript has successfully met the high standards set by
+        our editorial team and has been accepted for publication in the Journal of Artificial Intelligence.
+        
+        Your dedication to advancing the field of artificial intelligence is evident, and we believe that
+        your contribution will make a valuable addition to our journal. We commend the quality of your work
+        and appreciate the effort you have put into the preparation of your manuscript.
+        
+        Please find attached the formal acceptance letter and further instructions regarding the publication
+        process. Our editorial team is available to assist you with any queries or concerns you may have
+        during this stage.
+        
+        Once again, congratulations on this achievement, and we look forward to showcasing your work in the
+        upcoming issue of the Journal of Artificial Intelligence.
+        
+        Thank you for choosing our journal for the dissemination of your research, and we anticipate more
+        successful collaborations in the future.
+        {% elif paper.eicdecision.decision == 'Minor Revision' or paper.eicdecision.decision == 'Major Revision' %}
+        We appreciate the effort and dedication you have put into the preparation and submission of your
+        manuscript, to the Journal of Artificial Intelligence.
+        
+        Following a comprehensive review by our editorial team, it has been determined that your manuscript
+        requires some revisions before it can be considered for publication. We believe that with the
+        necessary adjustments, your work has the potential to meet the high standards we uphold in our
+        journal.
+        
+        To initiate the revision process, please log into the Author Center by visiting <a href="http://localhost:8000{% url 'login' %}">http://localhost:8000/login/</a>.
+        Once logged in, navigate to your Author Center, where you will find your manuscript title listed
+        under "Manuscripts with Decisions." Under "Status," click on "Create a Revision" to begin the
+        revision process.
+        
+        We kindly request that you carefully address the feedback provided by our reviewers and make the
+        necessary changes to enhance the quality and clarity of your manuscript. If you have any questions
+        or need further guidance during the revision process, do not hesitate to reach out to our editorial
+        team.
+        
+        We appreciate your understanding and cooperation in this matter. Thank you for choosing the Journal
+        of Artificial Intelligence for the dissemination of your research, and we look forward to receiving
+        your revised manuscript.{% endif %}
+        Sincerely,
+        Dr. {{ user.first_name }} {{ user.last_name }}
+        Editor-in-Chief, Journal of Artificial Intelligence
+        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+        <hr/>
+        <b>Editor-in-Chief's Comments:</b>
+        <div class="wrapped-text">{{ paper.eicdecision.comments }}</div>
+        Files Attached:
+        {% for eic_file in paper.eicdecision.decision_files.all %}
+            {{ forloop.counter }}. <a href="{{ eic_file.file.url }}">{{ eic_file.file|basename }}</a>
+        {% endfor %}
+        <hr/>
+        <b>Associate Editor's Comments:</b>
+        <div class="wrapped-text">{{ paper.aerecommendation.comments_to_author }}</div>
+        Files Attached:
+        {% for ae_file in paper.aerecommendation.aerecommendation_files.all %}
+            {{ forloop.counter }}. <a href="{{ ae_file.file.url }}">{{ ae_file.file|basename }}</a>
+        {% endfor %}
+        <hr/>
+        <b>Reviewer's Comments:</b>
+        {% for review in reviews %}
+            Reviewer {{ forloop.counter }}:<div style="margin-left: 30px; width: 870px; white-space: pre-line;">{{ review.comments_to_author }}</div>
+            Files Attached:
+            {% for rev_file in review.review_files.all %}
+                {{ forloop.counter }}. <a href="{{ rev_file.file.url }}">{{ rev_file.file|basename }}</a>
+            {% endfor %}
+        {% endfor %}
+    </pre>
+</td>
+</tr>
+</table>
+<table role="presentation" bgcolor="#36454F" width="100%">
+<tr>
+<td align="center" style="padding: 15px 15px; color: #fff;">
+  <p>© {% now "Y" %} LuminaScholar, All Rights Reserved.</p>
+  <a href="http://{{domain}}" style="color:#fff;">Visit Website</a>      
+</td>
+</tr>
+</table>
+</div>
+
+
+</body>
+</html>
+
+        

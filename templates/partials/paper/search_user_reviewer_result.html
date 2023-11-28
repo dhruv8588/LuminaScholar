@@ -23,7 +23,7 @@
               <tbody>
                 <tr>
                   <td>{{ user.first_name }} {{ user.last_name }}<br/><a href="mailto{{ user.email }}">{{ user.email }}</a></td>
-                  <td>{{ user.institution }}</td>
+                  <td>{{ user.institution }}{% if user.city %}, {{ user.city }}{% endif %}{% if user.state %}, {{ user.state }}{% endif %}, {{ user.country }}</td>
                 </tr>
               </tbody>
             </table>

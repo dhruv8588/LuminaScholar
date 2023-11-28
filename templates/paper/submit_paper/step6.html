@@ -151,8 +151,8 @@ select {
                   <div class="d-flex align-items-center">
                   {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                     {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                        {% if figures_tables_published_elsewhere_desc %}
-                          <i class="fas fa-check green-check"></i>  
+                        {% if paper.figures_tables_published_elsewhere_desc %}
+                          <i class="fas fa-check green-check"></i>&nbsp;  
                         {% else %}
                           &nbsp;&nbsp;&nbsp;&nbsp;     
                         {% endif %}  
@@ -194,7 +194,7 @@ select {
       <div style="margin-right: 100px;">
         <br/>
       <h2>Step 6: Reviewers</h2>
-      <p style="color: #54626F;">Add your preferred and non-preferred reviewers by entering the reviewer's information into the Add Reviewer form. When you are finished, click "Continue". </b><br/><span class="red-asterisk">*</span> = Required Fields</p>
+      <p>Add your preferred and non-preferred reviewers by entering the reviewer's information into the Add Reviewer form. When you are finished, click "Continue". </b><br/><span class="red-asterisk">*</span> = Required Fields</p>
       <hr/>
 
       <div id='reviewers'>
@@ -397,7 +397,10 @@ select {
     $('#add-rev').click(function() {
       $('#message').text('');
       $('.error-message').text('');
-      $('.form-control').val('');
+      $('#first-name').val('');
+      $('#last-name').val('');
+      $('#email').val('');
+      $('#reason').val('');
       document.getElementById("rev-error-box").style.display = 'none';
       document.getElementById("add-reviewer-button").style.pointerEvents="auto";
       document.getElementById("add-reviewer-button").style.cursor="pointer";

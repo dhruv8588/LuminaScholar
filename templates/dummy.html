@@ -119,3 +119,49 @@ console.log("No file selected.");
 
 
 {% endblock %}  
+def search_user1(request, paper_id):
+    email = request.POST.get('email')
+
+    try:
+        user = User.objects.get(email=email)
+    except:
+        user = None   
+
+    if user == None:
+        try:
+            author = Author.objects.get(email=email)
+        except:
+            author = None    
+    else:
+        author = None        
+         
+    context = {
+        'user': user,
+        'author': author,
+        'paper_id': paper_id
+    }
+    return render(request, 'partials/search_user_result1.html', context)
+
+
+    def search_user2(request, paper_id):
+    email = request.POST.get('email')
+
+    try:
+        user = User.objects.get(email=email)
+    except:
+        user = None   
+
+    if user == None:
+        try:
+            author = Author.objects.get(email=email)
+        except:
+            author = None    
+    else:
+        author = None        
+         
+    context = {
+        'user': user,
+        'author': author,
+        'paper_id': paper_id
+    }
+    return render(request, 'partials/search_user_result2.html', context)

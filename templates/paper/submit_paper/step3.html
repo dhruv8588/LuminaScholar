@@ -143,8 +143,8 @@
                       <div class="d-flex align-items-center">
                       {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                            {% if figures_tables_published_elsewhere_desc %}
-                              <i class="fas fa-check green-check"></i>  
+                            {% if paper.figures_tables_published_elsewhere_desc %}
+                              <i class="fas fa-check green-check"></i>&nbsp;  
                             {% else %}
                               &nbsp;&nbsp;&nbsp;&nbsp;   
                             {% endif %}  
@@ -185,7 +185,7 @@
         <div style="margin-right: 100px;">
           <br/>
         <h2>Step 3: Attributes</h2>
-        <p style="color: #54626F;">Choose from predefined attributes or create new ones to accurately categorize your paper. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
+        <p>Choose from predefined attributes or create new ones to accurately categorize your paper. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
         <hr>  
 
         <form id="submit-paper-form_step1" action="{% url 'submit_paper_step3' paper.id %}" method="post">
@@ -198,7 +198,7 @@
                     {{ form.attributes|add_class:'form-control' }}
                 </div>
             </div>
-
+            <br/>
             <div class="form-row">
               <div class="form-group col-md-6" id="item-attributes">
                 <label><span class="red-asterisk">*</span> Additional Attributes</label>&nbsp; &nbsp;<a href="#" class="add-attributes btn btn-success btn-sm"><i class="fas fa-plus"></i> Add</a>&nbsp;&nbsp; &nbsp;<span class="badge badge-info">REQUIRED 1. MAX 3.</span>

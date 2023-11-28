@@ -115,6 +115,15 @@
     th:nth-child(5) {
       border: none;
     }
+
+    .error-box {
+      border: 2px solid red;
+      background-color: lightcoral;
+      color: darkred;
+      padding: 10px;
+      width: 470px;
+  }
+  
 </style>  
 
 
@@ -209,8 +218,8 @@
                       <div class="d-flex align-items-center">
                       {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                            {% if figures_tables_published_elsewhere_desc %}
-                              <i class="fas fa-check green-check"></i> 
+                            {% if paper.figures_tables_published_elsewhere_desc %}
+                              <i class="fas fa-check green-check"></i>&nbsp; 
                             {% else %}
                               &nbsp;&nbsp;&nbsp;&nbsp; 
                             {% endif %}  
@@ -250,7 +259,7 @@
         <div style="margin-right: 100px;">
           <br/>
           <h2>Step 2: Authors</h2>
-          <p style="color: #54626F;">Enter your co-authors' information in the boxes below, then click "Add to My Authors." To check if an author already exists in the journal's database, enter the author's e-mail address and click "Find." If the author is found, their information will be automatically filled out for you. When you are finished, click "Save and Continue."
+          <p>Enter your co-authors' information in the boxes below, then click "Add to My Authors." To check if an author already exists in the journal's database, enter the author's e-mail address and click "Find." If the author is found, their information will be automatically filled out for you. When you are finished, click "Save and Continue."
             <br/><span class="red-asterisk">*</span> = Required Fields</p>
 
           <section id="add_authors" class="col-12">
@@ -281,6 +290,15 @@
           <form id="add-author-form" class="modal-form">
             {% csrf_token %}
             <div class="modal-body">
+              <div class="form-row" id="author-error-box" style="display: none;">
+                <div class="error-box" style="width: 770px;"> 
+                  <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+                  <ul>
+                      <span id="author-error"></span>
+                  </ul> 
+                </div>
+                <br/>
+              </div>
               <div class="form-row">
                 <div class="form-group col-md-6">
                   <label><span style="color: red;">*</span> First name</label>
@@ -388,8 +406,9 @@
         else
           countryError.innerHTML = '';
 
-        if (email.value && firstName.value && lastName.value && institution.value && country.value) 
+        if (email.value && firstName.value && lastName.value && institution.value && country.value) {
           hiddenButton.click();
+        }
       
     });
 
@@ -425,6 +444,11 @@
               $('#country').val('');
               $('#state').val('');
               $('#city').val('');
+
+              document.getElementById("author-error-box").style.display = 'none';
+              document.getElementById("add-author-button").style.pointerEvents="auto";
+              document.getElementById("add-author-button").style.cursor="pointer";
+              document.getElementById("add-author-button").style.opacity=1;
               
           }
       });

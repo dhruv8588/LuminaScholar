@@ -98,23 +98,25 @@
 </div>
 
 
-<div class="card border-secondary mb-3" style="max-width: 18rem; float: right;  margin-right: 210px;">
-    <h5 class="card-header text-secondary">Reviews</h5>
-    <div class="card-body">
-      <table class="table table-bordered">
-        <tbody>
-          {% for paper_reviewer in paper_reviewers %}
-              {% if paper_reviewer.status == 'Submitted' %}
-                  <tr>
-                      <th class="text-secondary">{{paper_reviewer.reviewer.first_name}} {{paper_reviewer.reviewer.last_name}} </th>
-                      <td>{{ paper_reviewer.review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' paper_reviewer.id %}')">View</a></td>
-                  </tr>
-                {% endif %}
-          {% endfor %}  
-        </tbody>    
-    </table> 
+{% for reviews in grouped_reviews_list %}
+    <div class="card border-secondary mb-3" style="max-width: 18rem; float: right; margin-right: 210px;">
+      <h5 class="card-header text-secondary">
+        Reviews {% if grouped_reviews_list|length > 1 %}to {{ paper.journal_id|original_journal_id }}_R{{ reviews.0.revision }}{% endif %}
+      </h5>
+      <div class="card-body">
+        <table class="table table-bordered">
+          <tbody>
+            {% for review in reviews %}
+              <tr>
+                <th class="text-secondary">{{ review.paper_reviewer.reviewer.first_name }} {{ review.paper_reviewer.reviewer.last_name }} </th>
+                <td>{{ review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' review.id %}')">View</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>    
+      </table> 
+      </div>
     </div>
-  </div>
+{% endfor %}
   
   
 

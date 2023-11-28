@@ -140,8 +140,8 @@
                       <div class="d-flex align-items-center">
                       {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                            {% if figures_tables_published_elsewhere_desc %}
-                              <i class="fas fa-check green-check"></i> 
+                            {% if paper.figures_tables_published_elsewhere_desc %}
+                              <i class="fas fa-check green-check"></i>&nbsp; 
                             {% else %}
                               &nbsp;&nbsp;&nbsp;&nbsp; 
                             {% endif %}  
@@ -187,10 +187,10 @@
           
           <h2>Step 0: View and Respond to Decision Letter</h2>
           
-          <p style="color: #54626F;">Enter your response into the appropriate box below. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
+          <p>Enter your response into the appropriate box below. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
           <hr>
 
-          <h5 style="color: grey;">Decision Letter</h5>
+          <h5>Decision Letter</h5>
           <div class="scroll-box" style="padding: 10px;">
           {% include 'paper/decision_letter.html' %}
         </div>
@@ -201,7 +201,7 @@
                 {% csrf_token %}
                 <div class="row">
                     <div class="form-group">
-                        <label><h5 style="color: grey;"><span class="red-asterisk">*</span> Your Response</h5></label>
+                        <label><h5><span class="red-asterisk">*</span> Your Response</h5></label>
                         {{ form.decision_response|add_class:'form-control' }}
                     </div>
                 </div>

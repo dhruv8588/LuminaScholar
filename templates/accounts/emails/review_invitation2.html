@@ -1,11 +1,13 @@
 {% autoescape off %}
     Dear {{ paper_reviewer.reviewer.first_name }},
 
-    Thank you for agreeing to review Manuscript ID {{ paper_reviewer.paper.journal_id }} entitled "{{ paper_reviewer.paper.title }}” submitted to the
-    Journal of Artificial Intelligence Research(JAIR). Please try your best to complete your review within the next 2 weeks.
+    Thank you for agreeing to review Manuscript ID {{ paper_reviewer.paper.journal_id }} entitled
+    "{{ paper_reviewer.paper.title }}” submitted to the Journal of Artificial Intelligence Research(JAIR).
+    Please try your best to complete your review within the next 2 weeks.
 
-    In your review, please answer all questions. On the review page, there is a space for “Comments to Editor” and a space for "Comments to the Author.”
-    Please be sure to put your comments to the author in the appropriate space.
+    In your review, please answer all questions. On the review page, there is a space for “Comments to Editor”
+    and a space for "Comments to the Author.” Please be sure to put your comments to the author in the appropriate
+    space.
 
     To access the manuscript, login to the LuminaScholar site:
     http://{{domain}}{% url 'login' %}

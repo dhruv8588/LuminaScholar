@@ -69,7 +69,7 @@ class PaperForm2(forms.ModelForm):
         model = Paper
         fields = ['cover_letter', 'number_of_figures', 'number_of_tables', 'word_count', 'MSWord_file', 'certification_form', 'publish_elsewhere', 'approval', 'appropriate_statement', 'figures_tables_published_elsewhere', 'figures_tables_published_elsewhere_desc']
         widgets = {
-          'cover_letter': forms.Textarea(attrs={'rows':4, 'cols':100}),
+          'cover_letter': forms.Textarea(attrs={'rows':5, 'cols':100}),
           'figures_tables_published_elsewhere_desc': forms.Textarea(attrs={'rows':4, 'cols':100})
         }
 

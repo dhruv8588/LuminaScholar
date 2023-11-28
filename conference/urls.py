@@ -24,10 +24,7 @@ urlpatterns = [
 
     path('ae_affairs/<str:type>/', views.ae_affairs, name="ae_affairs"),
 
-    path('agree-to-review/<int:paper_reviewer_id>/', views.agree_to_review, name="agree_to_review"),
-    path('decline-to-review/<int:paper_reviewer_id>/', views.decline_to_review, name="decline_to_review"),
-
-    path('view_review/<int:paper_reviewer_id>/', views.view_review, name='view_review'),
+    path('view_review/<int:review_id>/', views.view_review, name='view_review'),
     path('view_recommendation/<int:aerecommendation_id>/', views.view_recommendation, name='view_recommendation'),
 ]
 

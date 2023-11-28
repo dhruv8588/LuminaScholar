@@ -33,7 +33,7 @@
 </div>
 
 
-<form hx-post="{% url 'save_review' paper.id %}" hx-target="#review-form" id="myForm">
+<form hx-post="{% url 'save_review' review.id %}" hx-target="#review-form" id="myForm">
     {% csrf_token %}
     <table class="table table-bordered" >
       <tr>

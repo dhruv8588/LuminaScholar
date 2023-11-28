@@ -1,35 +1,78 @@
-{% autoescape off %}
-    Dear {{ paper_reviewer.reviewer.first_name }},
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" lang="en">
 
-    Manuscript ID {{ paper_reviewer.paper.journal_id }} entitled "{{ paper_reviewer.paper.title }}” has been submitted to the Journal of Artificial Intelligence Research(JAIR).
+<head>
+  <link rel="stylesheet" type="text/css" hs-webfonts="true" href="https://fonts.googleapis.com/css?family=Lato|Lato:i,b,bi">
+  <meta property="og:title" content="Email template">  
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+  <style type="text/css">
+    #email {
+      margin: auto;
+      width: 1000px;
+      background-color: white;
+    }  
+  </style>    
+</head>
+<body bgcolor="#F5F8FA" style="width: 100%; margin: auto 0; padding:0; font-size:16px; color:#33475B; word-break:break-word">
+    <div id="email">
+        <table bgcolor="#EAF0F6" width="100%" role="presentation" border="0" cellpadding="0" cellspacing="10px" style="padding: 20px 20px 20px 20px;">
+            <tr>
+                <td>
+    <pre>
+        Dear {{ paper_reviewer.reviewer.first_name }},
 
-    I invite you to review this manuscript. The abstract appears at the end of this letter, along with the names of the authors.
-    Please let me know as soon as possible if you will be able to accept my invitation to review. If you are unable
-    to review at this time, I would appreciate you recommending another expert reviewer. 
+        Manuscript ID {{ paper_reviewer.paper.journal_id }} entitled "{{ paper_reviewer.paper.title }}” has been submitted
+        to the Journal of Artificial Intelligence Research(JAIR).
 
-    You may e-mail me with your reply or click the appropriate link at the bottom of the page to automaticaly register your reply with our online
-    manuscript submission and review system.
+        I invite you to review this manuscript. The abstract appears at the end of this letter, along with
+        the names of the authors. Please let me know as soon as possible if you will be able to accept my
+        invitation to review. If you are unableto review at this time, I would appreciate you recommending
+        another expert reviewer.
 
-    Once you accept my invitation to review this manuscript, you wil be notified via e-mail about how to access LuminaScholar
-    Manuscripts, our online manuscript submission and review system. You will then have access to the manuscript and
-    reviewer instructions in your Reviewer Center.
+        You may e-mail me with your reply or click the appropriate link at the bottom of the page to
+        automaticaly register your reply with our online manuscript submission and review system.
 
-    I realize that our expert reviewers greatly contribute to the high standards of the Journal, and I thank you for your
-    present and/or future participation.
+        Once you accept my invitation to review this manuscript, you wil be notified via e-mail about how
+        to access LuminaScholar Manuscripts, our online manuscript submission and review system. You will
+        then have access to the manuscript and reviewer instructions in your Reviewer Center.
 
-    To respond automatically, click below: 
-    *** PLEASE NOTE: This is a two-step process. After clicking on the link, you will be directed to a webpage to confirm.***
+        I realize that our expert reviewers greatly contribute to the high standards of the Journal, and I
+        thank you for your present and/or future participation.
 
-    Agreed: http://{{domain}}{% url 'agree_to_review' paper_reviewer.id %}
-    Declined: http://{{domain}}{% url 'decline_to_review' paper_reviewer.id %}
+        To respond automatically, click below:
+        *** PLEASE NOTE: This is a two-step process. After clicking on the link, you will be directed to a
+            webpage to confirm.***
 
-    MANUSCRIPT DETAILS
-    TITLE: {{ paper_reviewer.paper.title }}
-    AUTHORS: {% for author in paper_reviewer.paper.authors.all %}{{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-    ABSTRACT: {{ paper_reviewer.paper.abstract }}
+        Agreed: http://{{domain}}{% url 'agree_to_review' paper_reviewer.id %}
+        Declined: http://{{domain}}{% url 'decline_to_review_mail' paper_reviewer.id %}
 
-    Sincerely,
-    {{ user.first_name }} {{ user.last_name }} 
-    {{ user.email }}
-    JAIR Associate Editor
-{% endautoescape %} 
+        MANUSCRIPT DETAILS
+        TITLE: {{ paper_reviewer.paper.title }}
+        AUTHORS: {% for author in paper_reviewer.paper.authors.all %}{{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        ABSTRACT: {{ paper_reviewer.paper.abstract }}
+
+        Sincerely,
+        {{ user.first_name }} {{ user.last_name }} 
+        {{ user.email }}
+        JAIR Associate Editor
+    </pre>
+                </td>
+            </tr>
+        </table>
+        <table role="presentation" bgcolor="#36454F" width="100%">
+          <tr>
+            <td align="center" style="padding: 15px 15px; color: #fff;">
+              <p>© {% now "Y" %} LuminaScholar, All Rights Reserved.</p>
+              <a href="http://{{domain}}" style="color:#fff;">Visit Website</a>      
+            </td>
+          </tr>
+      </table>
+    </div>
+
+
+</body>
+</html>
+
+
+

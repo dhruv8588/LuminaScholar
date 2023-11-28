@@ -12,7 +12,6 @@
       display: block;
       padding: 10px 15px; /* Add padding to create a clickable area */
       text-decoration: none; /* Remove underline */
-      color: #333; /* Default color */
       transition: color 0.3s; /* Smooth color transition on hover */
   }
   
@@ -37,16 +36,14 @@
     background-color: #f0f0f0; /* Background color */
     border: 1px solid #ccc; /* Border color */
     padding: 3px; /* Padding */
-    width: 150px; /* Width of the select box */
+    width: 205px; /* Width of the select box */
     border-radius: 4px; /* Rounded corners */
   }
 </style>  
-  
-    <h2 class="text-center">Invitations</h2>
 
-    <div class="row">
+    <div class="row" style="margin-top:30px;">
         <div class="col-md-4">
-            <div class="card" style="width: 18rem; margin-left: 50px;">
+            <div class="card" style="width: 18rem; margin-left: 50px; margin-top: 45px;">
                 <div class="card-header">
                   <h5 class="text-secondary">&nbsp;&nbsp;Reviewer Dashboard</h5>
                 </div>
@@ -83,7 +80,7 @@
   
   
         <div class="col-md-8">
-            {% if paper_reviewers %}
+            <h2>Invitations</h2>
     
                 <table class="table table-striped table-bordered" style="width: 900px;">
                     <thead class="table-secondary">
@@ -98,9 +95,9 @@
                         {% for paper_reviewer in paper_reviewers %}
                             <tr>
                                 <td>
-                                    <select id="reviewOptions" onchange="redirectToURL()">
+                                    <select class="reviewOptions" onchange="redirectToURL(this)">
                                         <option selected disabled>Select...</option>
-                                        <option value="{% url 'review' paper_reviewer.paper.id %}">Agreed and Begin Review</option>
+                                        <option value="{% url 'create_review' paper_reviewer.paper.id %}">Agreed and Begin Review</option>
                                         <option data-toggle="modal" data-target="#DeclineInvitation{{ paper_reviewer.id }}">Declined</option>
                                     </select>                                
                                 </td>
@@ -136,16 +133,24 @@
                         {% endfor %}
                     </tbody>
                 </table>
-
-            {% endif %}
         </div>
 
   </div>
   
-  <script>
+  {% comment %} <script>
     function redirectToURL() {
         var selectedValue = document.getElementById("reviewOptions").value;
         window.location.href = selectedValue;
+    }
+</script> {% endcomment %}
+
+<script>
+    function redirectToURL(selectElement) {
+        var selectedValue = selectElement.value;
+        // Ensure that the selected value is not the default (disabled) option
+        if (selectedValue && selectedValue !== 'Select...') {
+            window.location.href = selectedValue;
+        }
     }
 </script>
 {% endblock %}

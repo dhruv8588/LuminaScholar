@@ -1,5 +1,5 @@
 {% load custom_filters %}        
-
+<h5>Files</h5>
 {% if duplicate_files %}
     <div class="error-box"> 
         <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
@@ -8,11 +8,11 @@
                 <li>A file named {{ file }} is already uploaded for this manuscript. If you want to upload this file (e.g. this is a replacement for an existing file) you must rename the new file and then upload it</li>
             {% endfor %}
         </ul> 
-    </div>
+    </div><br/>
 {% endif %}
 
 <li class="file list-group-item d-flex justify-content-between align-items-center">    
-    <span><b>ORDER FILE DESIGNATION UPLOAD-DATE ACTION</b></span>
+    <b><span>ORDER</span><span style="margin-left: 90px;">FILE</span><span style="margin-left: 240px; margin-right: 90px;">DESIGNATION</span><span style="margin-right: 60px;">UPLOAD-DATE</span><span>ACTION</span></b>
 </li>
 {% csrf_token %}
 <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_files' paper.id %}" hx-target="#files">
@@ -22,19 +22,19 @@
             <input type="hidden" name="file_order" value="{{ file.pk }}"/>
             <li class="file list-group-item d-flex justify-content-between align-items-center">    
                 {% if file.file.name|is_image %}
-                    #{{ file.order }}
-                    <img src="{{ file.file.url }}" alt="{{ file|basename }}" style="max-width: 100px; max-height:100px;"/> 
-                    <a href="{{ file.file.url }}">{{ file|basename }}</a>
+                    <span style="margin-left: 20px;">#{{ file.order }}</span>
+                    <span style="width: 200px;"><img src="{{ file.file.url }}" alt="{{ file|basename }}" style="max-width: 110px; max-height:110px;"/><br/> 
+                    <a href="{{ file.file.url }}">{{ file|basename }}</a></span>
                 {% else %}
-                    <span>#{{ file.order }} <a href="{{ file.file.url }}">{{ file|basename }}</a></span>
+                    <span style="margin-left: 20px;">#{{ file.order }}</span><span style="width: 200px;"><a href="{{ file.file.url }}">{{ file|basename }}</a></span>
                 {% endif %}
 
-                {{ file.designation }}
+                <span>{{ file.designation }}</span>
 
-                {{ file.created_at|date }}
+                <span>{{ file.created_at|date }}</span>
 
                 <span class="badge badge-danger badge-pill" 
-                        style="cursor: pointer;"
+                        style="cursor: pointer; margin-right: 30px;"
                         hx-delete="{% url 'delete_file' paper.id file.pk %}"
                         hx-target="#files"
                         hx-confirm="Are you sure you wish to delete this file?">X</span>

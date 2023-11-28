@@ -1,5 +1,7 @@
+from collections import defaultdict
 from datetime import datetime
 import os
+import re
 import time
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -9,8 +11,8 @@ from django.db.models import Q
 
 from accounts.models import Role, User
 from paper.forms import AERecommendationForm, EICDecisionForm, ReviewForm
-from paper.models import AERecommendation, AERecommendationFile, DecisionFile, EICDecision, Paper, Paper_Reviewer, PreferencePaper_Reviewer, Reviewer
-from conference.utils import send_review_invitation_email, send_review_invitation_email2, send_review_withdrawal_email
+from paper.models import AERecommendation, AERecommendationFile, DecisionFile, EICDecision, Paper, Paper_Reviewer, PreferencePaper_Reviewer, Review, Reviewer
+from conference.utils import send_decision_letter_email, send_review_invitation_email, send_review_withdrawal_email
 from paper.utils import get_max_order_reviewer, reorder_reviewers
 
 
@@ -34,6 +36,20 @@ def select_ae(request, paper_id):
     return render(request, 'partials/assigned_ae.html', context) 
       
 
+def get_grouped_reviews_list(paper_reviewers):
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=False)
+
+    # Group reviews by revision using a defaultdict
+    grouped_reviews_dict = defaultdict(list)
+    for review in reviews:
+        grouped_reviews_dict[review.revision].append(review)
+
+    # Convert the dictionary values to a list of lists
+    grouped_reviews_list = list(grouped_reviews_dict.values())   
+    grouped_reviews_list = list(reversed(grouped_reviews_list))  
+
+    return grouped_reviews_list
+
 
 def get_papers_awaiting_rev_selection(papers):
     # papers = Paper.objects.all()
@@ -47,7 +63,9 @@ def get_papers_awaiting_rev_selection(papers):
         paper for paper in papers
             if Paper_Reviewer.objects.filter(
                 Q(paper=paper) & (Q(status='') | Q(status='Agreed') | Q(status='Invited') | Q(status='Submitted'))
-            ).count() < paper.required_reviews
+            ).count() < paper.required_reviews and
+
+            paper.date_submitted is not None
     ]
 
     return papers_awaiting_rev_selection
@@ -260,7 +278,8 @@ def display_papers_submitted_ae_recommendation(request):
 
 
 def display_papers_awaiting_ae_selection(request):
-    papers = Paper.objects.filter(associate_editor=None)
+    papers = Paper.objects.filter(associate_editor=None, date_submitted__isnull=False)
+    print(papers)
 
     paginator = Paginator(papers, 3)
     page_number = request.GET.get('page')
@@ -275,7 +294,7 @@ def display_papers_awaiting_ae_selection(request):
 
 
 def display_papers_awaiting_ae_assignment(request):
-    papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=True))
+    papers = Paper.objects.filter(Q(associate_editor__isnull=False, aerecommendation__date_submitted__isnull=True, date_submitted__isnull=False))
 
     paginator = Paginator(papers, 3)
     page_number = request.GET.get('page')
@@ -356,54 +375,22 @@ def change_req_reviews(request, paper_id):
         paper.required_reviews = required_reviews
         paper.save()
 
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)    
+
     context = {
         'paper': paper,
         'status_count': get_status_count(paper.id),
-        'changed': True
+        'changed': True,
+        'grouped_reviews_list': grouped_reviews_list
     }    
 
     return render(request, 'partials/progress.html', context)
 
 
-def agree_to_review(request, paper_reviewer_id):
-    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
-    paper_reviewer.status = "Agreed"
-    paper_reviewer.save()
 
-    send_review_invitation_email2(request, paper_reviewer)
-
-    return render(request, 'accounts/login.html')
-
-def decline_to_review(request, paper_reviewer_id):
-    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
-    paper_reviewer.status = "Declined"
-    paper_reviewer.save()
-
-    paper = paper_reviewer.paper
-
-    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
-    
-    if not paper_reviewers.filter(status='') and (paper_reviewers.filter(status='Agreed') | paper_reviewers.filter(status='Invited')).count() < paper.required_reviews:
-        try:
-            paper_reviewer = Paper_Reviewer.objects.get(status='Alternate', order=1)
-        except:
-            paper_reviewer = None
-
-        if paper_reviewer:
-            paper_reviewer.status = 'Invited'
-            paper_reviewer.invite_sent_date = datetime.now().date()
-            paper_reviewer.save()
-            send_review_invitation_email(request, paper_reviewer)
-
-            reorder_reviewers(paper_id=paper.id)
-
-
-    return render(request, 'paper/reviewer_invitations.html')
-
-
-def view_review(request, paper_reviewer_id):
-    paper_reviewer = get_object_or_404(Paper_Reviewer, id=paper_reviewer_id)
-    review = paper_reviewer.review
+def view_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
 
     form = ReviewForm(instance=review)
 
@@ -441,16 +428,18 @@ def invite_rev(request, paper_rev_id):
     paper_reviewer.invite_sent_date = datetime.now().date()
     paper_reviewer.save()
 
-    # send_review_invitation_email(request, paper_reviewer)
-    time.sleep(5)
+    send_review_invitation_email(request, paper_reviewer)
+    # time.sleep(5)
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper_reviewer.paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
     paper = Paper.objects.get(id=paper_reviewer.paper.id)
 
     context = {
         "paper_reviewers": paper_reviewers,
         'paper': paper,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'grouped_reviews_list': grouped_reviews_list
     }
 
     return render(request, 'partials/reviewers+progress.html', context)
@@ -459,6 +448,7 @@ def invite_rev(request, paper_rev_id):
 def invite_rev_all(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
 
     # paper_reviewers.update(status='Invited')
 
@@ -467,13 +457,14 @@ def invite_rev_all(request, paper_id):
             paper_reviewer.status = 'Invited'
             paper_reviewer.invite_sent_date = datetime.now().date()
             paper_reviewer.save()
-            # send_review_invitation_email(request, paper_reviewer)
-            time.sleep(3)
+            send_review_invitation_email(request, paper_reviewer)
+            # time.sleep(3)
 
     context = {
         "paper_reviewers": paper_reviewers,
         'paper': paper,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'grouped_reviews_list': grouped_reviews_list
     }
 
     return render(request, 'partials/reviewers+progress.html', context)
@@ -497,7 +488,12 @@ def get_matching_users(paper_id):
                 id_list.append(user.id)
                 break
 
-    matching_users = (User.objects.filter(id__in=id_list) | matching_users).distinct().exclude(reviewer__in=paper.reviewers.all())  
+
+    author_emails = [author.email for author in paper.authors.all()]             
+
+    matching_users = (User.objects.filter(id__in=id_list) | matching_users).exclude(reviewer__in=paper.reviewers.all()).exclude(email__in=author_emails).distinct()
+
+
 
     return matching_users  
 
@@ -515,6 +511,7 @@ def delete_reviewer(request, paper_id, reviewer_id): # from Main Reviewer list
         reviewer.delete()
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)  
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
 
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
@@ -523,7 +520,8 @@ def delete_reviewer(request, paper_id, reviewer_id): # from Main Reviewer list
         'users': get_matching_users(paper_id),
         'paper_reviewers': paper_reviewers,
         'status_count': get_status_count(paper_id),
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
     }  
 
     return render(request, 'partials/add-remove_reviewers.html', context)
@@ -538,11 +536,13 @@ def remove_reviewer(request, paper_reviewer_id): # from Alternate Reviewer list
     reorder_reviewers(paper.id)
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
 
     context = {
         'paper_reviewers': paper_reviewers,
         'paper': paper,
-        'status_count': get_status_count(paper.id)
+        'status_count': get_status_count(paper.id),
+        'grouped_reviews_list': grouped_reviews_list
     }    
 
     return render(request, 'partials/reviewers+progress.html', context)
@@ -554,13 +554,15 @@ def add_alternate_reviewer(request, paper_reviewer_id):
 
     paper = paper_reviewer.paper
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
 
     reorder_reviewers(paper.id)
 
     context = {
             "paper_reviewers": paper_reviewers,
             'paper': paper,
-            'status_count': get_status_count(paper.id)
+            'status_count': get_status_count(paper.id),
+            'grouped_reviews_list': grouped_reviews_list
         }
 
     return render(request, 'partials/reviewers+progress.html', context)
@@ -569,19 +571,21 @@ def add_alternate_reviewer(request, paper_reviewer_id):
 def ae_affairs(request, type):
     papers = Paper.objects.all()
     if type == 'papers_awaiting_ae_selection':
-        papers = Paper.objects.filter(associate_editor=None)
+        papers = Paper.objects.filter(associate_editor=None, date_submitted__isnull=False)
         if not papers:
             return redirect('awaiting_ae_selection')
     elif type == 'papers_awaiting_ae_assignment':    
-        papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=True))
+        papers = Paper.objects.filter(Q(associate_editor__isnull=False, aerecommendation__date_submitted__isnull=True, date_submitted__isnull=False))
         if not papers:
             return redirect('awaiting_ae_assignment')
     elif type == 'papers_awaiting_eic_decision':
-        papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=False))
+        papers = Paper.objects.filter(Q(aerecommendation__date_submitted__isnull=False) & Q(eicdecision__date_submitted__isnull=True))
         if not papers:
             return redirect('awaiting_eic_decision')   
     else:
         papers = Paper.objects.filter(Q(eicdecison__date_submitted__isnull=True))
+
+
 
     paginator = Paginator(papers, 1)
     page_number = request.GET.get('page')
@@ -601,10 +605,12 @@ def ae_affairs(request, type):
         context['associate_editors'] = associate_editors
     elif type == 'papers_awaiting_eic_decision':
         form = EICDecisionForm(instance=EICDecision.objects.get(paper=paper))
+        paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
         context.update({
             'form': form,
             'decision': paper.eicdecision,
-            'paper_reviewers': Paper_Reviewer.objects.filter(paper=paper)  
+            'paper_reviewers': paper_reviewers,
+            'grouped_reviews_list': get_grouped_reviews_list(paper_reviewers) 
         })
 
     return render(request, 'conference/ae_affairs.html', context)  
@@ -637,6 +643,7 @@ def rev_affairs(request, type):
     paper = papers[current_paper_index]
     
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
 
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
@@ -646,7 +653,8 @@ def rev_affairs(request, type):
         'paper_reviewers': paper_reviewers,
         'status_count': get_status_count(paper.id),
         'type': type,
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
     }
 
     if type == 'papers_awaiting_ae_recommendation':
@@ -676,13 +684,15 @@ def ae_recommendation(request):
             form.fields[field_name].widget.attrs['readonly'] = True
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
 
     context = {
         'paper': paper,
         'form': form,
         'page_obj': page_obj,
         'paper_reviewers': paper_reviewers,
-        'recommendation': recommendation
+        'recommendation': recommendation,
+        'grouped_reviews_list': grouped_reviews_list
     }  
     return render(request, 'conference/ae_recommendation.html', context)   
 
@@ -703,14 +713,16 @@ def eic_decision(request):
     for field_name in ['decision', 'comments']:  
             form.fields[field_name].widget.attrs['readonly'] = True
 
-    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)        
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)    
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)    
 
     context = {
         'paper': paper,
         'form': form,
         'page_obj': page_obj,
         'paper_reviewers': paper_reviewers,
-        'decision': decision
+        'decision': decision,
+        'grouped_reviews_list': grouped_reviews_list
     }  
     return render(request, 'conference/eic_decision.html', context)   
 
@@ -751,10 +763,13 @@ def select_rev(request, user_id, paper_id):
 
     reviewer = Reviewer.objects.get_or_create(user=user, first_name=user.first_name, last_name=user.last_name, email=user.email)[0]
     reviewer.save()
+
+    user.roles.add(Role.objects.get(name='REV'))
                     
     Paper_Reviewer.objects.create(paper=paper, reviewer=reviewer, order=get_max_order_reviewer(paper_id))
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers) 
 
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
@@ -763,7 +778,9 @@ def select_rev(request, user_id, paper_id):
         'paper_reviewers': paper_reviewers,
         'paper': paper,
         'status_count': get_status_count(paper.id),
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
+        
     }
     return render(request, 'partials/add-remove_reviewers.html', context)
 
@@ -777,6 +794,8 @@ def add_preference_reviewer(request, paper_reviewer_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
+
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
     context = {
@@ -784,7 +803,8 @@ def add_preference_reviewer(request, paper_reviewer_id):
         'paper_reviewers': paper_reviewers,
         'paper': paper,
         'status_count': get_status_count(paper.id),
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
     }
     return render(request, 'partials/add-remove_reviewers.html', context)
 
@@ -802,6 +822,8 @@ def add_user_as_reviewer(request, paper_id, user_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
+
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
     context = {
@@ -809,7 +831,8 @@ def add_user_as_reviewer(request, paper_id, user_id):
         'paper': paper,
         'paper_reviewers': paper_reviewers,
         'status_count': get_status_count(paper.id),
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
     }
 
     return render(request, 'partials/add-remove_reviewers.html', context)
@@ -825,6 +848,8 @@ def add_reviewer_as_reviewer(request, paper_id, reviewer_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
+
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
     context = {
@@ -832,7 +857,8 @@ def add_reviewer_as_reviewer(request, paper_id, reviewer_id):
         'users': get_matching_users(paper_id),
         'paper_reviewers': paper_reviewers,
         'status_count': get_status_count(paper.id),
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
     }
 
     return render(request, 'partials/add-remove_reviewers.html', context)
@@ -852,6 +878,8 @@ def add_new_reviewer(request, paper_id):
 
     paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
 
+    grouped_reviews_list = get_grouped_reviews_list(paper_reviewers)
+
     preferencepaper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper).exclude(reviewer__in=paper.reviewers.all())  
 
     context = {
@@ -859,34 +887,44 @@ def add_new_reviewer(request, paper_id):
         'paper': paper,
         'paper_reviewers': paper_reviewers,
         'status_count': get_status_count(paper.id),
-        'preferencepaper_reviewers': preferencepaper_reviewers
+        'preferencepaper_reviewers': preferencepaper_reviewers,
+        'grouped_reviews_list': grouped_reviews_list
     }
 
     return render(request, 'partials/add-remove_reviewers.html', context)
 
 
+
 def search_user_rev(request, paper_id):
     email = request.POST.get('email')
 
+    user = None
+    reviewer = None
     try:
-        user = User.objects.get(email=email)
+        author = Paper.objects.get(id=paper_id).authors.get(email=email)
     except:
-        user = None   
-
-    if user == None:
+        author = None
+    if author == None: 
         try:
-            reviewer = Reviewer.objects.get(email=email)
+            user = User.objects.get(email=email)
         except:
-            reviewer = None    
-    else:
-        reviewer = None        
-         
+            user = None   
+        if user == None:
+            try:
+                reviewer = Reviewer.objects.get(email=email)
+            except:
+                reviewer = None    
+        else:
+            reviewer = None            
+            
     context = {
         'user': user,
         'reviewer': reviewer,
-        'paper_id': paper_id
+        'paper_id': paper_id,
+        'author': author
     }
     return render(request, 'partials/search_user_rev_result.html', context)
+
 
 
 # # case-sensitive and space-sensitive matching query
@@ -990,7 +1028,8 @@ def submit_recommendation(request, paper_id):
     recommendation.date_submitted = datetime.now()
     recommendation.save()
 
-    EICDecision.objects.create(paper=paper)
+    if not EICDecision.objects.filter(paper=paper).exists():
+        EICDecision.objects.create(paper=paper)
 
     return redirect('submitted_ae_recommendation')
     
@@ -1053,6 +1092,12 @@ def save_decision(request, paper_id):
     return render(request, 'partials/conference/eic_form.html', context)
 
 
+def revision_number(input_string):
+    # Use regular expression to find the numeric part after '_R' at the end
+    match = re.search(r'_R(\d+)$', input_string)
+
+    # If a numeric part is found, convert it to an integer; otherwise, return 0
+    return int(match.group(1)) if match else 0
     
 
 def submit_decision(request, paper_id):
@@ -1067,10 +1112,14 @@ def submit_decision(request, paper_id):
         paper_reviewer.status = ''
         paper_reviewer.invite_sent_date = None
         paper_reviewer.save()
-        send_review_withdrawal_email(paper_reviewer)
-        if paper_reviewer.review:
-            paper_reviewer.review.delete()
+        send_review_withdrawal_email(request, paper_reviewer)
+        reviews = Review.objects.filter(paper_reviewer=paper_reviewer, date_submitted=None)
+        if reviews:
+            reviews.delete()
 
-
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=False, revision=revision_number(paper.journal_id)-1)
+    send_decision_letter_email(request, paper, reviews)    
+            
     return redirect('submitted_eic_decisions')
         

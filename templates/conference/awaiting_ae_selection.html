@@ -12,7 +12,6 @@
       display: block;
       padding: 10px 15px; /* Add padding to create a clickable area */
       text-decoration: none; /* Remove underline */
-      color: #333; /* Default color */
       transition: color 0.3s; /* Smooth color transition on hover */
   }
   
@@ -59,11 +58,9 @@
   
 </style>  
 
-    <h2 class="text-center">Papers Awaiting AE Selection</h2>
-
-    <div class="row">
+    <div class="row" style="margin-top:30px;">
         <div class="col-md-4">
-            <div class="card" style="width: 18rem; margin-left: 50px;">
+            <div class="card" style="width: 18rem; margin-left: 50px; margin-top: 45px;">
                 <div class="card-header">
                   <h5 class="text-secondary">&nbsp;&nbsp;EIC Dashboard</h5>
                 </div>
@@ -106,15 +103,16 @@
   
   
         <div class="col-md-8">
+            <h2>Papers Awaiting AE Selection</h2>
             <table class="table table-bordered table-striped" style="width: 900px;">
                 <thead class="table-secondary">
                     <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Date Submitted</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Take Action</th>
-                    </tr>   
+                        <th scope="col" style="width: 15%;">ID</th>
+                        <th scope="col" style="width: 35%">TITLE</th>
+                        <th scope="col" style="width: 19%">DATE SUBMITTED</th>
+                        <th scope="col" style="width: 21%">STATUS</th>
+                        <th scope="col" style="width: 10%">TAKE ACTION</th>
+                    </tr>    
                 </thead>
                 <tbody>
                     {% for paper in page_obj %}
@@ -123,7 +121,7 @@
                                 {{ paper.journal_id }}
                             </td>
                             <td>
-                                {{ paper.title }}<br/>[ <a href="{{ paper.file.url }}" target="_blank">View Submission</a> ]
+                                {{ paper.title }}<br/>[ <a onclick="openNewWindow('{{ paper.file.url }}')" href="#">View Submission</a> ]
                             </td>
                             <td>
                                 {{ paper.date_submitted|date }}
@@ -146,5 +144,11 @@
   </div>
 
   {% include "includes/pagination.html" %} 
+
+  <script>
+    function openNewWindow(url) {
+        window.open(url, '_blank', 'width=700,height=700'); 
+    }
+</script>
   
 {% endblock %}

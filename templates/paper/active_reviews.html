@@ -12,7 +12,6 @@
       display: block;
       padding: 10px 15px; /* Add padding to create a clickable area */
       text-decoration: none; /* Remove underline */
-      color: #333; /* Default color */
       transition: color 0.3s; /* Smooth color transition on hover */
   }
   
@@ -62,11 +61,10 @@
   </li>
  {% endcomment %}
 
-    <h2 class="text-center">Active Reviews</h2>
 
-    <div class="row">
+    <div class="row" style="margin-top:30px;">
         <div class="col-md-4">
-            <div class="card" style="width: 18rem; margin-left: 50px;">
+            <div class="card" style="width: 18rem; margin-left: 50px; margin-top: 45px;">
                 <div class="card-header">
                   <h5 class="text-secondary">&nbsp;&nbsp;Reviewer Dashboard</h5>
                 </div>
@@ -101,7 +99,7 @@
   
   
       <div class="col-md-8">
-        {% if paper_reviewers %}
+        <h2>Active Reviews</h2>
     
             <table class="table table-striped table-bordered" style="width: 900px;">
                 <thead class="table-secondary">
@@ -113,27 +111,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for paper_reviewer in paper_reviewers %}
+                    {% for review in reviews %}
                         <tr>
                             <td>
-                                <a href="{% url 'review' paper_reviewer.paper.id %}">Continue</a>                          
+                                <a href="{% url 'review' review.id %}">Continue</a>                          
                             </td>
                             <td>
-                                {{ paper_reviewer.review.due_date|date }}
+                                {{ review.due_date|date }}
                             </td>    
                             <td>
-                                {{ paper_reviewer.paper.type }}
+                                {{ review.paper_reviewer.paper.type }}
                             </td>
                             <td>
-                                {{ paper_reviewer.paper.journal_id }}<br/>
-                                {{ paper_reviewer.paper.title }}
+                                {{ review.paper_reviewer.paper.journal_id }}<br/>
+                                {{ review.paper_reviewer.paper.title }}
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
 
-        {% endif %}
       </div>
   </div>
   

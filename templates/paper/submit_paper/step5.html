@@ -139,8 +139,8 @@
                       <div class="d-flex align-items-center">
                       {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                            {% if figures_tables_published_elsewhere_desc %}
-                              <i class="fas fa-check green-check"></i>  
+                            {% if paper.figures_tables_published_elsewhere_desc %}
+                              <i class="fas fa-check green-check"></i>&nbsp;  
                             {% else %}
                               &nbsp;&nbsp;&nbsp;&nbsp;     
                             {% endif %}  
@@ -181,7 +181,7 @@
         <div style="margin-right: 100px;">
         <br/>
         <h2>Step 5: Details & Comments</h2>
-        <p style="color: #54626F;">Enter or paste your cover letter text into the "Cover Letter" box below. If you would like to attach a file containing your cover letter, click the "Select..." button, locate your file, and click "Upload". Answer any remaining questions appropriately. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
+        <p>Enter or paste your cover letter text into the "Cover Letter" box below. If you would like to attach a file containing your cover letter, click the "Select..." button, locate your file, and click "Upload". Answer any remaining questions appropriately. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
         <hr>
 
         <b>Cover Letter</b><br/>
@@ -193,12 +193,12 @@
           <form id="submit-paper-form_step5" action="{% url 'submit_paper_step5' paper.id %}" method="post" enctype="multipart/form-data">
               {% csrf_token %}
               <div class="row">
-                  <div class="col-md-6">
-                      <div class="form-group">
+                  {% comment %} <div class="col-md-6"> {% endcomment %}
+                      <div class="form-group col-md-10">
                           <label>Write Cover Letter</label>
                           {{ form.cover_letter|add_class:'form-control' }}
                       </div>
-                  </div>
+                  {% comment %} </div> {% endcomment %}
               </div>
 
               {% comment %} <div class="row">
@@ -282,7 +282,7 @@
                 
                   <tr>
                     <td>
-                      <label>Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
+                      <label><span class="red-asterisk">*</span> Does your manuscript include figures or tables that have already been published elsewhere?</label><br/>
                       {{ form.figures_tables_published_elsewhere }}
                     </td>
                   </tr>

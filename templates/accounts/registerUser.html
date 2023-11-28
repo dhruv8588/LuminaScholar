@@ -154,7 +154,7 @@
 {% endblock %}
 
 <div class="col-lg-12 login-title">
-  <h2>Register</h2>
+  <h2 style="color: white;">Register</h2>
 </div>
 <div class="col-lg-12 login-key text-center">
   <i class="fa fa-key" aria-hidden="true"></i>
@@ -176,7 +176,7 @@
         </div>
       </div>
 
-      <input type="hidden" name="username" value="{{ form.username }}" />
+      <input type="hidden" name="username" value="{{ form.username.value }}"/>
 
       <div class="form-row">
         <div class="form-group col-md-4">

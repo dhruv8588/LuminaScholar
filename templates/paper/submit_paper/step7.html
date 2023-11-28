@@ -142,8 +142,8 @@
                   <div class="d-flex align-items-center">
                   {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                     {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                        {% if figures_tables_published_elsewhere_desc %}
-                          <i class="fas fa-check green-check"></i>  
+                        {% if paper.figures_tables_published_elsewhere_desc %}
+                          <i class="fas fa-check green-check"></i>&nbsp;  
                         {% else %}
                           &nbsp;&nbsp;&nbsp;&nbsp;     
                         {% endif %}  
@@ -184,7 +184,7 @@
       <div style="margin-right: 100px;">
         <br/>
       <h2>Step 7: Review & Submit</h2>
-      <p style="color: #54626F;">Review the information below for correctness and make changes as needed. <b>After reviewing the manuscript proof at the foot of this page, you MUST CLICK 'SUBMIT' to complete your submission.</b><br/><span class="red-asterisk">*</span> = Required Fields</p>
+      <p>Review the information below for correctness and make changes as needed. <b>After reviewing the manuscript proof at the foot of this page, you MUST CLICK 'SUBMIT' to complete your submission.</b><br/><span class="red-asterisk">*</span> = Required Fields</p>
       <hr/>
 
       {% if paper.eicdecision %}
@@ -215,6 +215,14 @@
                             <td><span class="badge badge-danger">Incomplete</span></td>
                           {% endif %}
                       </tr>
+                      <tr>
+                          <th>File Attached</th>
+                          <td>
+                            {% if paper.decision_response_file %}
+                              <a href="{{ paper.decision_response_file.url }}">{{ paper.decision_response_file|basename }}</a>
+                            {% endif %}  
+                          </td>
+                      </tr>  
                   </tbody>    
               </table>
               <br/> 
@@ -386,12 +394,12 @@
         {% include 'partials/step5_errors.html' %}<br/>
           <b>Cover Letter</b>
               <div class="row">
-                  <div class="col-md-6">
-                      <div class="form-group">
+                  {% comment %} <div class="col-md-6"> {% endcomment %}
+                      <div class="form-group col-md-10">
                           <label>Write Cover Letter</label>
                           {{ form.cover_letter|add_class:'form-control' }}
                       </div>
-                  </div>
+                  {% comment %} </div> {% endcomment %}
               </div>
 
               <div class="row">

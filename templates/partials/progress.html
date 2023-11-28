@@ -1,3 +1,5 @@
+{% load custom_filters %}
+
 {% if changed %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert" style="border: 1px solid red;">
       <strong>Saved </strong> # Required reviews!
@@ -55,26 +57,25 @@
   </div>
 </div>
 
-<div class="card border-secondary mb-3" style="max-width: 18rem;">
-  <h5 class="card-header text-secondary">Reviews</h5>
-  <div class="card-body">
-    <table class="table table-bordered">
-      <tbody>
-        {% for paper_reviewer in paper_reviewers %}
-            {% comment %} {% if paper_reviewer.status == 'Submitted' %} {% endcomment %}
-            {% if paper_reviewer.review.date_submitted %}
-                <tr>
-                    <th class="text-secondary">{{paper_reviewer.reviewer.first_name}} {{paper_reviewer.reviewer.last_name}} </th>
-                    <td>{{ paper_reviewer.review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' paper_reviewer.id %}')">View</a></td>
-                </tr>
-              {% endif %}
-        {% endfor %}  
-      </tbody>    
-  </table> 
-  </div>
-</div>
-
-
+{% for reviews in grouped_reviews_list %}
+    <div class="card border-secondary mb-3" style="max-width: 18rem;">
+      <h5 class="card-header text-secondary">
+        Reviews {% if grouped_reviews_list|length > 1 %}to {{ paper.journal_id|original_journal_id }}_R{{ reviews.0.revision }}{% endif %}
+      </h5>
+      <div class="card-body">
+        <table class="table table-bordered">
+          <tbody>
+            {% for review in reviews %}
+              <tr>
+                <th class="text-secondary">{{ review.paper_reviewer.reviewer.first_name }} {{ review.paper_reviewer.reviewer.last_name }} </th>
+                <td>{{ review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' review.id %}')">View</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>    
+      </table> 
+      </div>
+    </div>
+{% endfor %}
 
 
 <!-- Modal -->
@@ -90,6 +91,15 @@
         <form id="add-reviewer-form" class="modal-form">
           {% csrf_token %}
           <div class="modal-body">
+            <div class="form-row" id="rev-error-box" style="display: none;">
+              <div class="error-box"> 
+                <i class="fas fa-exclamation-triangle"></i>&nbsp;Please attend to the following:<br/>
+                <ul>
+                    <span id="rev-error"></span>
+                </ul> 
+              </div>
+              <br/>
+          </div>
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label>First name</label>
@@ -163,7 +173,13 @@
 $('#add-rev').click(function() {
   $('#message').text('');
   $('.error-message').text('');
-  $('.form-control').val('');
+  $('#first-name').val('');
+  $('#last-name').val('');
+  $('#email').val('');
+  document.getElementById("rev-error-box").style.display = 'none';
+  document.getElementById("add-reviewer-button").style.pointerEvents="auto";
+  document.getElementById("add-reviewer-button").style.cursor="pointer";
+  document.getElementById("add-reviewer-button").style.opacity=1;
 }); 
 
 

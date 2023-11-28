@@ -59,13 +59,17 @@ urlpatterns = [
 
     path('delete_attribute/<int:attribute_id>', views.delete_attribute, name='delete_attribute'),
 
-
     path('rev_invitations/', views.rev_invitations, name='rev_invitations'),
     path('active_reviews/', views.active_reviews, name='active_reviews'),
     path('submitted_reviews/', views.submitted_reviews, name='submitted_reviews'),
 
-    path('<int:paper_id>/review', views.review, name='review'),
-    path('<int:paper_id>/submit_review', views.submit_review, name='submit_review'),
+    path('<int:paper_id>/create-review', views.create_review, name='create_review'),
+    path('<int:review_id>/review', views.review, name='review'),
+    path('<int:review_id>/submit_review', views.submit_review, name='submit_review'),
+
+    path('agree-to-review/<int:paper_reviewer_id>/', views.agree_to_review, name="agree_to_review"),
+    path('decline-to-review/<int:paper_reviewer_id>/', views.decline_to_review, name="decline_to_review"),
+    path('decline-to-review/<int:paper_reviewer_id>/', views.decline_to_review_mail, name="decline_to_review_mail"),
 ]    
 
 htmx_urlpatterns = [
@@ -93,10 +97,10 @@ htmx_urlpatterns = [
 
     path('assign_corresponding_author/<int:paper_author_id>/', views.assign_corresponding_author, name='assign_corresponding_author'),
 
-    path('original_files/<int:paper_id>/', views.original_files, name='original_files'),
-    path('view_proof/<int:paper_id>/', views.view_proof, name='view_proof'),
+    path('original_files/<int:review_id>/', views.original_files, name='original_files'),
+    path('view_proof/<int:review_id>/', views.view_proof, name='view_proof'),
 
-    path('<int:paper_id>/save_review', views.save_review, name='save_review'),
+    path('save_review/<int:review_id>', views.save_review, name='save_review'),
 
     
 

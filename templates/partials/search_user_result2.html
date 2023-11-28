@@ -2,7 +2,7 @@
 
   <!-- Modal -->
   <div class="modal fade" id="addUserAsAuthor2" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Did you mean this Author?</h5>
@@ -11,8 +11,20 @@
           </button>
         </div>
         <div class="modal-body">
-            <b>{{ user.first_name }} {{ user.last_name }}</b><br/>
-            {{ user.email }}
+          <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Reviewer</th>
+                    <th scope="col">Institution</th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ user.first_name }} {{ user.last_name }}<br/><a href="mailto{{ user.email }}">{{ user.email }}</a></td>
+                <td>{{ user.institution }}{% if user.city %}, {{ user.city }}{% endif %}{% if user.state %}, {{ user.state }}{% endif %}, {{ user.country }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>    
         <div class="modal-footer justify-content-between">
           <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No</button>
@@ -54,7 +66,7 @@
 
   <!-- Modal -->
   <div class="modal fade" id="addAuthorAsAuthor2" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Did you mean this Author?</h5>
@@ -63,8 +75,20 @@
           </button>
         </div>
         <div class="modal-body">
-            <b>{{ author.first_name }} {{ author.last_name }}</b><br/>
-            {{ author.email }}
+          <table class="table table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">Reviewer</th>
+                    <th scope="col">Institution</th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ author.first_name }} {{ author.last_name }}<br/><a href="mailto{{ author.email }}">{{ author.email }}</a></td>
+                <td>{{ author.institution }}{% if author.city %}, {{ author.city }}{% endif %}{% if author.state %}, {{ author.state }}{% endif %}, {{ author.country }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>    
         <div class="modal-footer justify-content-between">
           <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;No</button>
@@ -101,6 +125,31 @@
         }); 
     }); 
   </script>
+
+
+  {% elif reviewer %}
+      <script>
+          var author_error_box = document.getElementById("author-error-box");  
+          var author_error = document.getElementById("author-error");
+          author_error.innerHTML = "If you want to add {{ reviewer.email }} as an author to this manuscript you need first to remove him/her from the list of your preferred/opposed list of reviewers for this manuscript in step 6.";
+          author_error_box.style.display = 'block';
+
+          document.getElementById("add-author-button").style.pointerEvents="none";
+          document.getElementById("add-author-button").style.cursor="default";
+          document.getElementById("add-author-button").style.opacity=0.5;
+      </script>
+
+    {% else %}
+
+      <script>
+          var author_error = document.getElementById("author-error");
+          var author_error_box = document.getElementById("author-error-box");  
+          author_error.innerHTML = "";
+          author_error_box.style.display = 'none';
+          document.getElementById("add-author-button").style.pointerEvents="auto";
+          document.getElementById("add-author-button").style.cursor="pointer";
+          document.getElementById("add-author-button").style.opacity=1;
+      </script>
 
 
 {% endif %}

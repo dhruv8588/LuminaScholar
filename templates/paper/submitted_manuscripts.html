@@ -12,7 +12,6 @@
         display: block;
         padding: 10px 15px; /* Add padding to create a clickable area */
         text-decoration: none; /* Remove underline */
-        color: #333; /* Default color */
         transition: color 0.3s; /* Smooth color transition on hover */
     }
     
@@ -34,11 +33,9 @@
   </style>  
   
 
-    <h2 class="text-center">Submitted Manuscripts in Draft</h2>
-
-    <div class="row">
+    <div class="row" style="margin-top:30px;">
       <div class="col-md-4">
-          <div class="card" style="width: 18rem; margin-left: 50px;">
+          <div class="card" style="width: 18rem; margin-left: 50px; margin-top: 45px;">
               <div class="card-header">
                 <h5 class="text-secondary">&nbsp;&nbsp;Author Dashboard</h5>
               </div>
@@ -97,7 +94,8 @@
       </div>
   
       <div class="col-md-8">
-        {% if papers %}
+        <h2>Submitted Manuscripts in Draft</h2>
+        
             <table class="table table-bordered table-striped" style="width: 900px;">
                 <thead class="table-secondary">
                     <tr>
@@ -126,7 +124,7 @@
                             <td>
                                 {{ paper.title }}
                                 <br/>
-                                <a href="{% url 'merge_pdfs' paper.id %}" target="_blank">View Submission</a>    
+                                <a onclick="openNewWindow('{{ paper.file.url }}')" href="#">View Submission</a>
                             </td>
                             <td>
                                 {{ paper.created_at|date }}
@@ -138,9 +136,15 @@
                     {% endfor %}
                 </tbody>
             </table>
-        {% endif %}
+
       </div>
   </div>
+
+  <script>
+    function openNewWindow(url) {
+        window.open(url, '_blank', 'width=700,height=700'); // Adjust width and height as needed
+    }
+</script>
   
 
 {% endblock %}

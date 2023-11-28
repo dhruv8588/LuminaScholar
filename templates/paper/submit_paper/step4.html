@@ -60,7 +60,7 @@
     background-color: lightcoral;
     color: darkred;
     padding: 10px;
-    width: 800px;
+    width: 870px;
 }
   
 </style>  
@@ -153,8 +153,8 @@
                     <div class="d-flex align-items-center">
                     {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                       {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                          {% if figures_tables_published_elsewhere_desc %}
-                            <i class="fas fa-check green-check"></i>  
+                          {% if paper.figures_tables_published_elsewhere_desc %}
+                            <i class="fas fa-check green-check"></i>&nbsp;  
                           {% else %}
                             &nbsp;&nbsp;&nbsp;&nbsp;   
                           {% endif %}  
@@ -195,7 +195,7 @@
         <div style="margin-right: 100px;">
         <br/>
         <h2>Step 4: File Upload</h2>
-        <p style="color: #54626F;">Upload as many files as needed for your manuscript in groups of three or fewer. These files will be combined into a single PDF document for the peer review process. If you are submitting a revision, please include only the latest set of files. If you have updated a file, please delete the original version and upload the revised file. To designate the order in which your files appear, use the dropdowns in the "order" column below. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
+        <p>Upload as many files as needed for your manuscript in groups of three or fewer. These files will be combined into a single PDF document for the peer review process. If you are submitting a revision, please include only the latest set of files. If you have updated a file, please delete the original version and upload the revised file. To designate the order in which your files appear, use the dropdowns in the "order" column below. When you are finished, click "Save and Continue."<br/><span class="red-asterisk">*</span> = Required Fields</p>
 
 
         <section id="files" class="col-12">

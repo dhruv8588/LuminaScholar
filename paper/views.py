@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
 from io import BytesIO
 from django.http import HttpResponse
@@ -8,6 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.core.files.base import ContentFile
+
 
 from PyPDF2 import PdfReader, PdfWriter
 from docx2pdf import convert
@@ -22,10 +24,12 @@ import win32com.client
 from reportlab.lib.pagesizes import letter
 
 from accounts.models import Role, User
+from accounts.views import login
+from conference.utils import send_review_invitation_email, send_review_invitation_email2
 
 from .forms import AuthorForm, PaperForm1, PaperForm2, PaperForm3, PaperForm4, ReviewFileModelFormset, ReviewForm, additionalAttributeFormSet
-from .models import AERecommendation, Author, File, Paper, Paper_Author, Paper_Reviewer, PreferencePaper_Reviewer, Review, ReviewFile, Reviewer, additionalAttribute
-from .utils import get_max_order_author, get_max_order_file, reorder_authors, reorder_files
+from .models import AERecommendation, Author, EICDecision, File, Paper, Paper_Author, Paper_Reviewer, PreferencePaper_Reviewer, Review, ReviewFile, Reviewer, additionalAttribute
+from .utils import get_max_order_author, get_max_order_file, reorder_authors, reorder_files, reorder_reviewers
 
 # Create your views here.
 
@@ -53,8 +57,13 @@ def delete_author(request, paper_id, author_id):
     paper_authors = Paper_Author.objects.filter(paper=paper)  
 
     papers = Paper.objects.filter(submitter=request.user)
-    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
-    
+    # authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    reviewer_emails = [paper_reviewer.reviewer.email for paper_reviewer in paper_reviewers]
+
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).exclude(email__in=reviewer_emails).distinct()
+
     context = {
         'paper': paper,
         'authors': authors,
@@ -67,23 +76,40 @@ def delete_author(request, paper_id, author_id):
 def search_user1(request, paper_id):
     email = request.POST.get('email')
 
-    try:
-        user = User.objects.get(email=email)
-    except:
-        user = None   
+    # paper = Paper.objects.get(id=paper_id)
+    # paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    # for paper_reviewer in paper_reviewers:
+    #     if paper_reviewer.reviewer.email == email:
+    #         break
+    # reviewer = paper_reviewer.reviewer  
 
-    if user == None:
+    try:
+        reviewer = PreferencePaper_Reviewer.objects.get(paper_id=paper_id, reviewer__email=email).reviewer
+    except:
+        reviewer = None
+
+    if reviewer == None:    
         try:
-            author = Author.objects.get(email=email)
+            user = User.objects.get(email=email)
         except:
-            author = None    
+            user = None   
+
+        if user == None:
+            try:
+                author = Author.objects.get(email=email)
+            except:
+                author = None    
+        else:
+            author = None        
     else:
+        user = None
         author = None        
          
     context = {
         'user': user,
         'author': author,
-        'paper_id': paper_id
+        'paper_id': paper_id,
+        'reviewer': reviewer
     }
     return render(request, 'partials/search_user_result1.html', context)
 
@@ -92,31 +118,42 @@ def search_user2(request, paper_id):
     email = request.POST.get('email')
 
     try:
-        user = User.objects.get(email=email)
+        reviewer = PreferencePaper_Reviewer.objects.get(paper_id=paper_id, reviewer__email=email).reviewer
     except:
-        user = None   
+        reviewer = None
 
-    if user == None:
+    if reviewer == None:    
         try:
-            author = Author.objects.get(email=email)
+            user = User.objects.get(email=email)
         except:
-            author = None    
+            user = None   
+
+        if user == None:
+            try:
+                author = Author.objects.get(email=email)
+            except:
+                author = None    
+        else:
+            author = None        
     else:
+        user = None
         author = None        
          
     context = {
         'user': user,
         'author': author,
-        'paper_id': paper_id
+        'paper_id': paper_id,
+        'reviewer': reviewer
     }
     return render(request, 'partials/search_user_result2.html', context)
+
 
 
 def add_user_as_author(request, paper_id, user_id):
     user = get_object_or_404(User, id=user_id)
     user.roles.add(Role.objects.get(name='AU'))
 
-    author = Author.objects.get_or_create(user=user, first_name=user.first_name, last_name=user.last_name, email=user.email)[0]
+    author = Author.objects.get_or_create(user=user, first_name=user.first_name, last_name=user.last_name, email=user.email, institution=user.institution, city=user.city, state=user.state, country=user.country)[0]
 
     paper = Paper.objects.get(id=paper_id)
 
@@ -126,7 +163,11 @@ def add_user_as_author(request, paper_id, user_id):
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
     papers = Paper.objects.filter(submitter=request.user)
-    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    reviewer_emails = [paper_reviewer.reviewer.email for paper_reviewer in paper_reviewers]
+
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).exclude(email__in=reviewer_emails).distinct()
 
     context = {
         'paper': paper,
@@ -148,7 +189,12 @@ def add_author_as_author(request, paper_id, author_id):
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
     papers = Paper.objects.filter(submitter=request.user)
-    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+    # authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    reviewer_emails = [paper_reviewer.reviewer.email for paper_reviewer in paper_reviewers]
+
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).exclude(email__in=reviewer_emails).distinct()
 
     context = {
         'paper': paper,
@@ -178,7 +224,12 @@ def add_new_author(request, paper_id):
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
     papers = Paper.objects.filter(submitter=request.user)
-    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+    # authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    reviewer_emails = [paper_reviewer.reviewer.email for paper_reviewer in paper_reviewers]
+
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).exclude(email__in=reviewer_emails).distinct()
 
     context = {
         'paper': paper,
@@ -198,7 +249,12 @@ def add_author_from_my_previous_papers(request, author_id, paper_id):
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
     papers = Paper.objects.filter(submitter=request.user)
-    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+    # authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    reviewer_emails = [paper_reviewer.reviewer.email for paper_reviewer in paper_reviewers]
+
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).exclude(email__in=reviewer_emails).distinct()
 
     context = {
         'paper': paper,
@@ -265,10 +321,19 @@ def sort_files(request, paper_id):
 def edit_author(request, paper_id, author_id):
     first_name = request.POST.get('first_name').capitalize()
     last_name = request.POST.get('last_name').capitalize()
+    institution = request.POST.get('institution').capitalize()
+    country = request.POST.get('country').capitalize()
+    state = request.POST.get('state').capitalize()
+    city = request.POST.get('city').capitalize()
 
     author = get_object_or_404(Author, id=author_id)
     author.first_name = first_name
     author.last_name = last_name
+    author.institution = institution
+    author.country = country
+    author.state = state
+    author.city = city
+
     author.save()
     paper = get_object_or_404(Paper, id=paper_id)
     paper_authors = Paper_Author.objects.filter(paper=paper)
@@ -305,7 +370,7 @@ def submitted_manuscripts(request):
 
 def unsubmitted_manuscripts(request):
     try: 
-        papers = Paper.objects.filter(date_submitted__isnull=True, submitter=request.user)
+        papers = Paper.objects.filter(date_submitted__isnull=True, submitter=request.user, eicdecision__date_submitted__isnull=True)
     except:
         papers = None    
     context = {
@@ -381,27 +446,55 @@ def submit_paper_step0(request, paper_id):
     else:
         form = PaperForm4(instance=paper)
 
-    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper, status='Submitted')    
-
-    context = {
-        'paper': paper,
-        'form': form,
-        'paper_reviewers': paper_reviewers
-    }        
-
-    return render(request, 'paper/submit_paper/step0.html', context)        
-
-
-def view_decision_letter(request, paper_id):
-    paper = Paper.objects.get(id=paper_id)
-
-    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper, status='Submitted')
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=False, revision=revision_number(paper.journal_id)-1)
 
     eic = User.objects.get(roles=Role.objects.get(name='EIC'))
 
     context = {
         'paper': paper,
-        'paper_reviewers': paper_reviewers,
+        'form': form,
+        'reviews': reviews,
+        'eic': eic
+    }        
+
+    return render(request, 'paper/submit_paper/step0.html', context)        
+
+
+def get_grouped_reviews_list(paper_reviewers):
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=False)
+
+    # Group reviews by revision using a defaultdict
+    grouped_reviews_dict = defaultdict(list)
+    for review in reviews:
+        grouped_reviews_dict[review.revision].append(review)
+
+    # Convert the dictionary values to a list of lists
+    grouped_reviews_list = list(grouped_reviews_dict.values())   
+    grouped_reviews_list = list(reversed(grouped_reviews_list))  
+
+    return grouped_reviews_list
+
+
+def revision_number(value):
+    # Use regular expression to find the numeric part after '_R' at the end
+    match = re.search(r'_R(\d+)$', value)
+
+    # If a numeric part is found, convert it to an integer; otherwise, return 0
+    return int(match.group(1)) if match else 0
+
+
+def view_decision_letter(request, paper_id):
+    paper = Paper.objects.get(id=paper_id)
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=False, revision=revision_number(paper.journal_id))
+
+    eic = User.objects.get(roles=Role.objects.get(name='EIC'))
+
+    context = {
+        'paper': paper,
+        'reviews': reviews,
         'eic': eic
     }
 
@@ -415,7 +508,7 @@ def create_revision(request, paper_id):
     paper.date_submitted = None
     paper.save()
 
-    return redirect(request, 'submit_paper_step0', paper.id);
+    return redirect('submit_paper_step0', paper.id)
 
 
 def rev_invitations(request):
@@ -430,27 +523,27 @@ def rev_invitations(request):
     return render(request, 'paper/reviewer_invitations.html', context)
 
 
-def active_reviews(request):
-    try: 
-        # papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Agreed')
-        paper_reviewers = Paper_Reviewer.objects.filter(reviewer__user = request.user, status='Agreed')
-    except:
-        paper_reviewers = None    
+def active_reviews(request): 
+    # papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Agreed')
+    # paper_reviewers = Paper_Reviewer.objects.filter(reviewer__user = request.user, status='Agreed')
+    paper_reviewers = Paper_Reviewer.objects.filter(reviewer__user = request.user)
+
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=True)
+    
     context = {
-        'paper_reviewers': paper_reviewers,
+        'reviews': reviews,
     }
     return render(request, 'paper/active_reviews.html', context)
 
 
 def submitted_reviews(request):
-    try: 
-        # papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Submitted')
-        paper_reviewers = Paper_Reviewer.objects.filter(reviewer__user = request.user, status='Submitted')
-    except:
-        paper_reviewers = None    
-   
+    # papers = Paper.objects.filter(reviewers__user = request.user, paper_reviewer__status='Submitted')
+    # paper_reviewers = Paper_Reviewer.objects.filter(reviewer__user = request.user, status='Submitted')
+    paper_reviewers = Paper_Reviewer.objects.filter(reviewer__user = request.user)
+    reviews = Review.objects.filter(paper_reviewer__in = paper_reviewers, date_submitted__isnull=False)
+      
     context = {
-        'paper_reviewers': paper_reviewers,
+        'reviews': reviews,
     }
     return render(request, 'paper/submitted_reviews.html', context)
 
@@ -569,7 +662,12 @@ def submit_paper_step2(request, paper_id):
     paper_authors = Paper_Author.objects.filter(paper=paper)
 
     papers = Paper.objects.filter(submitter=request.user)
-    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+    # authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).distinct()
+
+    paper_reviewers = PreferencePaper_Reviewer.objects.filter(paper=paper)
+    reviewer_emails = [paper_reviewer.reviewer.email for paper_reviewer in paper_reviewers]
+
+    authors = Author.objects.filter(papers__in=papers).exclude(papers=paper).exclude(email__in=reviewer_emails).distinct()
     
     context = {
         'paper': paper,
@@ -675,9 +773,13 @@ def upload_file(request, paper_id):
     for file in saved_files:
         file_list.append(os.path.basename(file.file.name))
 
+    print(file_list)    
+
     file1 = request.FILES.get('file1') 
     file2 = request.FILES.get('file2')
     file3 = request.FILES.get('file3')
+
+    print(file1.name)
     
     if file1:
         desig1 = request.POST.get('desig1')
@@ -972,21 +1074,38 @@ def submit_paper_step7(request, paper_id):
     return render(request, 'paper/submit_paper/step7.html', context)   
 
 
+from django.core.files import File as f
 def submit_paper(request, paper_id):
     paper = get_object_or_404(Paper, id=paper_id)
 
     current_date = datetime.now()
-    current_year = current_date.year % 100
+    current_year = current_date.year 
     current_month = current_date.month
+    print(current_year)
+    print(current_month)
 
-    if not paper.journal_id:
+    if paper.journal_id == 'draft':
         papers_count = Paper.objects.filter(date_submitted__year=current_year, date_submitted__month=current_month).count()
+        print(papers_count)
 
         paper.journal_id = 'JAIR-' + str(current_year%100) + '-' + str(current_month) + '-' + str(papers_count + 1)
 
     paper.date_submitted = current_date.date()
- 
+
+    # paper.file.name = str(paper.journal_id) + '.pdf'
+    # paper.file.save(str(paper.journal_id)+'.pdf')
+
+
+    # new_file_name = str(paper.journal_id) + '.pdf'
+    # new_file_path = os.path.join("files", new_file_name) 
+
+    # with open(paper.file.path, 'rb') as existing_file:
+    #     new_file = f(existing_file, name=new_file_path)
+    #     paper.file.save(new_file_name, new_file)
+
     paper.save()
+
+    merge_pdfs(request, paper.id)
 
     role = Role.objects.get(name='AU')
     paper.submitter.roles.add(role)
@@ -996,11 +1115,11 @@ def submit_paper(request, paper_id):
         paper_reviewer.status = ''
         paper_reviewer.save()
 
-    if paper.eicdecision:
+    if EICDecision.objects.filter(paper=paper).exists():
         paper.eicdecision.date_submitted = None
         paper.eicdecision.save()
 
-    if paper.aerecommendation:
+    if AERecommendation.objects.filter(paper=paper).exists():
         paper.aerecommendation.date_submitted = None    
         paper.aerecommendation.save()
 
@@ -1051,12 +1170,11 @@ def delete_review(request, paper_id):
     return redirect('myAccount')
 
 
-
 def remove_rev_file(request, review_id, rev_file_id):
     review = get_object_or_404(Review, id=review_id)
     rev_file = get_object_or_404(ReviewFile, id=rev_file_id)
     rev_file.delete()  
-    rev_file.file.delete(save=False)
+    # rev_file.file.delete(save=False)
 
     formset = ReviewFileModelFormset(queryset=ReviewFile.objects.filter(review=review, view=''))
 
@@ -1121,54 +1239,61 @@ def upload_rev_file(request, review_id):
     return render(request, 'partials/review_files.html', context)   
 
 
-def review(request, paper_id):
+def revision_number(input_string):
+    # Use regular expression to find the numeric part after '_R' at the end
+    match = re.search(r'_R(\d+)$', input_string)
+
+    # If a numeric part is found, convert it to an integer; otherwise, return 0
+    return int(match.group(1)) if match else 0
+
+
+def create_review(request, paper_id):
     paper_reviewer = Paper_Reviewer.objects.get(paper=paper_id, reviewer__user=request.user)
-    if paper_reviewer.status != 'Agreed':
-        paper_reviewer.status = 'Agreed'
-        paper_reviewer.save()
+    paper_reviewer.status = 'Agreed'
+    paper_reviewer.save()
 
-    review, created = Review.objects.get_or_create(paper_reviewer=paper_reviewer)
+    r = Review.objects.create(paper_reviewer=paper_reviewer, due_date = (datetime.now() + timedelta(days=20)).replace(hour=23, minute=59), revision = revision_number(paper_reviewer.paper.journal_id))
 
-    if created or review.date_submitted:
-        review.due_date = (datetime.now() + timedelta(days=20)).replace(hour=23, minute=59)
-        review.save()
+    return redirect(review, r.id)
+
+
+
+def review(request, review_id):
+    review = Review.objects.get(id=review_id)
     
     form = ReviewForm(instance=review)
 
     formset = ReviewFileModelFormset(queryset=ReviewFile.objects.filter(review=review, view=''))
 
     context = {
-        'paper': paper_reviewer.paper,
+        'paper': review.paper_reviewer.paper,
         'form': form,
         'formset': formset,
         'review': review,
+        'paper_reviewer': review.paper_reviewer
     }    
     return render(request, 'paper/review.html', context)
 
 
-def save_review(request, paper_id):
-    paper_reviewer = Paper_Reviewer.objects.get(paper=paper_id, reviewer__user=request.user)
-
-    review = Review.objects.get(paper_reviewer=paper_reviewer)
+def save_review(request, review_id):
+    review = Review.objects.get(id=review_id)
 
     form = ReviewForm(request.POST, instance=review)
     review = form.save(commit=False)
     review.save()
 
     context = {
-        'paper': paper_reviewer.paper,
         'form': form,
         'review': review,
     }    
 
     return render(request, 'partials/review_form.html', context)
 
-def submit_review(request, paper_id):
-    paper_reviewer = Paper_Reviewer.objects.get(paper=paper_id, reviewer__user=request.user)
-    paper_reviewer.status = 'Submitted'
-    paper_reviewer.save()
+def submit_review(request, review_id):
+    review = Review.objects.get(id=review_id)
+    review.paper_reviewer.status = 'Submitted'
+    review.paper_reviewer.save()
 
-    review = Review.objects.get(paper_reviewer=paper_reviewer)
     review.date_submitted = datetime.now()
     review.save()
 
@@ -1331,36 +1456,54 @@ def merge_pdfs(request, paper_id):
     # Get the Paper object
     paper = Paper.objects.get(id=paper_id)
 
+    paper.file.delete(save=False)
+
     # Assign the merged PDF file to the 'file' field of the Paper model
     paper.file.save(str(paper.journal_id)+'.pdf', merged_pdf_file)
-
-        
-    
 
     # Create an HttpResponse with the merged PDF as content
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'inline; filename="merged.pdf"'
 
     # Write the merged PDF content to the response
-    merger.write(response)
+    # merger.write(response)
     merger.close()
+
+    # Write the merged PDF content to the response
+    merged_pdf_content.seek(0)
+    response.write(merged_pdf_content.read())
 
     # Clean up the temporary HTML-to-PDF file
     os.remove(temp_html_pdf_path)
 
-    return response
+    if not paper.date_submitted:
+        return response
+    else:
+        return
 
 
-def original_files(request, paper_id):
-    paper = get_object_or_404(Paper, id=paper_id)
+def original_files(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
 
-    return render(request, 'partials/paper/original_files.html', {'paper': paper})
+    context = {
+        'paper': review.paper_reviewer.paper,
+        'review': review,
+        'paper_reviewer': review.paper_reviewer
+    }    
+
+    return render(request, 'partials/paper/original_files.html', context)
 
 
-def view_proof(request, paper_id):
-    paper = get_object_or_404(Paper, id=paper_id)
+def view_proof(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
 
-    return render(request, 'partials/paper/view_proof.html', {'paper': paper})
+    context = {
+        'paper': review.paper_reviewer.paper,
+        'review': review,
+        'paper_reviewer': review.paper_reviewer
+    }    
+
+    return render(request, 'partials/paper/view_proof.html', context)
 
 
 
@@ -1419,3 +1562,67 @@ def view_proof(request, paper_id):
 #     return response
 
 
+
+
+def agree_to_review(request, paper_reviewer_id):
+    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
+    paper_reviewer.status = "Agreed"
+    paper_reviewer.save()
+
+    review = Review.objects.create(paper_reviewer=paper_reviewer, due_date = (datetime.now() + timedelta(days=20)).replace(hour=23, minute=59), revision = revision_number(paper_reviewer.paper.journal_id))
+
+    # send_review_invitation_email2(request, paper_reviewer)
+
+    return redirect(login)
+
+def decline_to_review(request, paper_reviewer_id):
+    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
+    paper_reviewer.status = "Declined"
+    paper_reviewer.save()
+
+    paper = paper_reviewer.paper
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    
+    if not paper_reviewers.filter(status='') and (paper_reviewers.filter(status='Agreed') | paper_reviewers.filter(status='Invited')).count() < paper.required_reviews:
+        try:
+            paper_reviewer = Paper_Reviewer.objects.get(status='Alternate', order=1)
+        except:
+            paper_reviewer = None
+
+        if paper_reviewer:
+            paper_reviewer.status = 'Invited'
+            paper_reviewer.invite_sent_date = datetime.now().date()
+            paper_reviewer.save()
+            send_review_invitation_email(request, paper_reviewer)
+
+            reorder_reviewers(paper_id=paper.id)
+
+
+    return render(request, 'paper/reviewer_invitations.html')
+
+def decline_to_review_mail(request, paper_reviewer_id):
+    paper_reviewer = Paper_Reviewer.objects.get(id=paper_reviewer_id)
+    paper_reviewer.status = "Declined"
+    paper_reviewer.save()
+
+    paper = paper_reviewer.paper
+
+    paper_reviewers = Paper_Reviewer.objects.filter(paper=paper)
+    
+    if not paper_reviewers.filter(status='') and (paper_reviewers.filter(status='Agreed') | paper_reviewers.filter(status='Invited')).count() < paper.required_reviews:
+        try:
+            paper_reviewer = Paper_Reviewer.objects.get(status='Alternate', order=1)
+        except:
+            paper_reviewer = None
+
+        if paper_reviewer:
+            paper_reviewer.status = 'Invited'
+            paper_reviewer.invite_sent_date = datetime.now().date()
+            paper_reviewer.save()
+            send_review_invitation_email(request, paper_reviewer)
+
+            reorder_reviewers(paper_id=paper.id)
+
+
+    return redirect(login)

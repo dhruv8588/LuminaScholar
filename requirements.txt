@@ -13,3 +13,5 @@ docx2pdf==0.1.8
 pywin32==306
 
 python-multipart==0.0.6
+django-celery-beat==2.5.0 
+redis==5.0.1

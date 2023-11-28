@@ -4,13 +4,20 @@
     <div class="card-header">
       <ul class="nav nav-pills card-header-pills">
         <li class="nav-item">
-          <a class="nav-link" href="#" hx-post="{% url 'view_proof' paper.id %}" hx-target='#info' hx-trigger='click'>Proof</a>
+          <a class="nav-link" href="#" hx-post="{% url 'view_proof' review.id %}" hx-target='#info' hx-trigger='click'>Proof</a>
         </li>
         <li class="nav-item">
           <a class="nav-link selected" href="#">Original Files</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Instructions</a>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Previous Reviews</a>
+            <div class="dropdown-menu">
+              {% for rev in paper_reviewer.reviews.all %}
+                {% if rev.revision != review.revision %}
+                  <a class="dropdown-item" onclick="openNewWindow('{% url 'view_review' rev.id %}')" href="#">{{ paper_reviewer.paper.journal_id|original_journal_id }}_R{{ rev.revision }}</a>
+                {% endif %}
+              {% endfor %}
+          </div>
         </li>
       </ul>
     </div>

@@ -11,7 +11,6 @@
     display: block;
     padding: 10px 15px; /* Add padding to create a clickable area */
     text-decoration: none; /* Remove underline */
-    color: #333; /* Default color */
     transition: color 0.3s; /* Smooth color transition on hover */
 }
 
@@ -33,11 +32,9 @@
   
 </style>  
 
-    <h2 class="text-center">Start New Submission</h2>
-
-    <div class="row">
+    <div class="row" style="margin-top:30px;">
       <div class="col-md-4">
-        <div class="card" style="width: 18rem; margin-left: 50px;">
+        <div class="card" style="width: 18rem; margin-left: 50px; margin-top: 45px;">
             <div class="card-header">
               <h5 class="text-secondary">&nbsp;&nbsp;Author Dashboard</h5>
             </div>
@@ -97,6 +94,8 @@
   
   
       <div class="col-md-8">
+        <h2>Start New Submission</h2>
+
         <b style="color: #54626F;">Please make sure to upload your revised paper as a REVISION and not a NEW SUBMISSION. Do not start a new submission for revised papers.</b><br/><br/>
         <a href="{% url 'create_paper' %}">
             <button type="button" class="btn btn-dark mb-3">Begin Submission</button>

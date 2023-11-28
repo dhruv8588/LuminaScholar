@@ -56,17 +56,15 @@
 
 
 <br/>
-<h3 style="margin-left: 400px;">
   {% if type == 'papers_awaiting_ae_selection' %}
-    Awaiting AE Selection
+    <h3 style="margin-left: 400px;">Awaiting AE Selection</h3>
   {% elif type == 'papers_awaiting_ae_assignment' %} 
-    Awaiting AE Assignment
+    <h3 style="margin-left: 400px;">Awaiting AE Assignment</h3>
   {% elif type == 'papers_awaiting_eic_decision' %} 
-    Awaiting EIC Decision
+    <h3 style="margin-left: 210px;">Awaiting EIC Decision</h3>
   {% else %}  
-    Submitted EIC Decisions
+    <h3 style="margin-left: 210px;">Submitted EIC Decisions</h3>
   {% endif %}  
-</h3>
 <br/>
 
 {% for paper in page_obj %}
@@ -124,7 +122,7 @@
             </tbody>    
         </table>
        
-        <a href="{{ paper.file.url }}" target="_blank" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
+        <a onclick="openNewWindow('{{ paper.file.url }}')" href="#" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
         <a href="#" data-toggle="modal" data-target="#OriginalFiles" style="margin-right: 60px;"><i class="fa fa-file-alt"></i> Original Files</a>
         {% if paper.cover_letter or paper.cover_letter_file %}
             <a href="#" data-toggle="modal" data-target="#CoverLetter" style="margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
@@ -157,25 +155,28 @@
   </div>
 
   {% if form %}
-      <div class="card border-secondary mb-3" style="max-width: 18rem; float: right;  margin-right: 210px;">
-        <h5 class="card-header text-secondary">Reviews</h5>
+<div style="float: right;  margin-right: 210px;">
+  {% for reviews in grouped_reviews_list %}
+      <div class="card border-secondary mb-3" style="max-width: 18rem;">
+        <h5 class="card-header text-secondary">
+          Reviews {% if grouped_reviews_list|length > 1 %}to {{ paper.journal_id|original_journal_id }}_R{{ reviews.0.revision }}{% endif %}
+        </h5>
         <div class="card-body">
           <table class="table table-bordered">
             <tbody>
-              {% for paper_reviewer in paper_reviewers %}
-                  {% if paper_reviewer.status == 'Submitted' %}
-                      <tr>
-                          <th class="text-secondary">{{paper_reviewer.reviewer.first_name}} {{paper_reviewer.reviewer.last_name}} </th>
-                          <td>{{ paper_reviewer.review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' paper_reviewer.id %}')">View</a></td>
-                      </tr>
-                    {% endif %}
-              {% endfor %}  
+              {% for review in reviews %}
+                <tr>
+                  <th class="text-secondary">{{ review.paper_reviewer.reviewer.first_name }} {{ review.paper_reviewer.reviewer.last_name }} </th>
+                  <td>{{ review.recommendation }}<br/><a href="#" onclick="openNewWindow('{% url 'view_review' review.id %}')">View</a></td>
+                </tr>
+              {% endfor %}
             </tbody>    
         </table> 
         </div>
       </div>
+  {% endfor %}
 
-      <div class="card border-secondary mb-3" style="max-width: 18rem; float: right;  margin-right: 210px;">
+      <div class="card border-secondary mb-3" style="max-width: 18rem;">
         <h5 class="card-header text-secondary">Recommendations</h5>
         <div class="card-body">
           <table class="table table-bordered">
@@ -189,7 +190,7 @@
         </div>
       </div>
 
-
+    </div>
 
         <div style="width: 700px; margin-left: 210px; margin-top: 560px;">
         <h4>EIC Decision</h4>
@@ -440,6 +441,12 @@
               
     </script> 
 {% endif %}
+
+<script>
+  function openNewWindow(url) {
+      window.open(url, '_blank', 'width=700,height=700'); 
+  }
+</script>
 
 
 {% endblock %}

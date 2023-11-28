@@ -9,6 +9,24 @@ from conference.models import Attribute
 
 # Create your models here.
 
+class CustomFileSystemStorage(FileSystemStorage):
+    def get_valid_name(self, name):
+        # Override this method to prevent Django from modifying the file name
+        return name
+
+    def _save(self, name, content):
+        # Get the directory name and the file name
+        dir_name, file_name = os.path.split(name)
+        # Generate a unique file name without modifying it
+        while self.exists(name):
+            # If the file already exists, add a suffix to the file name
+            name = os.path.join(dir_name, self.get_available_name(file_name))
+        # Call the parent class method to save the file with the modified name
+        return super(CustomFileSystemStorage, self)._save(name, content)
+
+custom_storage = CustomFileSystemStorage(location='media/')
+
+
 class Author(models.Model):
     user = OneToOneField(User, on_delete=models.SET_NULL, blank=True, null=True)
     first_name = models.CharField(max_length=100)
@@ -59,7 +77,7 @@ class Paper(models.Model):
     attributes = models.ManyToManyField(Attribute, blank=True)
 
     cover_letter = models.TextField(blank=True, null=True)
-    cover_letter_file = models.FileField(upload_to='conference/papers', blank=True, null=True)
+    cover_letter_file = models.FileField(storage=custom_storage, upload_to='cover_letters', blank=True, null=True)
     number_of_figures = models.PositiveSmallIntegerField(blank=True, null=True)
     number_of_tables = models.PositiveSmallIntegerField(blank=True, null=True)
     word_count = models.PositiveSmallIntegerField(blank=True, null=True)
@@ -79,10 +97,10 @@ class Paper(models.Model):
 
     required_reviews = models.PositiveSmallIntegerField(default=2, blank=True, null=True)
 
-    file = models.FileField(upload_to='files', blank=True, null=True)
+    file = models.FileField(storage=custom_storage, upload_to='files', blank=True, null=True)
 
     decision_response = models.TextField(blank=True, null=True)
-    decision_response_file = models.FileField(upload_to='conference/papers', blank=True, null=True)
+    decision_response_file = models.FileField(storage=custom_storage, upload_to='decision_response_files', blank=True, null=True)
 
     def written_by(self):
         return ", ".join([str(i) for i in self.authors.all()])
@@ -112,7 +130,7 @@ class Paper_Author(models.Model):
 
 class File(models.Model):
     paper = models.ForeignKey(Paper, related_name="files", on_delete=models.CASCADE)
-    file = models.FileField(upload_to='files', blank=True, null=True)
+    file = models.FileField(storage=custom_storage, upload_to='original_files', blank=True, null=True)
     order = models.PositiveSmallIntegerField(blank=True, null=True)
     designation = models.CharField(max_length=70, blank=True)
 
@@ -193,7 +211,7 @@ class additionalAttribute(models.Model):
 
 
 class Review(models.Model):
-    paper_reviewer = models.OneToOneField(Paper_Reviewer, related_name="review", on_delete=models.CASCADE, blank=True, null=True)
+    paper_reviewer = models.ForeignKey(Paper_Reviewer, related_name="reviews", on_delete=models.CASCADE, blank=True, null=True)
 
     date_submitted = models.DateTimeField(blank=True, null=True)
     due_date = models.DateTimeField(blank=True, null=True)
@@ -211,23 +229,7 @@ class Review(models.Model):
     comments_to_editor = models.TextField(blank=True)
     comments_to_author = models.TextField(blank=True)
 
-
-class CustomFileSystemStorage(FileSystemStorage):
-    def get_valid_name(self, name):
-        # Override this method to prevent Django from modifying the file name
-        return name
-
-    def _save(self, name, content):
-        # Get the directory name and the file name
-        dir_name, file_name = os.path.split(name)
-        # Generate a unique file name without modifying it
-        while self.exists(name):
-            # If the file already exists, add a suffix to the file name
-            name = os.path.join(dir_name, self.get_available_name(file_name))
-        # Call the parent class method to save the file with the modified name
-        return super(CustomFileSystemStorage, self)._save(name, content)
-
-custom_storage = CustomFileSystemStorage(location='media/')
+    revision = models.SmallIntegerField(default=0)
 
 
 class ReviewFile(models.Model):
@@ -236,7 +238,7 @@ class ReviewFile(models.Model):
         ('Author & Editor', 'Author & Editor'),
     )
     review = models.ForeignKey(Review, related_name="review_files", on_delete=models.CASCADE, blank=True, null=True)
-    file = models.FileField(storage=custom_storage, upload_to='files', blank=True, null=True)
+    file = models.FileField(storage=custom_storage, upload_to='review_files', blank=True, null=True)
     view = models.CharField(max_length=50, blank=True, choices=view_choices)
 
     def __str__(self):
@@ -254,7 +256,7 @@ class AERecommendation(models.Model):
 
 class AERecommendationFile(models.Model):
     aerecommendation = models.ForeignKey(AERecommendation, related_name="aerecommendation_files", on_delete=models.CASCADE)
-    file = models.FileField(storage=custom_storage, upload_to='files', blank=True, null=True)
+    file = models.FileField(storage=custom_storage, upload_to='recommendation_files', blank=True, null=True)
 
     def __str__(self):
         return self.file.name
@@ -270,7 +272,7 @@ class EICDecision(models.Model):
     
 class DecisionFile(models.Model):
     decision = models.ForeignKey(EICDecision, related_name="decision_files", on_delete=models.CASCADE)
-    file = models.FileField(storage=custom_storage, upload_to='files', blank=True, null=True)
+    file = models.FileField(storage=custom_storage, upload_to='decision_files', blank=True, null=True)
 
     def __str__(self):
         return self.file.name    

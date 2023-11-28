@@ -133,8 +133,8 @@
                       <div class="d-flex align-items-center">
                       {% if paper.number_of_figures and paper.number_of_tables and paper.word_count and paper.MSWord_file and paper.certification_form and paper.publish_elsewhere and paper.approval and paper.figures_tables_published_elsewhere  %}
                         {% if paper.figures_tables_published_elsewhere == 'Yes' %}  
-                            {% if figures_tables_published_elsewhere_desc %}
-                              <i class="fas fa-check green-check"></i> 
+                            {% if paper.figures_tables_published_elsewhere_desc %}
+                              <i class="fas fa-check green-check"></i>&nbsp; 
                             {% else %}
                               &nbsp;&nbsp;&nbsp;&nbsp; 
                             {% endif %}  
@@ -180,7 +180,7 @@
           
           <h2>Step 1: Type, Title, & Abstract</h2>
           
-          <p style="color: #54626F;">Select your manuscript type. Enter your title and abstract into the appropriate boxes below. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
+          <p>Select your manuscript type. Enter your title and abstract into the appropriate boxes below. When you are finished, click "Save and Continue".<br/><span class="red-asterisk">*</span> = Required Fields</p>
             <form id="submit-paper-form_step1" action="{% url 'submit_paper_step1' paper.id %}" method="post">
                 {% csrf_token %}
                 <table class="table table-bordered">
@@ -214,9 +214,11 @@
                 
                 <br/>
 
+                {% if paper.eicdecision %}
                 <div style="display: inline-block; float: left;">
                   <a href="{% url 'submit_paper_step0' paper.id %}" class="btn btn-dark btn-sm"><i class="fas fa-angle-left"></i>&nbsp;Previous Step</a>
                 </div>
+                {% endif %}
                 <div style="display: inline-block; float: right;">
                   {% comment %} <button type="submit" name="save" class="btn btn-dark btn-sm mb-3" hx-get="{% url 'success_message' %}" hx-target='#success_message' >Save</button> {% endcomment %}
 

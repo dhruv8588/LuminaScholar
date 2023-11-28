@@ -21,7 +21,7 @@
             <tbody>
               <tr>
                 <td>{{ user.first_name }} {{ user.last_name }}</td>
-                <td>{{ user.institution }}</td>
+                <td>{{ user.institution }}{% if user.city %}, {{ user.city }}{% endif %}{% if user.state %}, {{ user.state }}{% endif %}, {{ user.country }}</td>
               </tr>
             </tbody>
           </table>
@@ -63,7 +63,7 @@
             <tbody>
               <tr>
                 <td>{{ author.first_name }} {{ author.last_name }}</td>
-                <td></td>
+                <td>{{ author.institution }}{% if author.city %}, {{ author.city }}{% endif %}{% if author.state %}, {{ author.state }}{% endif %}, {{ author.country }}</td>
               </tr>
             </tbody>
           </table>
@@ -82,6 +82,36 @@
       $('#addAuthorAsAuthor').modal('show');
     }); 
   </script>
+
+{% elif reviewer %}
+
+    <!-- Modal -->
+    <div class="modal fade" id="warning-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ reviewer.email }}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <span style="color: red;">Note: If you want to add {{ reviewer.email }} as an author to this manuscript you need first to remove him/her from the list of your preferred/opposed list of reviewers for this manuscript in step 6.</span>
+          </div>
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-angle-left"></i>&nbsp;Search Again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <script>
+      $(document).ready(function() {
+        $('#warning-modal').modal('show');
+      }); 
+    </script>
+  
+
 
 {% else %}
 

@@ -39,6 +39,7 @@ def register_user(request):
             user.city = form.cleaned_data['city'].capitalize()
             
             user.save()
+            form.save()
 
             try:
                 author = Author.objects.get(email=user.email)

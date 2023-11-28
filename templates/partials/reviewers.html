@@ -48,7 +48,7 @@
             </tbody>    
         </table>
        
-        <a href="{{ paper.file.url }}" target="_blank" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
+        <a onclick="openNewWindow('{{ paper.file.url }}')" href="#" style="margin-right: 60px;"><i class="fas fa-file-alt"></i> Submission</a>
         <a href="#" data-toggle="modal" data-target="#OriginalFiles" style="margin-right: 60px;"><i class="fa fa-file-alt"></i> Original Files</a>
         {% if paper.cover_letter or paper.cover_letter_file %}
             <a href="#" data-toggle="modal" data-target="#CoverLetter" style="margin-right: 60px;"><i class="fas fa-file-pen"></i> Cover Letter</a>
@@ -63,7 +63,7 @@
         <p class="card-text">
             {% csrf_token %}
             <li class="list-group-item d-flex justify-content-between align-items-center">    
-                <span><b>ORDER REVIEWER STATUS ACTION</b></span>
+                <span><b><span>ORDER</span><span style="margin-left: 90px;">REVIEWER</span><span style="margin-left: 120px; margin-right: 80px;">STATUS</span><span>ACTION</span></b></span>
             </li>
             <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
                 <div class="htmx-indicator">Updating...</div>
@@ -72,31 +72,35 @@
                         <div>
                             <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
                             <li class="list-group-item d-flex justify-content-between align-items-center">    
-                                #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} {% if paper_reviewer.preference %}<i style="color: grey;">({{paper_reviewer.preference}})</i>{% endif %} <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
+                                <span style="margin-right: 50px; margin-left: 20px;">#{{ paper_reviewer.order }}</span><span style="width: 190px;">{{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} {% if paper_reviewer.preference %}<i style="color: grey;">({{paper_reviewer.preference}})</i>{% endif %}<br/> <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a></span>
                                
-                                {% if paper_reviewer.status == ''  %}
-                                    <button type="button" class="btn btn-success btn-sm invite-btn" hx-post="{% url 'invite_rev' paper_reviewer.id %}" hx-target="#reviewers_progress" hx-trigger="click"><i class="fas fa-check"></i>&nbsp;Invite</button>
-                                    <div class="spinner" style="display: none;">
-                                        <div class="spinner-border text-success" role="status" style="width: 1.2rem; height: 1.2rem;"></div> <span style="color: grey">Inviting...</span>   
-                                    </div>     
-                                {% elif paper_reviewer.status == 'Declined' %}
-                                    <span style="color: red;">{{ paper_reviewer.status }}</span>
-                                {% else  %}
-                                    <span style="color: #32CD32;">{{ paper_reviewer.status }}</span>                                
-                                {% endif %}
+                                <span style="width: 80px;">
+                                    {% if paper_reviewer.status == ''  %}
+                                        <button type="button" class="btn btn-success btn-sm invite-btn" hx-post="{% url 'invite_rev' paper_reviewer.id %}" hx-target="#reviewers_progress" hx-trigger="click"><i class="fas fa-check"></i>&nbsp;Invite</button>
+                                        <div class="spinner" style="display: none;">
+                                            <div class="spinner-border text-success" role="status" style="width: 1.2rem; height: 1.2rem;"></div> <span style="color: grey">Inviting...</span>   
+                                        </div>     
+                                    {% elif paper_reviewer.status == 'Declined' %}
+                                        <span style="color: red;">{{ paper_reviewer.status }}</span>
+                                    {% else  %}
+                                        <span style="color: #32CD32;">{{ paper_reviewer.status }}</span>                                
+                                    {% endif %}
+                                </span>    
                                 
-                                <select>
-                                    <option selected disabled>Select...</option>
-                                    {% if paper_reviewer.status == '' %}
-                                        <option data-toggle="modal" data-target="#AlternateReviewer{{ paper_reviewer.id }}">Alternate Reviewer</option>
-                                    {% endif %}
-                                    {% if not paper_reviewer.reviewer.user %}
-                                        <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
-                                    {% endif %}
-                                    {% if paper_reviewer.status != 'Submitted' %}    
-                                        <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#add-remove_reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
-                                    {% endif %}    
-                                </select>  
+                                <span>
+                                    <select>
+                                        <option selected disabled>Select...</option>
+                                        {% if paper_reviewer.status == '' %}
+                                            <option data-toggle="modal" data-target="#AlternateReviewer{{ paper_reviewer.id }}">Alternate Reviewer</option>
+                                        {% endif %}
+                                        {% if not paper_reviewer.reviewer.user %}
+                                            <option data-toggle="modal" data-target="#editReviewerModal{{ paper_reviewer.reviewer.id }}">Edit</option> 
+                                        {% endif %}
+                                        {% if paper_reviewer.status != 'Submitted' %}    
+                                            <option hx-delete="{% url 'delete_reviewer' paper_reviewer.paper.id paper_reviewer.reviewer.pk %}" hx-target="#add-remove_reviewers" hx-confirm="Are you sure you wish to delete this Reviewer?">Delete</option>
+                                        {% endif %}    
+                                    </select>  
+                                </span>    
                             </li>
                         </div>
                     {% endif %}    
@@ -110,7 +114,7 @@
         <p class="card-text">
             {% csrf_token %}
             <li class="list-group-item d-flex justify-content-between align-items-center">    
-                <span><b>ORDER REVIEWER ACTION</b></span>
+                <span><b><span>ORDER</span><span style="margin-left: 130px; margin-right: 220px;">REVIEWER</span><span>ACTION</span></b></span>
             </li>
             <form class="sortable list-group" hx-trigger="end" hx-post="{% url 'sort_reviewers' %}" hx-target="#reviewers" >
                 <div class="htmx-indicator">Updating...</div>
@@ -119,11 +123,13 @@
                         <div>
                             <input type="hidden" name="reviewer_order" value="{{ paper_reviewer.pk }}"/>
                             <li class="list-group-item d-flex justify-content-between align-items-center">    
-                                #{{ paper_reviewer.order }} {{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }} <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a>
-                                <select>
-                                    <option selected disabled>Select...</option>
-                                    <option hx-delete="{% url 'remove_reviewer' paper_reviewer.id %}" hx-target="#reviewers_progress">Remove</option>
-                                </select>  
+                                <span style="margin-right: 60px; margin-left: 20px;">#{{ paper_reviewer.order }}</span><span style="width: 190px;">{{ paper_reviewer.reviewer.first_name }} {{ paper_reviewer.reviewer.last_name }}<br/> <a href="mailto: {{ paper_reviewer.reviewer.email }}">{{ paper_reviewer.reviewer.email }}</a></span>
+                                <span>
+                                    <select>
+                                        <option selected disabled>Select...</option>
+                                        <option hx-delete="{% url 'remove_reviewer' paper_reviewer.id %}" hx-target="#reviewers_progress">Remove</option>
+                                    </select>  
+                                </span>
                             </li>
                         </div>
                     {% endif %}    
@@ -317,5 +323,10 @@
         });    
         inviteAllBtn.style.display = 'none';
    });
+   
+
+   function openNewWindow(url) {
+    window.open(url, '_blank', 'width=700,height=700'); // Adjust width and height as needed
+}
 
 </script>
